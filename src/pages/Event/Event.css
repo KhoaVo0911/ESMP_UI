@@ -1,0 +1,118 @@
+.headername{
+    font-size: 20px;
+}
+
+.inputsearch{
+    border-radius: 10px;
+    height: 32px;
+    width: 40%;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.create-event-button {
+    color: white;
+    border-radius: 4px;
+    /* padding: 0 16px; */
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.date-end{
+    margin-right: 16%;
+}
+
+.date-time{
+    margin-right: 21%;
+}
+
+.event-card {
+    border-radius: 10px;
+    overflow: hidden;
+    /* border: 1px solid #e0e0e0;  */
+    display: flex;
+    flex-direction: column;
+    height: 96%;
+    box-shadow: 0 10px 50px #3d37f140;
+    transition: transform 0.3s ease-in-out;
+
+}
+.event-card:hover {
+    transform: translateY(-10px);
+    transition: transform 0.3s ease-in-out; 
+}
+
+.event-card-cover img {
+    border-radius: 10px;
+    object-fit: cover;
+    height: 230px;
+    width: 100%;
+    /* border-bottom: 1px solid #e0e0e0;  */
+}
+
+.event-info-container {
+    display: flex;
+    align-items: flex-start;
+    background-color: #fff;
+    border-radius: 0 0 10px 10px;
+    flex-grow: 1;
+    justify-content: space-between;
+}
+
+.event-date {
+    margin-right: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.event-date-box {
+    background-color: #e0e7ff;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    width: 60px;
+    display: flex;
+    flex-direction: column;
+}
+
+.event-date-day {
+    font-size: 18px;
+    font-weight: bold;
+    color: #4a90e2;
+}
+
+.event-date-month {
+    font-size: 14px;
+    color: #4a90e2;
+}
+
+.event-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    margin-top: -18px;
+}
+
+.event-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+
+}
+
+.event-description {
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    margin-top: 5px;
+    margin-top: -11px;
+    width: 106%;
+}
