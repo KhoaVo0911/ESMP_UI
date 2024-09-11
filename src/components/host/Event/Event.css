@@ -1,8 +1,9 @@
-.headername{
+.headername {
     font-size: 20px;
+    margin-left: 10px;
 }
 
-.inputsearch{
+.inputsearch {
     border-radius: 10px;
     height: 32px;
     width: 40%;
@@ -15,38 +16,46 @@
     margin-bottom: 16px;
 }
 
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
 .create-event-button {
     color: white;
     border-radius: 4px;
-    /* padding: 0 16px; */
     height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-left: auto;
 }
 
-.date-end{
+.date-end {
     margin-right: 16%;
 }
 
-.date-time{
+.date-time {
     margin-right: 21%;
 }
 
 .event-card {
     border-radius: 10px;
     overflow: hidden;
-    /* border: 1px solid #e0e0e0;  */
     display: flex;
     flex-direction: column;
-    height: 96%;
+    height: 100%;
+    /* Đảm bảo card chiếm toàn bộ chiều cao */
     box-shadow: 0 10px 50px #3d37f140;
     transition: transform 0.3s ease-in-out;
-
+    background-color: #fff;
+    /* Màu nền trắng */
 }
+
 .event-card:hover {
-    transform: translateY(-10px);
-    transition: transform 0.3s ease-in-out; 
+    transform: translateY(-8px);
+    /* Tăng hiệu ứng hover */
+    transition: transform 0.3s ease-in-out;
 }
 
 .event-card-cover img {
@@ -56,6 +65,7 @@
     width: 100%;
     /* border-bottom: 1px solid #e0e0e0;  */
 }
+
 
 .event-info-container {
     display: flex;
@@ -91,28 +101,28 @@
 .event-date-month {
     font-size: 14px;
     color: #4a90e2;
+    /* Màu cho tháng */
 }
 
 .event-details {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center; 
-    margin-top: -18px;
+    justify-content: center;
+    margin-top: 4px;
 }
 
 .event-title {
     font-size: 16px;
     font-weight: bold;
     color: #333;
-
+    margin-bottom: 10px;
+    /* Tạo khoảng cách dưới cho tiêu đề */
 }
 
 .event-description {
     font-size: 14px;
     color: #666;
     text-transform: uppercase;
-    margin-top: 5px;
-    margin-top: -11px;
-    width: 106%;
+    margin-top: -4px;
 }
