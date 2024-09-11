@@ -1,38 +1,37 @@
-.App {
-  text-align: center;
+/* Import the desired font */
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&display=swap");
+
+body {
+  background-color: #f4f7fe !important;
+  /* Force background color to override Ant Design's default */
+  font-family: "DM Sans", sans-serif;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.card {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  /* Shadow for cards */
+  border: 1px solid #e2e8f0;
+  /* Light border */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.card-title {
+  color: #1a202c;
+  /* Dark text color */
+  font-weight: bold;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.card-text {
+  color: #4a5568;
+  /* Lighter text color */
 }
 
-.App-link {
-  color: #61dafb;
+/* Add higher specificity for background override */
+.ant-layout {
+  background-color: #f4f7fe !important;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.ant-layout-content {
+  background-color: #f4f7fe !important;
 }
