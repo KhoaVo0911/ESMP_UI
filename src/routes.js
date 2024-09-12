@@ -4,6 +4,12 @@ import HostLayout from "./layouts/host/HostLayout";
 import Dashboard from "./pages/Dashboard";
 import Event from "./components/host/Event/Event";
 import EventDetails from "./components/host/EventDetail/EventDetail";
+import DashboardVendor from "./components/vendor/Dashboard";
+import ListProducts from "./components/vendor/Products/ListProducts";
+import VendorLayout from "./components/vendor/Layout/VendorLayout";
+import ManageProductItems from "./components/vendor/MostOderProduct/ManageProductItems";
+import EventPage from "./components/vendor/EventDetail/EventPage";
+import EventVendor from "./components/vendor/Event/EventVendor";
 
 const AppRoutes = () => {
   return (
@@ -16,7 +22,32 @@ const AppRoutes = () => {
           </HostLayout>
         }
       /> */}
+      <Route path="/DashboardVendor" element={<DashboardVendor />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route
+        path="/eventpage"
+        element={
+          <VendorLayout>
+            <EventPage />
+          </VendorLayout>
+        }
+      />
+      <Route
+        path="listproducts"
+        element={
+          <VendorLayout>
+            <ListProducts />
+          </VendorLayout>
+        }
+      />
+      <Route
+        path="/ManageProductItems"
+        element={
+          <VendorLayout>
+            <ManageProductItems />
+          </VendorLayout>
+        }
+      />
       <Route
         path="/events"
         element={
@@ -31,6 +62,14 @@ const AppRoutes = () => {
           <HostLayout>
             <EventDetails />
           </HostLayout>
+        }
+      />
+      <Route
+        path="/eventsVendor"
+        element={
+          <VendorLayout>
+            <EventVendor />
+          </VendorLayout>
         }
       />
     </Routes>

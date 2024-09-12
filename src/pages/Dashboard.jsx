@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Grid, Text } from "@chakra-ui/react";
-import RevenueChart from "../components/host/chart/RevenueChart";
+import RevenueChart from "../components/chart/RevenueChart";
 import MostOrderedProduct from "../components/host/product/MostOrderedProduct";
 import EventRanking from "../components/host/ranking/EventRanking";
 import StatisticsNumbers from "../components/host/stats/StatisticsNumbers";
