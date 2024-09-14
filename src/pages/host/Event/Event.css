@@ -126,3 +126,44 @@
     text-transform: uppercase;
     margin-top: -4px;
 }
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group {
+    display: flex;
+    justify-content: space-between;
+}
+
+.input-group>.ant-form-item {
+    width: 48%;
+}
+
+.thumbnail-preview-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.upload-thumbnail {
+    width: 100%;
+    max-width: 300px;
+    /* Max width for the thumbnail */
+    height: auto;
+    /* Let the height adjust automatically */
+    object-fit: cover;
+    /* Ensure the image fits within the box without stretching */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+
+.ant-form-item-label>label {
+    font-family: 'DM Sans', sans-serif;
+    color: #170F49;
+    font-weight: 700;
+    font-size: 16px;
+}

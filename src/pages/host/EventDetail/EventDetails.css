@@ -1,0 +1,25 @@
+.event-details-container {
+    font-family: 'DM Sans', sans-serif;
+    background-color: #fff;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.ant-typography {
+    color: #170F49;
+}
+
+.ant-btn {
+    background-color: #3d7eff;
+    color: #fff;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.ant-card-body {
+    padding: 0;
+    /* Remove inner padding of the card for cleaner image display */
+}

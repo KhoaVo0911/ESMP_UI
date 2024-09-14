@@ -1,11 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Event.css";
-import { Tabs, Input, Button, Card, Row, Col, Modal } from "antd";
+import {
+  Tabs,
+  Input,
+  Button,
+  Card,
+  Row,
+  Col,
+  Modal,
+  Divider,
+  Typography,
+  Form,
+  message,
+  Upload,
+  Space,
+} from "antd"; // Import necessary Ant Design components
 import axios from "axios";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { Divider } from "@mui/material";
+import { UploadOutlined } from "@ant-design/icons"; // Import icon
+
+const { TextArea } = Input;
 
 const URL = "https://668e540abf9912d4c92dcd67.mockapi.io/events";
 
@@ -16,6 +32,9 @@ const Event = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("1");
+  const [form] = Form.useForm(); // Sử dụng form của Ant Design
+  const [thumbnail, setThumbnail] = useState(null); // State cho ảnh thumbnail
+  const [fileName, setFileName] = useState(""); // State cho tên file thumbnail
   const navigate = useNavigate();
 
   const showModal = () => {
@@ -82,20 +101,58 @@ const Event = () => {
     setFilteredEvents(filtered);
   };
 
-  const handleBackClick = () => {
-    setSelectedEvent(null);
-  };
-
-  const handleBackClickTab = (event) => {
-    navigate(`/event-detail/${event.id}`, { state: { event } });
-  };
-
   const handleCancel = () => {
     setIsModalVisible(false);
+    form.resetFields(); // Reset form khi cancel
+    setThumbnail(null); // Clear thumbnail
   };
 
   const handleCreate = () => {
-    setIsModalVisible(false);
+    form
+      .validateFields()
+      .then((values) => {
+        const newEvent = {
+          ...values,
+          image: thumbnail, // Include thumbnail in the new event object
+          id: events.length + 1, // Temporary id for frontend, you might get an id from backend
+        };
+
+        axios
+          .post(URL, newEvent)
+          .then((response) => {
+            setEvents((prevEvents) => [...prevEvents, response.data]); // Update the event list
+            message.success("Event created successfully!");
+            setIsModalVisible(false);
+            form.resetFields();
+            setThumbnail(null); // Clear thumbnail after submit
+          })
+          .catch((error) => {
+            console.error("Error creating event:", error);
+            message.error("Failed to create event. Please try again.");
+          });
+      })
+      .catch((errorInfo) => {
+        console.error("Validation failed: ", errorInfo);
+      });
+  };
+
+  const handleFileChange = (file) => {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.URL.createObjectURL === "function"
+    ) {
+      if (file.size / 1024 / 1024 < 5) {
+        // Kiểm tra kích thước file
+        setThumbnail(window.URL.createObjectURL(file)); // Create object URL for the selected file
+        setFileName(file.name);
+      } else {
+        message.error("File size must be smaller than 5MB");
+      }
+    } else {
+      console.error(
+        "URL.createObjectURL is not available in this environment."
+      );
+    }
   };
 
   const items = [
@@ -112,7 +169,7 @@ const Event = () => {
         <div className="header-left">
           {selectedEvent && (
             <ArrowBackIcon
-              onClick={handleBackClick}
+              onClick={() => setSelectedEvent(null)}
               className="header-container-button"
               style={{ cursor: "pointer", fontSize: "20px" }}
             />
@@ -177,7 +234,9 @@ const Event = () => {
             <Card
               className="event-card"
               hoverable
-              onClick={() => handleBackClickTab(event)}
+              onClick={() =>
+                navigate(`/event-detail/${event.id}`, { state: { event } })
+              }
               cover={
                 <div className="event-card-cover">
                   <img alt={event.eventName} src={event.image} />
@@ -235,81 +294,106 @@ const Event = () => {
 
       <Modal
         title="Create Event"
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={handleCancel}
         footer={[
-          <Button
-            key="create"
-            type="primary"
-            onClick={handleCreate}
-            style={{ fontWeight: "700", fontSize: "14px" }}
-          >
+          <Button key="create" type="primary" onClick={handleCreate}>
             Create
           </Button>,
-          <Button
-            key="cancel"
-            onClick={handleCancel}
-            style={{ fontWeight: "700", fontSize: "14px" }}
-          >
+          <Button key="cancel" onClick={handleCancel}>
             Cancel
           </Button>,
         ]}
       >
         <Divider />
-        <div>
-          <div>
-            <p style={{ fontWeight: "700", fontSize: "14px" }}>Event Name </p>
-            <Input required />
-          </div>
-
-          <div
-            className="date"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
+        <Form layout="vertical" form={form} className="modal-content">
+          <Form.Item
+            label="Event Name"
+            name="eventName"
+            rules={[{ required: true, message: "Please enter event name" }]}
           >
-            <div>
-              <p style={{ fontWeight: "700", fontSize: "14px" }}>Start date</p>
-              <Input type="date" required style={{ width: "150%" }} />
-            </div>
-            <div className="date-end">
-              <p style={{ fontWeight: "700", fontSize: "14px" }}>End date</p>
-              <Input type="date" required style={{ width: "150%" }} />
-            </div>
-          </div>
+            <Input />
+          </Form.Item>
 
-          <div
-            className="time"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
+          <Space.Compact>
+            <Form.Item
+              label="Start Date"
+              name="startDate"
+              rules={[{ required: true, message: "Please select start date" }]}
+              style={{ width: "48%" }}
+            >
+              <Input type="date" />
+            </Form.Item>
+
+            <Form.Item
+              label="End Date"
+              name="endDate"
+              rules={[{ required: true, message: "Please select end date" }]}
+              style={{ width: "48%" }}
+            >
+              <Input type="date" />
+            </Form.Item>
+          </Space.Compact>
+
+          <Space.Compact>
+            <Form.Item
+              label="Start Time"
+              name="startTime"
+              rules={[{ required: true, message: "Please select start time" }]}
+              style={{ width: "48%" }}
+            >
+              <Input type="time" />
+            </Form.Item>
+
+            <Form.Item
+              label="End Time"
+              name="endTime"
+              rules={[{ required: true, message: "Please select end time" }]}
+              style={{ width: "48%" }}
+            >
+              <Input type="time" />
+            </Form.Item>
+          </Space.Compact>
+
+          <Form.Item
+            label="Event Description"
+            name="description"
+            rules={[
+              { required: true, message: "Please enter event description" },
+            ]}
           >
-            <div>
-              <p style={{ fontWeight: "700", fontSize: "14px" }}>Start time</p>
-              <Input type="time" required style={{ width: "186%" }} />
-            </div>
-            <div className="date-time">
-              <p style={{ fontWeight: "700", fontSize: "14px" }}>End time</p>
-              <Input type="time" required style={{ width: "184%" }} />
-            </div>
-          </div>
+            <TextArea rows={4} />
+          </Form.Item>
 
-          <div>
-            <p style={{ fontWeight: "700", fontSize: "14px" }}>
-              Event Description
-            </p>
-            <Input.TextArea placeholder="Please mention here" />
-          </div>
-          <div>
-            <p style={{ fontWeight: "700", fontSize: "14px" }}>
-              Event Thumbnail
-            </p>
-          </div>
-        </div>
+          <Form.Item label="Event Thumbnail" className="upload-button">
+            <Upload
+              listType="picture-card"
+              showUploadList={false}
+              beforeUpload={(file) => {
+                handleFileChange(file);
+                return false;
+              }}
+            >
+              {thumbnail ? (
+                <div className="thumbnail-preview-container">
+                  <img
+                    src={thumbnail}
+                    alt="thumbnail"
+                    className="upload-thumbnail"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <UploadOutlined />
+                  <div style={{ marginTop: 8 }}>Upload</div>
+                </div>
+              )}
+            </Upload>
+            <Typography.Text type="secondary">
+              File size: Up to 5MB. Optimal dimensions: 600x280px.
+            </Typography.Text>
+          </Form.Item>
+        </Form>
       </Modal>
     </>
   );
