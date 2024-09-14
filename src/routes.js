@@ -10,6 +10,8 @@ import VendorLayout from "./components/vendor/Layout/VendorLayout";
 import ManageProductItems from "./components/vendor/MostOderProduct/ManageProductItems";
 import EventPage from "./components/vendor/EventDetail/EventPage";
 import EventVendor from "./components/vendor/Event/EventVendor";
+import TransactionTable from "./components/vendor/Transaction/Transaction";
+import Transaction from "./components/vendor/Transaction/Transaction";
 
 const AppRoutes = () => {
   return (
@@ -69,6 +71,14 @@ const AppRoutes = () => {
         element={
           <VendorLayout>
             <EventVendor />
+          </VendorLayout>
+        }
+      />{" "}
+      <Route
+        path="/transaction"
+        element={
+          <VendorLayout>
+            <Transaction />
           </VendorLayout>
         }
       />
