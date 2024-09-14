@@ -12,27 +12,26 @@ import {
   MenuItem,
   Button,
 } from "@chakra-ui/react";
-import { SearchIcon, BellIcon, InfoIcon, MoonIcon } from "@chakra-ui/icons";
+import { SearchIcon, BellIcon } from "@chakra-ui/icons";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
 
 const HostHeader = ({ collapsed }) => {
   const location = useLocation();
 
-  // Lấy tiêu đề của trang dựa trên đường dẫn hiện tại
   const getPageTitle = () => {
     if (location.pathname.startsWith("/dashboard")) {
       return "Dashboard";
     } else if (location.pathname.startsWith("/events")) {
       return "Event Management";
     }
-    return "Event Information"; // Tiêu đề dự phòng
+    return "Event Information";
   };
 
   return (
     <Box
       as="header"
-      bg="rgba(255, 255, 255, 0.2)" // Nền có độ mờ
+      bg="rgba(255, 255, 255, 0.2)"
       boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
       padding="16px"
       display="flex"
@@ -41,25 +40,22 @@ const HostHeader = ({ collapsed }) => {
       position="sticky"
       top="0"
       zIndex="1000"
-      border="1px solid rgba(200, 200, 200, 0.3)" // Viền nhẹ
-      backdropFilter="blur(12px)" // Hiệu ứng blur
+      border="1px solid rgba(200, 200, 200, 0.3)"
+      backdropFilter="blur(12px)"
       borderRadius="16px"
-      marginLeft="40px" // Dịch header sang phải, tránh chạm vào sidebar
-      width="calc(100% - 75px)" // Tự động điều chỉnh kích thước theo độ rộng của sidebar
+      marginLeft="40px"
+      width="calc(100% - 75px)"
     >
-      <Flex alignItems="center" ml={8}>
-        {" "}
-        {/* Thêm khoảng cách để tránh bị dính vào sidebar */}
-        <Text fontSize="sm" fontWeight="medium" mr={4} color="gray.500">
+      <Flex direction="column" alignItems="flex-start" ml={8}>
+        <Text fontSize="sm" fontWeight="medium" color="gray.500" mb="2px">
           Menu / {getPageTitle()}
         </Text>
-        <Text fontSize="2xl" fontWeight="bold" color="gray.800">
+        <Text fontSize="2xl" fontWeight="bold" color="#1B2559">
           {getPageTitle()}
         </Text>
       </Flex>
 
       <Flex alignItems="center">
-        {/* Ô tìm kiếm */}
         <Box position="relative" mr={4} width="240px">
           <Input
             placeholder="Search..."
@@ -77,9 +73,9 @@ const HostHeader = ({ collapsed }) => {
           variant="ghost"
           fontSize="20px"
           color="gray.600"
-          mr={1}
+          mr={4}
         />
-        {/* Dropdown cho Avatar người dùng */}
+
         <Menu>
           <MenuButton
             as={Button}

@@ -31,7 +31,7 @@ const Event = () => {
           response.data.filter(
             (event) => event.details?.status?.toLowerCase() === "on-going"
           )
-        ); // Apply filter for 'On-going' when component loads
+        );
       })
       .catch((error) => {
         console.error("There was an error fetching the events!", error);
@@ -54,32 +54,27 @@ const Event = () => {
 
     switch (key) {
       case "1":
-        // Filter for 'On-going' events
         filtered = events.filter(
           (event) => event.details?.status?.toLowerCase() === "on-going"
         );
         break;
       case "2":
-        // Filter for 'Running' events
         filtered = events.filter(
           (event) => event.details?.status?.toLowerCase() === "running"
         );
         break;
       case "3":
-        // Filter for 'Cancelled' events
         filtered = events.filter(
           (event) => event.details?.status?.toLowerCase() === "cancelled"
         );
         break;
       case "5":
-        // Filter for 'Trash' events
         filtered = events.filter(
           (event) => event.details?.status?.toLowerCase() === "trash"
         );
         break;
       case "4":
       default:
-        // Show all events
         filtered = events;
         break;
     }
@@ -122,15 +117,24 @@ const Event = () => {
               style={{ cursor: "pointer", fontSize: "20px" }}
             />
           )}
-
-          <h1 className="headername">
-            <b>Events</b>
+          <h1
+            className="headername"
+            style={{ fontSize: "22px", fontWeight: "700", color: "#1B2559" }}
+          >
+            Events
           </h1>
         </div>
         {!selectedEvent && (
           <Button
             type="primary"
             className="create-event-button"
+            style={{
+              backgroundColor: "#3d7eff",
+              borderRadius: "8px",
+              fontWeight: "700",
+              fontSize: "14px",
+              padding: "8px 16px",
+            }}
             onClick={showModal}
           >
             + Create Event
@@ -140,13 +144,29 @@ const Event = () => {
 
       {!selectedEvent && (
         <>
-          <Tabs defaultActiveKey="1" items={items} onChange={handleTabChange} />
+          <Tabs
+            defaultActiveKey="1"
+            items={items}
+            onChange={handleTabChange}
+            style={{
+              marginBottom: "24px",
+              fontWeight: "700",
+              fontSize: "16px",
+            }}
+          />
           <Input
             placeholder="Search..."
             className="inputsearch"
             suffix={<SearchIcon />}
             value={searchTerm}
             onChange={handleSearch}
+            style={{
+              borderRadius: "10px",
+              height: "32px",
+              width: "40%",
+              fontWeight: "500",
+              fontSize: "14px",
+            }}
           />
         </>
       )}
@@ -167,17 +187,45 @@ const Event = () => {
               <div className="event-info-container">
                 <div className="event-date">
                   <div className="event-date-box">
-                    <span className="event-date-day">
+                    <span
+                      className="event-date-day"
+                      style={{
+                        fontSize: "18px",
+                        fontWeight: "700",
+                        color: "#4A90E2",
+                      }}
+                    >
                       {event.startDate.split(" ")[0]}
                     </span>
-                    <span className="event-date-month">
+                    <span
+                      className="event-date-month"
+                      style={{ fontSize: "14px", color: "#4A90E2" }}
+                    >
                       {event.startDate.split(" ")[1]}
                     </span>
                   </div>
                 </div>
                 <div className="event-details">
-                  <h3 className="event-title">{event.eventName}</h3>
-                  <p className="event-description">{event.description}</p>
+                  <h3
+                    className="event-title"
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: "700",
+                      color: "#002766",
+                    }}
+                  >
+                    {event.eventName}
+                  </h3>
+                  <p
+                    className="event-description"
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      color: "#1B2559",
+                    }}
+                  >
+                    {event.description}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -190,10 +238,19 @@ const Event = () => {
         visible={isModalVisible}
         onCancel={handleCancel}
         footer={[
-          <Button key="create" type="primary" onClick={handleCreate}>
+          <Button
+            key="create"
+            type="primary"
+            onClick={handleCreate}
+            style={{ fontWeight: "700", fontSize: "14px" }}
+          >
             Create
           </Button>,
-          <Button key="cancel" onClick={handleCancel}>
+          <Button
+            key="cancel"
+            onClick={handleCancel}
+            style={{ fontWeight: "700", fontSize: "14px" }}
+          >
             Cancel
           </Button>,
         ]}
@@ -201,7 +258,7 @@ const Event = () => {
         <Divider />
         <div>
           <div>
-            <p>Event Name </p>
+            <p style={{ fontWeight: "700", fontSize: "14px" }}>Event Name </p>
             <Input required />
           </div>
 
@@ -214,11 +271,11 @@ const Event = () => {
             }}
           >
             <div>
-              <p>Start date</p>
+              <p style={{ fontWeight: "700", fontSize: "14px" }}>Start date</p>
               <Input type="date" required style={{ width: "150%" }} />
             </div>
             <div className="date-end">
-              <p>End date</p>
+              <p style={{ fontWeight: "700", fontSize: "14px" }}>End date</p>
               <Input type="date" required style={{ width: "150%" }} />
             </div>
           </div>
@@ -232,21 +289,25 @@ const Event = () => {
             }}
           >
             <div>
-              <p>Start time</p>
+              <p style={{ fontWeight: "700", fontSize: "14px" }}>Start time</p>
               <Input type="time" required style={{ width: "186%" }} />
             </div>
             <div className="date-time">
-              <p>End time</p>
+              <p style={{ fontWeight: "700", fontSize: "14px" }}>End time</p>
               <Input type="time" required style={{ width: "184%" }} />
             </div>
           </div>
 
           <div>
-            <p>Event Description</p>
+            <p style={{ fontWeight: "700", fontSize: "14px" }}>
+              Event Description
+            </p>
             <Input.TextArea placeholder="Please mention here" />
           </div>
           <div>
-            <p>Event Thumbnail</p>
+            <p style={{ fontWeight: "700", fontSize: "14px" }}>
+              Event Thumbnail
+            </p>
           </div>
         </div>
       </Modal>
