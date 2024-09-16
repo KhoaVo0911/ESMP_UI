@@ -31,6 +31,12 @@ const VendorHeader = ({ collapsed }) => {
       return "Transaction";
     } else if (location.pathname.startsWith("/eventsVendor")) {
       return "Events List";
+    } else if (location.pathname.startsWith("/shop")) {
+      return "Shop";
+    } else if (location.pathname.startsWith("/ordered-list")) {
+      return "Shop";
+    } else if (location.pathname.startsWith("/payment")) {
+      return "Shop";
     }
 
     return "Event Information"; // Tiêu đề dự phòng

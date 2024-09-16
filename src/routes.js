@@ -13,7 +13,6 @@ import EventPage from "./components/vendor/EventDetail/EventPage";
 import EventVendor from "./components/vendor/Event/EventVendor";
 import EventEnrolled from "./components/vendor/EventDetail/EnrolledPage";
 import Shop from "./components/vendor/Shop/Shop";
-import ProductTabs from "./components/vendor/Shop/ProductsTabs";
 import OrderedList from "./components/vendor/Shop/OrderedList";
 import Payment from "./components/vendor/Shop/Payment";
 

@@ -3,15 +3,10 @@ import { Layout, Menu } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import EventIcon from "@mui/icons-material/Event";
-import SettingsIcon from "@mui/icons-material/Settings";
-import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import InfoIcon from "@mui/icons-material/Info";
-import LocalGroceryStoreIcon from "@mui/icons-material/LocalGroceryStore";
-import logo from "../../../assets/images/logo_EIPS.png";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import FastfoodIcon from "@mui/icons-material/Fastfood";
 import PaidIcon from "@mui/icons-material/Paid";
+import logo from "../../../assets/images/logo_EIPS.png";
 
 const { Sider } = Layout;
 
@@ -32,31 +27,9 @@ const VendorSideBar = ({ collapsed }) => {
       setSelectedMenuItem("4");
     } else if (location.pathname.startsWith("/transaction")) {
       setSelectedMenuItem("5");
-    } else if (location.pathname.startsWith("/eventpage")) {
-      setSelectedMenuItem("4"); // Đảm bảo rằng mặc định chọn Event Info
     }
   }, [location.pathname]);
 
-  // Sidebar items cho event detail
-  const eventDetailItems = [
-    {
-      type: "group",
-      children: [
-        {
-          key: "1",
-          icon: <InfoIcon />,
-          label: "Event info",
-        },
-        {
-          key: "2",
-          icon: <LocalGroceryStoreIcon />,
-          label: "Transaction",
-        },
-      ],
-    },
-  ];
-
-  // Sidebar items mặc định
   const defaultItems = [
     {
       type: "group",
@@ -100,11 +73,11 @@ const VendorSideBar = ({ collapsed }) => {
       collapsible
       collapsed={collapsed}
       style={{
-        backgroundColor: "#fff" /* Nền màu trắng */,
+        backgroundColor: "#fff",
         height: "135vh",
         position: "sticky",
         top: 0,
-        boxShadow: "2px 0 12px rgba(0, 0, 0, 0.1)" /* Đổ bóng nhẹ */,
+        boxShadow: "2px 0 12px rgba(0, 0, 0, 0.1)",
       }}
     >
       <img
@@ -118,16 +91,33 @@ const VendorSideBar = ({ collapsed }) => {
         }}
       />
       <Menu
-        style={{ backgroundColor: "#fff", color: "#3A4374" }}
+        style={{
+          backgroundColor: "#fff",
+          color: "#3A4374",
+        }}
         mode="inline"
         selectedKeys={[selectedMenuItem]}
         onClick={handleMenuClick}
-        items={
-          location.pathname.startsWith("/eventpage")
-            ? defaultItems
-            : defaultItems
-        }
-      />
+        theme="light"
+      >
+        {defaultItems[0].children.map((menuItem) => (
+          <Menu.Item
+            key={menuItem.key}
+            style={{
+              whiteSpace: "normal",
+              wordWrap: "break-word",
+              fontSize: "16px", // Chữ to hơn
+              fontWeight: "bold", // In đậm
+              height: "auto", // Đảm bảo item có chiều cao tự động theo nội dung
+              padding: "10px 24px", // Điều chỉnh khoảng cách padding
+            }}
+          >
+            {menuItem.icon}
+            {/* Thêm khoảng cách giữa icon và chữ */}
+            <span style={{ marginLeft: "10px" }}>{menuItem.label}</span>
+          </Menu.Item>
+        ))}
+      </Menu>
     </Sider>
   );
 };
