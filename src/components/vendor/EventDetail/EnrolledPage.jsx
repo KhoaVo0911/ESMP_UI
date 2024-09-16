@@ -3,30 +3,26 @@ import {
   Box,
   Grid,
   Text,
-  Button,
   Image,
   VStack,
   HStack,
-  useDisclosure,
   Divider,
+  Button,
 } from "@chakra-ui/react";
-import { ArrowBack } from "@mui/icons-material";
-import { useLocation, useNavigate } from "react-router-dom";
-import SelectBooth from "./SelectBooth"; // Import component SelectBooth
+import SelectBooth from "./SelectBooth"; // Assuming you already have this component
+import { useNavigate } from "react-router-dom"; // For navigation
 
-const EventPage = () => {
-  const location = useLocation();
-  const { event } = location.state || {};
+const EventEnrolled = () => {
   const navigate = useNavigate();
-  const { isOpen, onOpen, onClose } = useDisclosure(); // Modal control
+  const [boothData, setBoothData] = useState([
+    { id: 1, status: "available" },
+    { id: 2, status: "available" },
+    { id: 3, status: "unavailable" },
+    { id: 4, status: "available" },
+  ]); // Example booth data
 
-  const handleBackClick = () => {
-    navigate("/eventsVendor", { state: { selectedMenuItem: "4" } });
-  };
-
-  const handleConfirmBoothSelection = () => {
-    onClose(); // Close the modal after confirming booth selection
-    navigate("/eventenrolled"); // Navigate to the event enrolled page
+  const handleShopClick = () => {
+    navigate("/shop");
   };
 
   const groups = [
@@ -39,7 +35,7 @@ const EventPage = () => {
     },
     {
       id: 2,
-      name: "Câu Lạc Bộ Truyền Thống Cócc Sài Gòn",
+      name: "Câu Lạc Bộ Truyền Thống Cóc Sài Gòn",
       floor: "2",
       image:
         "https://scontent.fsgn5-10.fna.fbcdn.net/v/t39.30808-6/432447864_743677024565608_7538420170834029906_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=NWKqqhr3J2AQ7kNvgGI-WRW&_nc_ht=scontent.fsgn5-10.fna&oh=00_AYBMJEex-S8qsZaF6bf8jU4Z3nIooVfj2k7mLzIGwYVGbQ&oe=66E84CFE",
@@ -56,21 +52,10 @@ const EventPage = () => {
   return (
     <Box
       padding="20px"
-      bgGradient="linear(to-r, #d4f1f4, #d4f1f4, #f0e5d8)"
+      bgGradient="linear(to-r, #d4f1f4, #f0e5d8)"
       minH="100vh"
     >
-      {/* Back Button */}
-      <ArrowBack
-        onClick={handleBackClick}
-        style={{
-          cursor: "pointer",
-          fontSize: "24px",
-          marginRight: "10px",
-          marginBottom: "20px",
-        }}
-      />
-
-      {/* Event Title Section */}
+      {/* Event Introduction */}
       <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={10} mb={10}>
         <VStack align="flex-start" spacing={10}>
           <Text fontSize="4xl" fontWeight="bold" color="black">
@@ -91,8 +76,8 @@ const EventPage = () => {
             </Text>
           </div>
 
-          <Button colorScheme="teal" size="lg" onClick={onOpen}>
-            ENROLL
+          <Button colorScheme="teal" size="lg" onClick={handleShopClick}>
+            Shop
           </Button>
         </VStack>
         <Image
@@ -103,12 +88,22 @@ const EventPage = () => {
         />
       </Grid>
 
-      {/* Divider between Event Title and Shops */}
-      <Divider mb={10} />
+      <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
-      {/* Existing Shops Section */}
+      {/* Introduction Text */}
+      <Text fontSize="md" color="gray.600" mb={10}>
+        Welcome to the Mid-Autumn Festival 2024, where we come together to
+        celebrate the full moon and immerse ourselves in the warm, vibrant
+        atmosphere of autumn. With the theme "Harmony Under the Moonlight," this
+        year's event promises to bring you and your family a culturally rich and
+        meaningful experience.
+      </Text>
+
+      <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
+
+      {/* Existing Shops */}
       <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
-        Existing Shops
+        Existing Shop
       </Text>
       <Grid
         templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
@@ -132,7 +127,7 @@ const EventPage = () => {
               src={group.image}
               alt={group.name}
               height="200px"
-              width={"100%"}
+              width="100%"
               objectFit="cover"
             />
             <Box p={4}>
@@ -149,16 +144,37 @@ const EventPage = () => {
         ))}
       </Grid>
 
-      {/* Divider between Shops and Select Booth */}
-      <Divider mb={10} />
+      <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
-      {/* Popup Select Booth */}
-      <SelectBooth isPopup={true} isOpen={isOpen} onClose={onClose} />
+      {/* Select Booth Section */}
+      <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
+        Select Booth
+      </Text>
+      {/* Render the SelectBooth component directly in the page */}
+      <Box>
+        <SelectBooth boothData={boothData} setBoothData={setBoothData} />
+      </Box>
 
-      {/* Divider between Select Booth and any other future content */}
-      <Divider mb={10} />
+      <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
+
+      {/* Location Section */}
+      <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
+        Location
+      </Text>
+      <div style={{ width: "100%", height: "300px", marginBottom: "20px" }}>
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.6100105370224!2d106.8073080746704!3d10.84112758931162!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752731176b07b1%3A0xb752b24b379bae5e!2sFPT%20University%20HCMC!5e0!3m2!1sen!2s!4v1726308048313!5m2!1sen!2s"
+          width="100%"
+          height="100%"
+          style={{ border: 0 }}
+          allowFullScreen=""
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          title="FPT University HCMC Map"
+        ></iframe>
+      </div>
     </Box>
   );
 };
 
-export default EventPage;
+export default EventEnrolled;

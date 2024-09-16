@@ -23,11 +23,16 @@ const VendorHeader = ({ collapsed }) => {
   const getPageTitle = () => {
     if (location.pathname.startsWith("/dashboard")) {
       return "Dashboard";
-    } else if (location.pathname.startsWith("/listProducts")) {
-      return "List Products";
+    } else if (location.pathname.startsWith("/productsList")) {
+      return "Producst List";
     } else if (location.pathname.startsWith("/ManageProductItems")) {
       return "Manage Product Items";
+    } else if (location.pathname.startsWith("/Transaction")) {
+      return "Transaction";
+    } else if (location.pathname.startsWith("/eventsVendor")) {
+      return "Events List";
     }
+
     return "Event Information"; // Tiêu đề dự phòng
   };
 

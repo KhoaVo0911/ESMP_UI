@@ -11,6 +11,7 @@ import LocalGroceryStoreIcon from "@mui/icons-material/LocalGroceryStore";
 import logo from "../../../assets/images/logo_EIPS.png";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import FastfoodIcon from "@mui/icons-material/Fastfood";
+import PaidIcon from "@mui/icons-material/Paid";
 
 const { Sider } = Layout;
 
@@ -29,7 +30,7 @@ const VendorSideBar = ({ collapsed }) => {
       setSelectedMenuItem("3");
     } else if (location.pathname.startsWith("/eventsVendor")) {
       setSelectedMenuItem("4");
-    } else if (location.pathname.startsWith("/accounts")) {
+    } else if (location.pathname.startsWith("/transaction")) {
       setSelectedMenuItem("5");
     } else if (location.pathname.startsWith("/eventpage")) {
       setSelectedMenuItem("4"); // Đảm bảo rằng mặc định chọn Event Info
@@ -62,9 +63,10 @@ const VendorSideBar = ({ collapsed }) => {
       label: <h3>Menu</h3>,
       children: [
         { key: "1", icon: <DashboardIcon />, label: "Dashboard" },
-        { key: "2", icon: <FormatListBulletedIcon />, label: "List Products" },
+        { key: "2", icon: <FormatListBulletedIcon />, label: "Products List" },
         { key: "3", icon: <FastfoodIcon />, label: "Manage Product Items" },
         { key: "4", icon: <EventIcon />, label: "Events" },
+        { key: "5", icon: <PaidIcon />, label: "Transaction" },
       ],
     },
   ];
@@ -76,7 +78,7 @@ const VendorSideBar = ({ collapsed }) => {
         navigate("/dashboardVendor");
         break;
       case "2":
-        navigate("/listProducts");
+        navigate("/productsList");
         break;
       case "3":
         navigate("/ManageProductItems");
@@ -85,7 +87,7 @@ const VendorSideBar = ({ collapsed }) => {
         navigate("/eventsVendor");
         break;
       case "5":
-        navigate("/accounts");
+        navigate("/Transaction");
         break;
       default:
         navigate("/dashboardVendor");
