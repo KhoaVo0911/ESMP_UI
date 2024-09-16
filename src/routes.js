@@ -117,6 +117,22 @@ const AppRoutes = () => {
           </HostLayout>
         }
       />
+      <Route
+        path="/accounts"
+        element={
+          <HostLayout>
+            <AccountManagement />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <HostLayout>
+            <Settings />
+          </HostLayout>
+        }
+      />
     </Routes>
   );
 };
