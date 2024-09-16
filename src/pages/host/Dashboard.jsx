@@ -1,11 +1,11 @@
 import React from "react";
 import { Box, Grid, Text } from "@chakra-ui/react";
-import RevenueChart from "../components/chart/RevenueChart";
-import MostOrderedProduct from "../components/host/product/MostOrderedProduct";
-import EventRanking from "../components/host/ranking/EventRanking";
-import StatisticsNumbers from "../components/host/stats/StatisticsNumbers";
-import TopVendor from "../components/host/vendor/TopVendor";
-import HostLayout from "../layouts/host/HostLayout";
+import RevenueChart from "../../components/host/chart/RevenueChart";
+import MostOrderedProduct from "../../components/host/product/MostOrderedProduct";
+import EventRanking from "../../components/host/ranking/EventRanking";
+import StatisticsNumbers from "../../components/host/stats/StatisticsNumbers";
+import TopVendor from "../../components/host/vendor/TopVendor";
+import HostLayout from "../../layouts/host/HostLayout";
 
 const Dashboard = () => {
   return (
