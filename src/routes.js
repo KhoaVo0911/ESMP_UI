@@ -12,7 +12,9 @@ import ManageProductItems from "./components/vendor/MostOderProduct/ManageProduc
 import EventPage from "./components/vendor/EventDetail/EventPage";
 import EventVendor from "./components/vendor/Event/EventVendor";
 import TransactionTable from "./components/vendor/Transaction/Transaction";
-import Transaction from "./components/vendor/Transaction/Transaction";
+import AccountManagement from "./pages/host/Account";
+import Settings from "./pages/host/Settings";
+// import Transaction from "./components/vendor/Transaction/Transaction";
 
 const AppRoutes = () => {
   return (
@@ -71,7 +73,7 @@ const AppRoutes = () => {
         path="/transaction"
         element={
           <VendorLayout>
-            <Transaction />
+            <TransactionTable />
           </VendorLayout>
         }
       />
@@ -80,6 +82,22 @@ const AppRoutes = () => {
         element={
           <HostLayout>
             <Transaction />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/accounts"
+        element={
+          <HostLayout>
+            <AccountManagement />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <HostLayout>
+            <Settings />
           </HostLayout>
         }
       />

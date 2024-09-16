@@ -221,7 +221,7 @@ const Event = () => {
               borderRadius: "10px",
               height: "32px",
               width: "40%",
-              fontWeight: "500",
+              fontWeight: "200",
               fontSize: "14px",
             }}
           />

@@ -12,7 +12,7 @@ import {
   MenuItem,
   Button,
 } from "@chakra-ui/react";
-import { SearchIcon, BellIcon } from "@chakra-ui/icons";
+import { BellIcon } from "@chakra-ui/icons";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
 
@@ -24,6 +24,8 @@ const HostHeader = ({ collapsed }) => {
       return "Dashboard";
     } else if (location.pathname.startsWith("/events")) {
       return "Event Management";
+    } else if (location.pathname.startsWith("/accounts")) {
+      return "Account Managers";
     }
     return "Event Information";
   };
@@ -56,17 +58,6 @@ const HostHeader = ({ collapsed }) => {
       </Flex>
 
       <Flex alignItems="center">
-        <Box position="relative" mr={4} width="240px">
-          <Input
-            placeholder="Search..."
-            size="md"
-            borderRadius="full"
-            paddingLeft="40px"
-            boxShadow="sm"
-            _placeholder={{ color: "gray.400" }}
-          />
-          <SearchIcon position="absolute" left={4} top={3} color="gray.400" />
-        </Box>
         <IconButton
           aria-label="Notifications"
           icon={<BellIcon />}
