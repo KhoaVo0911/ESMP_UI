@@ -15,6 +15,9 @@ import EventEnrolled from "./components/vendor/EventDetail/EnrolledPage";
 import Shop from "./components/vendor/Shop/Shop";
 import OrderedList from "./components/vendor/Shop/OrderedList";
 import Payment from "./components/vendor/Shop/Payment";
+import AccountManagement from "./pages/host/Account";
+import Settings from "./pages/host/Settings";
+import PackagePage from "./pages/host/Package";
 
 const AppRoutes = () => {
   return (
@@ -130,6 +133,14 @@ const AppRoutes = () => {
         element={
           <HostLayout>
             <Settings />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/packages"
+        element={
+          <HostLayout>
+            <PackagePage />
           </HostLayout>
         }
       />

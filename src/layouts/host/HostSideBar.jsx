@@ -23,7 +23,7 @@ const HostSideBar = ({ collapsed }) => {
       setSelectedMenuItem("2");
     } else if (location.pathname.startsWith("/settings")) {
       setSelectedMenuItem("3");
-    } else if (location.pathname.startsWith("/pricing")) {
+    } else if (location.pathname.startsWith("/packages")) {
       setSelectedMenuItem("4");
     } else if (location.pathname.startsWith("/accounts")) {
       setSelectedMenuItem("5");
@@ -139,7 +139,7 @@ const HostSideBar = ({ collapsed }) => {
                 color: selectedMenuItem === "4" ? "#0d6efd" : "#4A5568",
               }}
             >
-              Pricing
+              Package
             </span>
           ),
         },
@@ -160,7 +160,7 @@ const HostSideBar = ({ collapsed }) => {
         navigate("/settings");
         break;
       case "4":
-        navigate("/pricing");
+        navigate("/packages");
         break;
       case "5":
         navigate("/accounts");
