@@ -18,6 +18,7 @@ import Payment from "./components/vendor/Shop/Payment";
 import AccountManagement from "./pages/host/Account";
 import Settings from "./pages/host/Settings";
 import PackagePage from "./pages/host/Package";
+import ManageProduct from "./pages/host/ManageProduct";
 
 const AppRoutes = () => {
   return (
@@ -117,6 +118,14 @@ const AppRoutes = () => {
         element={
           <HostLayout>
             <Transaction />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/manage-product"
+        element={
+          <HostLayout>
+            <ManageProduct />
           </HostLayout>
         }
       />
