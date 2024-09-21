@@ -19,10 +19,12 @@ import AccountManagement from "./pages/host/Account";
 import Settings from "./pages/host/Settings";
 import PackagePage from "./pages/host/Package";
 import ManageProduct from "./pages/host/ManageProduct";
+import LoginPage from "./components/Login/Login";
 
 const AppRoutes = () => {
   return (
     <Routes>
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/DashboardVendor" element={<DashboardVendor />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route

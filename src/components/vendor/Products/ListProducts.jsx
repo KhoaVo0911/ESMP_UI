@@ -1,27 +1,59 @@
-import React, { useState } from "react";
-import { Table, Modal, Input, Form, Button as AntdButton, message } from "antd";
-import { Button, Box, HStack, Text } from "@chakra-ui/react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import {
+  Table,
+  Modal,
+  Input,
+  Form,
+  Button as AntdButton,
+  Select,
+  message,
+} from "antd";
+import { Box, HStack, Text, VStack, IconButton } from "@chakra-ui/react";
 import { Delete, Edit } from "@mui/icons-material";
+import { SearchOutlined } from "@ant-design/icons";
+
+const { Option } = Select;
 
 const ProductList = () => {
-  const [data, setData] = useState([
-    { key: "1", name: "Sushi", quantity: 111, price: "10.000 VND" },
-    { key: "2", name: "Pizza", quantity: 222, price: "20.000 VND" },
-    { key: "3", name: "Burger", quantity: 333, price: "30.000 VND" },
-    { key: "4", name: "Bánh mì", quantity: 123, price: "15.000 VND" },
-    { key: "5", name: "Cơm tấm", quantity: 100, price: "25.000 VND" },
-    { key: "6", name: "Phở", quantity: 50, price: "35.000 VND" },
-    { key: "7", name: "Bún bò Huế", quantity: 20, price: "45.000 VND" },
-    { key: "8", name: "Bún đậu mắm tôm", quantity: 11, price: "40.000 VND" },
-    { key: "9", name: "Bún riêu", quantity: 10, price: "50.000 VND" },
-    { key: "10", name: "Gà rán", quantity: 100, price: "60.000 VND" },
-  ]);
-
+  const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState("name");
 
-  // Mở modal để tạo/sửa sản phẩm
+  // Fetch data from API
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        "https://668e540abf9912d4c92dcd67.mockapi.io/products"
+      );
+      setData(response.data);
+      setFilteredData(response.data);
+    } catch (error) {
+      message.error("Lỗi khi lấy dữ liệu từ API!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Function to format price as VND
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
+
+  // Show modal to create/edit product
   const showModal = (product = null) => {
     setEditingProduct(product);
     if (product) {
@@ -32,50 +64,95 @@ const ProductList = () => {
     setIsModalOpen(true);
   };
 
-  // Đóng modal
+  // Close modal
   const handleCancel = () => {
     setIsModalOpen(false);
     setEditingProduct(null);
   };
 
-  // Lưu sản phẩm mới hoặc cập nhật sản phẩm
-  const handleSave = () => {
-    form
-      .validateFields()
-      .then((values) => {
-        if (editingProduct) {
-          // Sửa sản phẩm
-          setData(
-            data.map((item) =>
-              item.key === editingProduct.key ? { ...item, ...values } : item
-            )
-          );
-          message.success("Sản phẩm đã được cập nhật!");
-        } else {
-          // Tạo sản phẩm mới
-          const newProduct = {
-            ...values,
-            key: Date.now().toString(),
-            price: `${values.price} VND`,
-          };
-          setData([...data, newProduct]);
-          message.success("Sản phẩm mới đã được thêm!");
-        }
-        setIsModalOpen(false);
-        form.resetFields();
-      })
-      .catch((info) => {
-        console.log("Validate Failed:", info);
-      });
+  // Save new or updated product
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      values.price = parseFloat(values.price.replace(/,/g, "")); // Ensure price is a number
+
+      if (editingProduct) {
+        // Update product
+        await axios.put(
+          `https://668e540abf9912d4c92dcd67.mockapi.io/products/${editingProduct.id}`,
+          values
+        );
+        setData(
+          data.map((item) =>
+            item.id === editingProduct.id ? { ...item, ...values } : item
+          )
+        );
+        setFilteredData(
+          filteredData.map((item) =>
+            item.id === editingProduct.id ? { ...item, ...values } : item
+          )
+        );
+        message.success("Sản phẩm đã được cập nhật!");
+      } else {
+        // Create new product
+        const response = await axios.post(
+          "https://668e540abf9912d4c92dcd67.mockapi.io/products",
+          values
+        );
+        setData([...data, response.data]);
+        setFilteredData([...filteredData, response.data]);
+        message.success("Sản phẩm mới đã được thêm!");
+      }
+      setIsModalOpen(false);
+      form.resetFields();
+    } catch (error) {
+      message.error("Đã xảy ra lỗi!");
+    }
   };
 
-  // Xóa sản phẩm
-  const handleDelete = (key) => {
-    setData(data.filter((item) => item.key !== key));
-    message.success("Sản phẩm đã được xóa!");
+  // Delete product
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(
+        `https://668e540abf9912d4c92dcd67.mockapi.io/products/${id}`
+      );
+      setData(data.filter((item) => item.id !== id));
+      setFilteredData(filteredData.filter((item) => item.id !== id));
+      message.success("Sản phẩm đã được xóa!");
+    } catch (error) {
+      message.error("Đã xảy ra lỗi khi xóa sản phẩm!");
+    }
   };
 
-  // Cấu hình cột của bảng
+  // Search for products
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+    const filtered = data.filter((item) =>
+      item.name.toLowerCase().includes(value)
+    );
+    setFilteredData(filtered);
+  };
+
+  // Sort products
+  const handleSort = (value) => {
+    setSortOrder(value);
+    const sorted = [...filteredData].sort((a, b) => {
+      if (value === "name") {
+        return a.name.localeCompare(b.name);
+      } else if (value === "quantity") {
+        return a.quantity - b.quantity;
+      } else {
+        return (
+          parseFloat(a.price.replace(/\./g, "")) -
+          parseFloat(b.price.replace(/\./g, ""))
+        );
+      }
+    });
+    setFilteredData(sorted);
+  };
+
+  // Table columns configuration
   const columns = [
     {
       title: "Product Name",
@@ -96,94 +173,115 @@ const ProductList = () => {
       title: "Price",
       dataIndex: "price",
       key: "price",
+      render: (price) => <Text>{formatPrice(price)}</Text>, // Format price as VND
     },
     {
       title: "Actions",
       key: "actions",
       render: (record) => (
         <HStack spacing={2}>
-          <Button
+          <IconButton
+            aria-label="Edit"
+            icon={<Edit />}
             colorScheme="blue"
             size="sm"
-            leftIcon={<Edit />}
             onClick={() => showModal(record)}
-          >
-            Edit
-          </Button>
-          <Button
+          />
+          <IconButton
+            aria-label="Delete"
+            icon={<Delete />}
             colorScheme="red"
             size="sm"
-            leftIcon={<Delete />}
-            onClick={() => handleDelete(record.key)}
-          >
-            Delete
-          </Button>
+            onClick={() => handleDelete(record.id)}
+          />
         </HStack>
       ),
     },
   ];
 
   return (
-    <Box padding={5} display="flex" justifyContent="center">
-      <Box width="80%">
-        <HStack justifyContent="space-between" marginBottom={4}>
-          <Text fontSize="2xl" fontWeight="bold">
-            Products
-          </Text>
-          <AntdButton
-            type="primary"
-            style={{ backgroundColor: "#3f51b5" }}
-            onClick={() => showModal()}
-          >
-            + CREATE PRODUCTS
-          </AntdButton>
-        </HStack>
+    <Box padding={5} display="flex" flexDirection="column" alignItems="center">
+      <VStack width="80%" spacing={5}>
+        <Text fontSize="2xl" fontWeight="bold">
+          List of Products
+        </Text>
+
+        <Box display="flex" justifyContent="space-between" width="100%">
+          <HStack>
+            <Input
+              placeholder="Search a product..."
+              value={searchTerm}
+              onChange={handleSearch}
+              prefix={<SearchOutlined />}
+              style={{ width: "300px" }}
+            />
+          </HStack>
+          <HStack>
+            <Select
+              defaultValue="name"
+              style={{ width: 120 }}
+              onChange={handleSort}
+            >
+              <Option value="name">Sort by Name</Option>
+              <Option value="quantity">Sort by Quantity</Option>
+              <Option value="price">Sort by Price</Option>
+            </Select>
+            <AntdButton
+              type="primary"
+              style={{ backgroundColor: "#3f51b5" }}
+              onClick={() => showModal()}
+            >
+              + Add new product
+            </AntdButton>
+          </HStack>
+        </Box>
         <Table
           columns={columns}
-          dataSource={data}
-          pagination={false}
+          dataSource={filteredData}
+          pagination={{
+            pageSize: 10, // Show a maximum of 10 products per page
+          }}
           bordered
-          rowKey="key"
-          style={{ textAlign: "center" }}
+          rowKey="id"
+          style={{ textAlign: "center", marginTop: "20px", width: "100%" }}
+          loading={loading}
         />
+      </VStack>
 
-        {/* Modal tạo/sửa sản phẩm */}
-        <Modal
-          title={editingProduct ? "Edit Product" : "Create Product"}
-          visible={isModalOpen}
-          onCancel={handleCancel}
-          onOk={handleSave}
-          okText={editingProduct ? "Update" : "Create"}
-        >
-          <Form form={form} layout="vertical">
-            <Form.Item
-              name="name"
-              label="Product Name"
-              rules={[
-                { required: true, message: "Please input the product name!" },
-              ]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              name="quantity"
-              label="Quantity"
-              rules={[
-                { required: true, message: "Please input the quantity!" },
-              ]}
-            >
-              <Input type="number" />
-            </Form.Item>
-            <Form.Item
-              name="price"
-              label="Price (VND)"
-              rules={[{ required: true, message: "Please input the price!" }]}
-            >
-              <Input />
-            </Form.Item>
-          </Form>
-        </Modal>
-      </Box>
+      {/* Modal to create/edit product */}
+      <Modal
+        title={editingProduct ? "Edit Product" : "Create Product"}
+        visible={isModalOpen}
+        onCancel={handleCancel}
+        onOk={handleSave}
+        okText={editingProduct ? "Update" : "Create"}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="name"
+            label="Product Name"
+            rules={[
+              { required: true, message: "Please input the product name!" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="quantity"
+            label="Quantity"
+            rules={[{ required: true, message: "Please input the quantity!" }]}
+          >
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item
+            name="price"
+            label="Price (VND)"
+            rules={[{ required: true, message: "Please input the price!" }]}
+          >
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Box>
   );
 };
