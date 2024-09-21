@@ -1,22 +1,24 @@
 import React from "react";
-import "./App.css";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend"; // Giữ HTML5Backend
 import { BrowserRouter as Router } from "react-router-dom";
 import { ChakraProvider, Box } from "@chakra-ui/react";
 import { AnimatePresence } from "framer-motion";
-import AppRoutes from "./routes"; // Import your routes
-import theme from "./theme/theme"; // Import the custom Chakra UI theme you shared
+import AppRoutes from "./routes"; // Import routes của bạn
+import theme from "./theme/theme"; // Import theme từ Chakra UI
 
 function App() {
   return (
     <ChakraProvider theme={theme}>
-      <Router>
-        {/* Thay exitBeforeEnter bằng mode="wait" */}
-        <AnimatePresence mode="wait">
-          <Box>
-            <AppRoutes />
-          </Box>
-        </AnimatePresence>
-      </Router>
+      <DndProvider backend={HTML5Backend}>
+        <Router>
+          <AnimatePresence mode="wait">
+            <Box>
+              <AppRoutes />
+            </Box>
+          </AnimatePresence>
+        </Router>
+      </DndProvider>
     </ChakraProvider>
   );
 }

@@ -14,6 +14,8 @@ import EventVendor from "./components/vendor/Event/EventVendor";
 import TransactionTable from "./components/vendor/Transaction/Transaction";
 import AccountManagement from "./pages/host/Account";
 import Settings from "./pages/host/Settings";
+import ViewWebsitePage from "./pages/host/ViewWebsitePage";
+import BoothPlan from "./pages/host/BoothPlan";
 // import Transaction from "./components/vendor/Transaction/Transaction";
 
 const AppRoutes = () => {
@@ -86,6 +88,14 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/event/booth-plan"
+        element={
+          <HostLayout>
+            <BoothPlan />
+          </HostLayout>
+        }
+      />
+      <Route
         path="/accounts"
         element={
           <HostLayout>
@@ -98,6 +108,14 @@ const AppRoutes = () => {
         element={
           <HostLayout>
             <Settings />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/view-website"
+        element={
+          <HostLayout>
+            <ViewWebsitePage />
           </HostLayout>
         }
       />
