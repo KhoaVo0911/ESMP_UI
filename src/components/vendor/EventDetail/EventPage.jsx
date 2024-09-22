@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
@@ -11,14 +11,46 @@ import {
   Divider,
 } from "@chakra-ui/react";
 import { ArrowBack } from "@mui/icons-material";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom"; // Use useParams for route params
+import axios from "axios"; // Import axios for API calls
 import SelectBooth from "./SelectBooth"; // Import component SelectBooth
 
 const EventPage = () => {
-  const location = useLocation();
-  const { event } = location.state || {};
+  const { eventId } = useParams(); // Get eventId from route parameters
   const navigate = useNavigate();
+  const [event, setEvent] = useState(null); // State to store event data
+  const [shops, setShops] = useState([]); // State to store shops data
+  const [loading, setLoading] = useState(true); // State for loading
   const { isOpen, onOpen, onClose } = useDisclosure(); // Modal control
+
+  useEffect(() => {
+    // Fetch event details and shops from the correct mock API endpoint
+    const fetchEventDetails = async () => {
+      try {
+        const eventResponse = await axios.get(
+          `https://668e540abf9912d4c92dcd67.mockapi.io/events/${eventId}/eventDetails`
+        );
+        const eventData = eventResponse.data;
+
+        if (Array.isArray(eventData) && eventData.length > 0) {
+          setEvent(eventData[0]);
+        } else {
+          setEvent(eventData);
+        }
+
+        const shopResponse = await axios.get(
+          `https://668e540abf9912d4c92dcd67.mockapi.io/events/${eventId}/shops`
+        );
+        setShops(shopResponse.data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching event or shop details:", error);
+        setLoading(false); // Handle error and stop loading
+      }
+    };
+
+    fetchEventDetails();
+  }, [eventId]);
 
   const handleBackClick = () => {
     navigate("/eventsVendor", { state: { selectedMenuItem: "4" } });
@@ -29,29 +61,9 @@ const EventPage = () => {
     navigate("/eventenrolled"); // Navigate to the event enrolled page
   };
 
-  const groups = [
-    {
-      id: 1,
-      name: "FPTU Event Club – The Way We Went",
-      floor: "2",
-      image:
-        "https://scontent.fsgn5-5.fna.fbcdn.net/v/t39.30808-6/457027829_1044539684338182_921737304847956243_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=sv_9k7XmVPwQ7kNvgG-ryEY&_nc_ht=scontent.fsgn5-5.fna&_nc_gid=AEsYgbQcq6e9704two0pWhy&oh=00_AYD5Lkef9YwUpybIjgf5Fmd8L3jfObqW2Xj6LFywdleQ7g&oe=66E87960",
-    },
-    {
-      id: 2,
-      name: "Câu Lạc Bộ Truyền Thống Cócc Sài Gòn",
-      floor: "2",
-      image:
-        "https://scontent.fsgn5-10.fna.fbcdn.net/v/t39.30808-6/432447864_743677024565608_7538420170834029906_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=NWKqqhr3J2AQ7kNvgGI-WRW&_nc_ht=scontent.fsgn5-10.fna&oh=00_AYBMJEex-S8qsZaF6bf8jU4Z3nIooVfj2k7mLzIGwYVGbQ&oe=66E84CFE",
-    },
-    {
-      id: 3,
-      name: "Cộng Đồng Sinh Viên Tỉnh Nguyễn SITIGROUP",
-      floor: "2",
-      image:
-        "https://scontent.fsgn5-14.fna.fbcdn.net/v/t39.30808-6/345904341_693634572567727_3208368438343116722_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=gEdBz4uMlj4Q7kNvgE6srcI&_nc_ht=scontent.fsgn5-14.fna&_nc_gid=AAeJWbkMECE93cxKsIe_ZoT&oh=00_AYAUMQLPh2XvNqnw8x5mLhlSW1Ymxmi21SijJ3hmEZ83aQ&oe=66E86AA5",
-    },
-  ];
+  if (loading) {
+    return <Text>Loading event details...</Text>;
+  }
 
   return (
     <Box
@@ -74,7 +86,7 @@ const EventPage = () => {
       <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={10} mb={10}>
         <VStack align="flex-start" spacing={10}>
           <Text fontSize="4xl" fontWeight="bold" color="black">
-            Mid Autumn Event
+            {event?.title}
           </Text>
           <div
             style={{
@@ -84,10 +96,13 @@ const EventPage = () => {
             }}
           >
             <Text fontSize="lg" fontWeight="bold" color="gray.600">
-              Sep 20 - 24, 2024
+              {event?.startDate}
             </Text>
             <Text fontSize="lg" fontWeight="bold" color="gray.600">
-              08:00 AM
+              {event?.endDate}
+            </Text>
+            <Text fontSize="lg" fontWeight="bold" color="gray.600">
+              {event?.time}
             </Text>
           </div>
 
@@ -96,8 +111,8 @@ const EventPage = () => {
           </Button>
         </VStack>
         <Image
-          src="https://th.bing.com/th/id/OIP.r4JVdCs4t-lvJ5FQt53giAHaEu?rs=1&pid=ImgDetMain"
-          alt="Mid Autumn Event"
+          src={event?.imageURL}
+          alt={event?.title}
           borderRadius="lg"
           boxShadow="lg"
         />
@@ -115,9 +130,9 @@ const EventPage = () => {
         gap={6}
         mb={10}
       >
-        {groups.map((group) => (
+        {shops.map((shop) => (
           <Box
-            key={group.id}
+            key={shop.id}
             bg="white"
             borderRadius="lg"
             boxShadow="md"
@@ -129,19 +144,19 @@ const EventPage = () => {
             }}
           >
             <Image
-              src={group.image}
-              alt={group.name}
+              src={shop.imageURL}
+              alt={shop.name}
               height="200px"
               width={"100%"}
               objectFit="cover"
             />
             <Box p={4}>
               <Text fontWeight="bold" mb={2} fontSize="xl">
-                {group.name}
+                {shop.name}
               </Text>
               <HStack spacing={2}>
                 <Text color="gray.500" fontSize="sm" fontWeight="bold">
-                  FLOOR {group.floor}
+                  FLOOR {shop.floor}
                 </Text>
               </HStack>
             </Box>

@@ -15,7 +15,7 @@ const VendorSideBar = ({ collapsed }) => {
   const location = useLocation();
   const [selectedMenuItem, setSelectedMenuItem] = useState("1");
 
-  // Cập nhật selectedMenuItem dựa trên URL hiện tại
+  // Update selectedMenuItem based on current URL
   useEffect(() => {
     if (location.pathname.startsWith("/dashboardVendor")) {
       setSelectedMenuItem("1");
@@ -33,13 +33,35 @@ const VendorSideBar = ({ collapsed }) => {
   const defaultItems = [
     {
       type: "group",
-      label: <h3>Menu</h3>,
+      label: <h3 style={{ fontWeight: "bold", color: "#A0AEC0" }}>MENU</h3>, // Adjusting group title style
       children: [
-        { key: "1", icon: <DashboardIcon />, label: "Dashboard" },
-        { key: "2", icon: <FormatListBulletedIcon />, label: "Products List" },
-        { key: "3", icon: <FastfoodIcon />, label: "Manage Product Items" },
-        { key: "4", icon: <EventIcon />, label: "Events" },
-        { key: "5", icon: <PaidIcon />, label: "Transaction" },
+        {
+          key: "1",
+          icon: <DashboardIcon />,
+          label: <span style={{ fontWeight: "bold" }}>Dashboard</span>,
+        },
+        {
+          key: "2",
+          icon: <FormatListBulletedIcon />,
+          label: <span style={{ fontWeight: "bold" }}>Products List</span>,
+        },
+        {
+          key: "3",
+          icon: <FastfoodIcon />,
+          label: (
+            <span style={{ fontWeight: "bold" }}>Manage Product Items</span>
+          ),
+        },
+        {
+          key: "4",
+          icon: <EventIcon />,
+          label: <span style={{ fontWeight: "bold" }}>Events</span>,
+        },
+        {
+          key: "5",
+          icon: <PaidIcon />,
+          label: <span style={{ fontWeight: "bold" }}>Transaction</span>,
+        },
       ],
     },
   ];
@@ -68,57 +90,55 @@ const VendorSideBar = ({ collapsed }) => {
   };
 
   return (
-    <Sider
-      trigger={null}
-      collapsible
-      collapsed={collapsed}
-      style={{
-        backgroundColor: "#fff",
-        height: "135vh",
-        position: "sticky",
-        top: 0,
-        boxShadow: "2px 0 12px rgba(0, 0, 0, 0.1)",
-      }}
-    >
-      <img
-        src={logo}
-        alt="logo"
+    <>
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
         style={{
-          width: collapsed ? "80px" : "200px",
-          transition: "width 0.3s ease",
-          margin: "16px auto",
-          display: "block",
+          backgroundColor: "#F7FAFC",
+          height: "100vh",
+          position: "fixed",
+          left: 0,
+          top: 0,
+          boxShadow: "2px 0 12px rgba(0, 0, 0, 0.1)",
+          overflow: "auto",
         }}
-      />
-      <Menu
-        style={{
-          backgroundColor: "#fff",
-          color: "#3A4374",
-        }}
-        mode="inline"
-        selectedKeys={[selectedMenuItem]}
-        onClick={handleMenuClick}
-        theme="light"
+        width={250} // Adjusted the width for more space
+        collapsedWidth={80} // Adjusted collapsed width
       >
-        {defaultItems[0].children.map((menuItem) => (
-          <Menu.Item
-            key={menuItem.key}
-            style={{
-              whiteSpace: "normal",
-              wordWrap: "break-word",
-              fontSize: "16px", // Chữ to hơn
-              fontWeight: "bold", // In đậm
-              height: "auto", // Đảm bảo item có chiều cao tự động theo nội dung
-              padding: "10px 24px", // Điều chỉnh khoảng cách padding
-            }}
-          >
-            {menuItem.icon}
-            {/* Thêm khoảng cách giữa icon và chữ */}
-            <span style={{ marginLeft: "10px" }}>{menuItem.label}</span>
-          </Menu.Item>
-        ))}
-      </Menu>
-    </Sider>
+        <img
+          src={logo}
+          alt="logo"
+          style={{
+            width: collapsed ? "40px" : "120px",
+            transition: "width 0.3s ease",
+            margin: "16px auto",
+            display: "block",
+          }}
+        />
+        <Menu
+          style={{
+            backgroundColor: "#F7FAFC",
+            color: "#4A5568",
+            fontSize: "16px", // Increased font size
+          }}
+          mode="inline"
+          selectedKeys={[selectedMenuItem]}
+          onClick={handleMenuClick}
+          items={defaultItems}
+        />
+      </Sider>
+      <div
+        style={{
+          marginLeft: collapsed ? "80px" : "250px", // Adjusted margin based on the width of the Sider
+          transition: "margin-left 0.3s ease",
+          padding: "12px",
+        }}
+      >
+        {/* Content will be displayed here */}
+      </div>
+    </>
   );
 };
 

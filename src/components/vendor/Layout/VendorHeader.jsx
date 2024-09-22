@@ -45,7 +45,7 @@ const VendorHeader = ({ collapsed }) => {
   return (
     <Box
       as="header"
-      bg="rgba(255, 255, 255, 0.2)" // Nền có độ mờ
+      bg="rgba(255, 255, 255, 0.2)"
       boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
       padding="16px"
       display="flex"
@@ -54,45 +54,31 @@ const VendorHeader = ({ collapsed }) => {
       position="sticky"
       top="0"
       zIndex="1000"
-      border="1px solid rgba(200, 200, 200, 0.3)" // Viền nhẹ
-      backdropFilter="blur(12px)" // Hiệu ứng blur
+      border="1px solid rgba(200, 200, 200, 0.3)"
+      backdropFilter="blur(12px)"
       borderRadius="16px"
-      marginLeft="40px" // Dịch header sang phải, tránh chạm vào sidebar
-      width="calc(100% - 75px)" // Tự động điều chỉnh kích thước theo độ rộng của sidebar
+      marginLeft="40px"
+      width="calc(100% - 75px)"
     >
-      <Flex alignItems="center" ml={8}>
-        {" "}
-        {/* Thêm khoảng cách để tránh bị dính vào sidebar */}
-        <Text fontSize="sm" fontWeight="medium" mr={4} color="gray.500">
+      <Flex direction="column" alignItems="flex-start" ml={8}>
+        <Text fontSize="sm" fontWeight="medium" color="gray.500" mb="2px">
           Menu / {getPageTitle()}
         </Text>
-        <Text fontSize="2xl" fontWeight="bold" color="gray.800">
+        <Text fontSize="2xl" fontWeight="bold" color="#1B2559">
           {getPageTitle()}
         </Text>
       </Flex>
 
       <Flex alignItems="center">
-        {/* Ô tìm kiếm */}
-        <Box position="relative" mr={4} width="240px">
-          <Input
-            placeholder="Search..."
-            size="md"
-            borderRadius="full"
-            paddingLeft="40px"
-            boxShadow="sm"
-            _placeholder={{ color: "gray.400" }}
-          />
-          <SearchIcon position="absolute" left={4} top={3} color="gray.400" />
-        </Box>
         <IconButton
           aria-label="Notifications"
           icon={<BellIcon />}
           variant="ghost"
           fontSize="20px"
           color="gray.600"
-          mr={1}
+          mr={4}
         />
-        {/* Dropdown cho Avatar người dùng */}
+
         <Menu>
           <MenuButton
             as={Button}
@@ -108,7 +94,7 @@ const VendorHeader = ({ collapsed }) => {
           </MenuButton>
           <MenuList boxShadow="lg" borderRadius="lg" padding="12px">
             <MenuItem fontSize="md" fontWeight="700" color="gray.700">
-              👋 Hey, "..."
+              👋 Hey, Host
             </MenuItem>
             <MenuItem fontSize="md" fontWeight="700" color="red.500">
               Log out

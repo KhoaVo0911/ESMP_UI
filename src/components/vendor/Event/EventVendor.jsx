@@ -29,7 +29,7 @@ const EventVendor = () => {
         setEvents(response.data);
         setFilteredEvents(
           response.data.filter(
-            (event) => event.details?.status?.toLowerCase() === "on-going"
+            (event) => event.details[0]?.status?.toLowerCase() === "on-going"
           )
         ); // Apply filter for 'On-going' when component loads
       })
@@ -56,25 +56,25 @@ const EventVendor = () => {
       case "1":
         // Filter for 'On-going' events
         filtered = events.filter(
-          (event) => event.details?.status?.toLowerCase() === "on-going"
+          (event) => event.details[0]?.status?.toLowerCase() === "on-going"
         );
         break;
       case "2":
         // Filter for 'Running' events
         filtered = events.filter(
-          (event) => event.details?.status?.toLowerCase() === "running"
+          (event) => event.details[0]?.status?.toLowerCase() === "running"
         );
         break;
       case "3":
         // Filter for 'Cancelled' events
         filtered = events.filter(
-          (event) => event.details?.status?.toLowerCase() === "cancelled"
+          (event) => event.details[0]?.status?.toLowerCase() === "cancelled"
         );
         break;
       case "5":
         // Filter for 'Trash' events
         filtered = events.filter(
-          (event) => event.details?.status?.toLowerCase() === "trash"
+          (event) => event.details[0]?.status?.toLowerCase() === "trash"
         );
         break;
       case "4":
@@ -88,10 +88,6 @@ const EventVendor = () => {
   };
 
   const handleBackClick = () => {
-    navigate("/eventpage");
-  };
-
-  const handleBackClickTab = () => {
     navigate("/eventpage");
   };
 
@@ -132,7 +128,7 @@ const EventVendor = () => {
             <Card
               className="event-card"
               hoverable
-              onClick={() => navigate("/eventpage")} // Điều hướng đến trang /eventpage khi nhấn vào thẻ
+              onClick={() => navigate(`/events/${event.id}`)} // Navigate to the specific event detail page
               cover={
                 <div className="event-card-cover">
                   <img alt={event.eventName} src={event.image} />

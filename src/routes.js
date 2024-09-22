@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import HostLayout from "./layouts/host/HostLayout";
 import Dashboard from "./pages/host/Dashboard";
 import Event from "./pages/host/Event/Event";
@@ -20,15 +20,21 @@ import Settings from "./pages/host/Settings";
 import PackagePage from "./pages/host/Package";
 import ManageProduct from "./pages/host/ManageProduct";
 import LoginPage from "./components/Login/Login";
+import EventList from "./components/vendor/Test/abc";
+import EventDetail from "./components/vendor/Test/zxc";
 
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* Redirect base URL to login page */}
+      <Route path="/" element={<Navigate to="/login" />} />
+      {/* <Route path="/eventss" element={<EventList />} />
+      <Route path="/events/:eventId" element={<EventDetail />} /> */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/DashboardVendor" element={<DashboardVendor />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route
-        path="/eventpage"
+        path="/events/:eventId"
         element={
           <VendorLayout>
             <EventPage />
