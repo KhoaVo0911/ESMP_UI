@@ -15,6 +15,7 @@ import {
 import { FaUserShield, FaStore, FaUserTie } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../shared/auth/AuthContext";
 
 const LoginPage = () => {
   const [role, setRole] = useState("Admin");
@@ -23,6 +24,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const toast = useToast();
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     setLoading(true);
@@ -38,7 +40,6 @@ const LoginPage = () => {
       if (user) {
         const { role: userRole } = user;
 
-        // Kiểm tra xem role đã chọn có khớp với role của tài khoản không
         if (userRole.toLowerCase() !== role.toLowerCase()) {
           toast({
             title: "Role mismatch",
@@ -49,7 +50,15 @@ const LoginPage = () => {
             position: "top",
           });
         } else {
-          // Điều hướng dựa trên role đã chọn
+          login(user);
+          toast({
+            title: "Đăng nhập thành công",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+            position: "top",
+          });
+
           if (userRole === "admin") {
             navigate("/admin");
           } else if (userRole === "vendor") {

@@ -3,7 +3,6 @@ import {
   Box,
   Flex,
   Text,
-  Input,
   IconButton,
   Avatar,
   Menu,
@@ -12,14 +11,15 @@ import {
   MenuItem,
   Button,
 } from "@chakra-ui/react";
-import { SearchIcon, BellIcon, InfoIcon, MoonIcon } from "@chakra-ui/icons";
+import { BellIcon } from "@chakra-ui/icons";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "../../../shared/auth/AuthContext";
 
 const VendorHeader = ({ collapsed }) => {
   const location = useLocation();
+  const { logout } = useAuth();
 
-  // Lấy tiêu đề của trang dựa trên đường dẫn hiện tại
   const getPageTitle = () => {
     if (location.pathname.startsWith("/dashboard")) {
       return "Dashboard";
@@ -89,14 +89,19 @@ const VendorHeader = ({ collapsed }) => {
             _focus={{ boxShadow: "none" }}
           >
             <Flex alignItems="center">
-              <Avatar size="sm" name="Host" bg="blue.500" mr={2} />
+              <Avatar size="sm" name="Vendor" bg="blue.500" mr={2} />
             </Flex>
           </MenuButton>
           <MenuList boxShadow="lg" borderRadius="lg" padding="12px">
             <MenuItem fontSize="md" fontWeight="700" color="gray.700">
-              👋 Hey, Host
+              👋 Hey, Vendor
             </MenuItem>
-            <MenuItem fontSize="md" fontWeight="700" color="red.500">
+            <MenuItem
+              fontSize="md"
+              fontWeight="700"
+              color="red.500"
+              onClick={logout} // Gọi hàm logout từ AuthContext
+            >
               Log out
             </MenuItem>
           </MenuList>

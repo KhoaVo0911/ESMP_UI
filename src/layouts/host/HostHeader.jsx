@@ -3,7 +3,6 @@ import {
   Box,
   Flex,
   Text,
-  Input,
   IconButton,
   Avatar,
   Menu,
@@ -15,9 +14,11 @@ import {
 import { BellIcon } from "@chakra-ui/icons";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "../../shared/auth/AuthContext";
 
 const HostHeader = ({ collapsed }) => {
   const location = useLocation();
+  const { logout } = useAuth();
 
   const getPageTitle = () => {
     if (location.pathname.startsWith("/dashboard")) {
@@ -84,7 +85,12 @@ const HostHeader = ({ collapsed }) => {
             <MenuItem fontSize="md" fontWeight="700" color="gray.700">
               👋 Hey, Host
             </MenuItem>
-            <MenuItem fontSize="md" fontWeight="700" color="red.500">
+            <MenuItem
+              fontSize="md"
+              fontWeight="700"
+              color="red.500"
+              onClick={logout}
+            >
               Log out
             </MenuItem>
           </MenuList>

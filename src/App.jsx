@@ -3,19 +3,21 @@ import "./App.css";
 import { BrowserRouter as Router } from "react-router-dom";
 import { ChakraProvider, Box } from "@chakra-ui/react";
 import { AnimatePresence } from "framer-motion";
-import AppRoutes from "./routes"; // Import your routes
-import theme from "./theme/theme"; // Import the custom Chakra UI theme you shared
+import AppRoutes from "./routes";
+import theme from "./theme/theme";
+import { AuthProvider } from "./shared/auth/AuthContext";
 
 function App() {
   return (
     <ChakraProvider theme={theme}>
       <Router>
-        {/* Thay exitBeforeEnter bằng mode="wait" */}
-        <AnimatePresence mode="wait">
-          <Box>
-            <AppRoutes />
-          </Box>
-        </AnimatePresence>
+        <AuthProvider>
+          <AnimatePresence mode="wait">
+            <Box>
+              <AppRoutes />
+            </Box>
+          </AnimatePresence>
+        </AuthProvider>
       </Router>
     </ChakraProvider>
   );

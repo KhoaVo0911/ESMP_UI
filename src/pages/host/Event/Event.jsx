@@ -32,9 +32,9 @@ const Event = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("1");
-  const [form] = Form.useForm(); // Sử dụng form của Ant Design
-  const [thumbnail, setThumbnail] = useState(null); // State cho ảnh thumbnail
-  const [fileName, setFileName] = useState(""); // State cho tên file thumbnail
+  const [form] = Form.useForm();
+  const [thumbnail, setThumbnail] = useState(null);
+  const [fileName, setFileName] = useState("");
   const navigate = useNavigate();
 
   const showModal = () => {
@@ -87,11 +87,6 @@ const Event = () => {
           (event) => event.details?.status?.toLowerCase() === "cancelled"
         );
         break;
-      case "5":
-        filtered = events.filter(
-          (event) => event.details?.status?.toLowerCase() === "trash"
-        );
-        break;
       case "4":
       default:
         filtered = events;
@@ -113,18 +108,18 @@ const Event = () => {
       .then((values) => {
         const newEvent = {
           ...values,
-          image: thumbnail, // Include thumbnail in the new event object
-          id: events.length + 1, // Temporary id for frontend, you might get an id from backend
+          image: thumbnail,
+          id: events.length + 1,
         };
 
         axios
           .post(URL, newEvent)
           .then((response) => {
-            setEvents((prevEvents) => [...prevEvents, response.data]); // Update the event list
+            setEvents((prevEvents) => [...prevEvents, response.data]);
             message.success("Event created successfully!");
             setIsModalVisible(false);
             form.resetFields();
-            setThumbnail(null); // Clear thumbnail after submit
+            setThumbnail(null);
           })
           .catch((error) => {
             console.error("Error creating event:", error);
@@ -143,7 +138,7 @@ const Event = () => {
     ) {
       if (file.size / 1024 / 1024 < 5) {
         // Kiểm tra kích thước file
-        setThumbnail(window.URL.createObjectURL(file)); // Create object URL for the selected file
+        setThumbnail(window.URL.createObjectURL(file));
         setFileName(file.name);
       } else {
         message.error("File size must be smaller than 5MB");
@@ -160,7 +155,6 @@ const Event = () => {
     { key: "2", label: "Running" },
     { key: "3", label: "Cancelled" },
     { key: "4", label: "All" },
-    { key: "5", label: "Trash" },
   ];
 
   return (

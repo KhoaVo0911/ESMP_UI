@@ -19,7 +19,7 @@ import AccountManagement from "./pages/host/Account";
 import Settings from "./pages/host/Settings";
 import PackagePage from "./pages/host/Package";
 import ManageProduct from "./pages/host/ManageProduct";
-import LoginPage from "./components/Login/Login";
+import LoginPage from "./shared/Login";
 import EventList from "./components/vendor/Test/abc";
 import EventDetail from "./components/vendor/Test/zxc";
 
