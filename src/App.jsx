@@ -1,5 +1,6 @@
 import React from "react";
-import "./App.css";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend"; // Giữ HTML5Backend
 import { BrowserRouter as Router } from "react-router-dom";
 import { ChakraProvider, Box } from "@chakra-ui/react";
 import { AnimatePresence } from "framer-motion";

@@ -22,6 +22,9 @@ import ManageProduct from "./pages/host/ManageProduct";
 import LoginPage from "./shared/Login";
 import EventList from "./components/vendor/Test/abc";
 import EventDetail from "./components/vendor/Test/zxc";
+import ViewWebsitePage from "./pages/host/ViewWebsitePage";
+import BoothPlan from "./pages/host/BoothPlan";
+// import Transaction from "./components/vendor/Transaction/Transaction";
 
 const AppRoutes = () => {
   return (
@@ -42,7 +45,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="productsList"
+        path="/productsList"
         element={
           <VendorLayout>
             <ListProducts />
@@ -80,7 +83,7 @@ const AppRoutes = () => {
             <EventVendor />
           </VendorLayout>
         }
-      />{" "}
+      />
       <Route
         path="/transaction"
         element={
@@ -96,7 +99,7 @@ const AppRoutes = () => {
             <EventEnrolled />
           </VendorLayout>
         }
-      />{" "}
+      />
       <Route
         path="/Shop"
         element={
@@ -138,6 +141,14 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/event/booth-plan"
+        element={
+          <HostLayout>
+            <BoothPlan />
+          </HostLayout>
+        }
+      />
+      <Route
         path="/accounts"
         element={
           <HostLayout>
@@ -158,6 +169,14 @@ const AppRoutes = () => {
         element={
           <HostLayout>
             <PackagePage />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/view-website"
+        element={
+          <HostLayout>
+            <ViewWebsitePage />
           </HostLayout>
         }
       />

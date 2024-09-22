@@ -1,9 +1,17 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Row, Col, Button, Typography, Divider, Card } from "antd"; // Use Ant Design components
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+  Button,
+  Image,
+  Divider,
+  Grid,
+  GridItem,
+} from "@chakra-ui/react";
 import ArrowBack from "@mui/icons-material/ArrowBack"; // For back button
-
-const { Title, Text, Paragraph } = Typography;
 
 const EventDetails = () => {
   const location = useLocation();
@@ -15,117 +23,110 @@ const EventDetails = () => {
     navigate("/events", { state: { selectedMenuItem: "2" } });
   };
 
+  const handleViewWebsite = () => {
+    navigate("/view-website", { state: { event: selectedEvent } });
+  };
+
   return (
-    <div
-      className="event-details-container"
-      style={{ padding: "24px", backgroundColor: "#fff", borderRadius: "8px" }}
-    >
+    <Box p={6} bg="white" borderRadius="md" boxShadow="md">
       {/* Header with back button and event name */}
-      <div
-        style={{ display: "flex", alignItems: "center", marginBottom: "24px" }}
-      >
+      <Flex align="center" mb={6}>
         <ArrowBack
           onClick={handleBackClick}
           style={{ cursor: "pointer", fontSize: "24px", marginRight: "16px" }}
         />
-        <Title
-          level={2}
-          style={{
-            margin: 0,
-            color: "#170F49",
-            fontFamily: "'DM Sans', sans-serif",
-          }}
-        >
+        <Heading as="h2" size="lg" color="purple.900">
           {selectedEvent?.eventName}
-        </Title>
-      </div>
+        </Heading>
 
-      <Divider />
+        {/* View Website Button */}
+        <Button ml="auto" colorScheme="purple" onClick={handleViewWebsite}>
+          View Website
+        </Button>
+      </Flex>
 
-      {/* Event details section */}
-      <Row gutter={[16, 24]} style={{ marginBottom: "24px" }}>
-        <Col span={12}>
-          <Text
-            style={{ fontWeight: "bold", color: "#170F49", fontSize: "16px" }}
-          >
+      <Divider mb={6} />
+
+      {/* Sử dụng Grid để bố trí các cột ngày và giờ gần nhau hơn */}
+      <Grid templateColumns="repeat(2, 1fr)" gap={6} mb={6}>
+        <GridItem>
+          <Text fontWeight="bold" color="purple.900">
             Start Date:
           </Text>
-          <Paragraph>{selectedEvent?.startDate}</Paragraph>
-        </Col>
-        <Col span={12}>
-          <Text
-            style={{ fontWeight: "bold", color: "#170F49", fontSize: "16px" }}
-          >
+          <Text>{selectedEvent?.startDate}</Text>
+        </GridItem>
+        <GridItem>
+          <Text fontWeight="bold" color="purple.900">
             End Date:
           </Text>
-          <Paragraph>{selectedEvent?.endDate}</Paragraph>
-        </Col>
-      </Row>
-
-      <Row gutter={[16, 24]} style={{ marginBottom: "24px" }}>
-        <Col span={12}>
-          <Text
-            style={{ fontWeight: "bold", color: "#170F49", fontSize: "16px" }}
-          >
+          <Text>{selectedEvent?.endDate}</Text>
+        </GridItem>
+        <GridItem>
+          <Text fontWeight="bold" color="purple.900">
             Start Time:
           </Text>
-          <Paragraph>{selectedEvent?.startTime || "N/A"}</Paragraph>
-        </Col>
-        <Col span={12}>
-          <Text
-            style={{ fontWeight: "bold", color: "#170F49", fontSize: "16px" }}
-          >
+          <Text>{selectedEvent?.startTime || "N/A"}</Text>
+        </GridItem>
+        <GridItem>
+          <Text fontWeight="bold" color="purple.900">
             End Time:
           </Text>
-          <Paragraph>{selectedEvent?.endTime || "N/A"}</Paragraph>
-        </Col>
-      </Row>
+          <Text>{selectedEvent?.endTime || "N/A"}</Text>
+        </GridItem>
+      </Grid>
 
-      <Row>
-        <Col span={24}>
-          <Text
-            style={{ fontWeight: "bold", color: "#170F49", fontSize: "16px" }}
-          >
-            Event Description:
-          </Text>
-          <Paragraph>{selectedEvent?.description}</Paragraph>
-        </Col>
-      </Row>
+      {/* Event Description */}
+      <Box mb={6}>
+        <Text fontWeight="bold" color="purple.900">
+          Event Description:
+        </Text>
+        <Text>{selectedEvent?.description}</Text>
+      </Box>
 
-      <Divider />
+      {/* Event Status */}
+      <Box mb={6}>
+        <Text fontWeight="bold" color="purple.900">
+          Status:
+        </Text>
+        <Text>{selectedEvent?.status || "Unknown"}</Text>
+      </Box>
+
+      <Divider mb={6} />
 
       {selectedEvent?.image && (
-        <div style={{ textAlign: "center", marginBottom: "24px" }}>
-          <Card
-            hoverable
-            cover={
-              <img
-                src={selectedEvent.image}
-                alt={selectedEvent.eventName}
-                style={{ maxWidth: "100%", borderRadius: "8px" }}
-              />
-            }
-            style={{
-              display: "inline-block",
-              width: "100%",
-              maxWidth: "600px",
-            }}
+        <Box textAlign="center" mb={6}>
+          <Image
+            src={selectedEvent.image}
+            alt={selectedEvent.eventName}
+            borderRadius="md"
+            maxW="600px"
+            mx="auto"
           />
-        </div>
+        </Box>
       )}
 
-      <Button
-        onClick={handleBackClick}
-        style={{
-          marginTop: "24px",
-          backgroundColor: "#170F49",
-          color: "#fff",
-          borderRadius: "8px",
-        }}
-      >
+      {/* Google Maps Location */}
+      <Box mb={6}>
+        <Text fontWeight="bold" color="purple.900">
+          Location:
+        </Text>
+        <Box w="100%" h="400px">
+          <iframe
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            style={{ border: 0 }}
+            src={`https://www.google.com/maps/embed/v1/place?q=FPT+University,+Ho+Chi+Minh+City,+Vietnam&key=YOUR_GOOGLE_MAPS_API_KEY`}
+            allowFullScreen
+            title="Event Location"
+          />
+        </Box>
+      </Box>
+
+      <Button onClick={handleBackClick} colorScheme="purple" mt={6}>
         Back to Events
       </Button>
-    </div>
+    </Box>
   );
 };
 
