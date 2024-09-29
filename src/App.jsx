@@ -1,6 +1,6 @@
 import React from "react";
 import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend"; // Giữ HTML5Backend
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { BrowserRouter as Router } from "react-router-dom";
 import { ChakraProvider, Box } from "@chakra-ui/react";
 import { AnimatePresence } from "framer-motion";
@@ -13,11 +13,13 @@ function App() {
     <ChakraProvider theme={theme}>
       <Router>
         <AuthProvider>
-          <AnimatePresence mode="wait">
-            <Box>
-              <AppRoutes />
-            </Box>
-          </AnimatePresence>
+          <DndProvider backend={HTML5Backend}>
+            <AnimatePresence mode="wait">
+              <Box>
+                <AppRoutes />
+              </Box>
+            </AnimatePresence>
+          </DndProvider>
         </AuthProvider>
       </Router>
     </ChakraProvider>

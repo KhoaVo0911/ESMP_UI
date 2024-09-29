@@ -1,14 +1,9 @@
 import React, { useState } from "react";
 import {
   Box,
-  Grid,
   Text,
-  Image,
   Button,
-  VStack,
-  Badge,
-  HStack,
-  Flex,
+  useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -16,93 +11,95 @@ import {
   ModalBody,
   ModalFooter,
   Input,
-  useDisclosure,
   FormControl,
   FormLabel,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  IconButton,
+  Select,
+  Flex,
+  Image,
 } from "@chakra-ui/react";
-import { EditIcon, AddIcon } from "@chakra-ui/icons";
-
+import { EditIcon, AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import Pizza from "../../assets/images/Pizza.png";
 
 const ManageProduct = () => {
-  // Sample product data
   const [products, setProducts] = useState([
     {
       id: 1,
       name: "Sushi",
-      price: "40.000 VND",
-      quantity: 15,
-      event: "Mid Autumn Event",
+      price: "40.000",
       shop: "Sushi Bar",
+      image: Pizza,
     },
     {
       id: 2,
       name: "Ramen",
-      price: "50.000 VND",
-      quantity: 8,
-      event: "New Year Festival",
+      price: "50.000",
       shop: "Ramen House",
+      image: Pizza,
     },
     {
       id: 3,
-      name: "Sushi",
-      price: "40.000 VND",
-      quantity: 15,
-      event: "Mid Autumn Event",
-      shop: "Sushi Bar",
+      name: "Kimbap",
+      price: "40.000",
+      shop: "Korean Food",
+      image: Pizza,
     },
     {
       id: 4,
-      name: "Ramen",
-      price: "50.000 VND",
-      quantity: 8,
-      event: "New Year Festival",
-      shop: "Ramen House",
+      name: "Tobokki",
+      price: "50.000",
+      shop: "Korean Food",
+      image: Pizza,
     },
     {
       id: 5,
       name: "Sushi",
-      price: "40.000 VND",
-      quantity: 15,
-      event: "Mid Autumn Event",
+      price: "40.000",
       shop: "Sushi Bar",
+      image: Pizza,
     },
     {
       id: 6,
-      name: "Ramen",
-      price: "50.000 VND",
-      quantity: 8,
-      event: "New Year Festival",
-      shop: "Ramen House",
+      name: "Chicken Nuggest",
+      price: "60.000",
+      shop: "Korean Food",
+      image: Pizza,
     },
     {
       id: 7,
-      name: "Sushi",
-      price: "40.000 VND",
-      quantity: 15,
-      event: "Mid Autumn Event",
-      shop: "Sushi Bar",
+      name: "Coca",
+      price: "15.000",
+      shop: "Ramen House",
+      image: Pizza,
     },
     {
       id: 8,
-      name: "Ramen",
-      price: "50.000 VND",
-      quantity: 8,
-      event: "New Year Festival",
-      shop: "Ramen House",
+      name: "Cheese",
+      price: "20.000",
+      shop: "Korean Food",
+      image: Pizza,
     },
   ]);
 
-  const { isOpen, onOpen, onClose } = useDisclosure(); // Controls modal for both Create/Edit
-  const [isEditMode, setIsEditMode] = useState(false); // To toggle between create/edit
-  const [selectedProduct, setSelectedProduct] = useState(null); // Product to edit
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [formState, setFormState] = useState({
     name: "",
     price: "",
-    quantity: "",
-    event: "",
     shop: "",
+    image: "",
   });
+
+  const [selectedShop, setSelectedShop] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
 
   const openEditModal = (product) => {
     setIsEditMode(true);
@@ -116,9 +113,8 @@ const ManageProduct = () => {
     setFormState({
       name: "",
       price: "",
-      quantity: "",
-      event: "",
       shop: "",
+      image: "",
     });
     onOpen();
   };
@@ -133,81 +129,138 @@ const ManageProduct = () => {
 
   const handleSave = () => {
     if (isEditMode) {
-      // Edit existing product
       const updatedProducts = products.map((p) =>
         p.id === selectedProduct.id ? { ...formState } : p
       );
       setProducts(updatedProducts);
     } else {
-      // Create new product
       const newProduct = { ...formState, id: products.length + 1 };
       setProducts([...products, newProduct]);
     }
     onClose();
   };
 
+  const handleSort = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
+
+  const handleDelete = (id) => {
+    setProducts(products.filter((product) => product.id !== id));
+  };
+
+  // Lọc sản phẩm theo shop, tìm kiếm theo tên và sắp xếp theo giá
+  const filteredProducts = products
+    .filter((product) => {
+      const matchesShop = selectedShop ? product.shop === selectedShop : true;
+      const matchesSearch = product.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      return matchesShop && matchesSearch;
+    })
+    .sort((a, b) => {
+      const priceA = parseInt(a.price.replace(".", ""));
+      const priceB = parseInt(b.price.replace(".", ""));
+      if (sortOrder === "asc") {
+        return priceA - priceB;
+      } else {
+        return priceB - priceA;
+      }
+    });
+
   return (
     <Box padding="20px" minH="100vh" bg="gray.50">
-      <Flex justify="space-between" align="center" mb={6}>
+      <Box
+        mb={6}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+      >
         <Text fontSize="2xl" fontWeight="bold">
           Manage Products
         </Text>
         <Button
           leftIcon={<AddIcon />}
           colorScheme="teal"
-          size="md"
           onClick={openCreateModal}
           bg="#4096ff"
         >
           Create Product
         </Button>
+      </Box>
+
+      {/* Flex để sắp xếp Search và Filter theo hàng ngang */}
+      <Flex mb={4} gap={4}>
+        {/* Tìm kiếm theo tên sản phẩm */}
+        <FormControl maxWidth="300px">
+          <FormLabel>Search by Name</FormLabel>
+          <Input
+            placeholder="Enter product name"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </FormControl>
+
+        {/* Lọc theo shop */}
+        <FormControl maxWidth="300px">
+          <FormLabel>Filter by Shop</FormLabel>
+          <Select
+            placeholder="Select shop"
+            value={selectedShop}
+            onChange={(e) => setSelectedShop(e.target.value)}
+          >
+            <option value="Sushi Bar">Sushi Bar</option>
+            <option value="Ramen House">Ramen House</option>
+            <option value="Korean Food">Korean Food</option>
+          </Select>
+        </FormControl>
       </Flex>
 
-      <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={9}>
-        {products.map((product) => (
-          <Box
-            key={product.id}
-            bg="white"
-            borderRadius="lg"
-            boxShadow="lg"
-            overflow="hidden"
-            transition="all 0.2s"
-            _hover={{ transform: "scale(1.03)", boxShadow: "xl" }}
-          >
-            <Image src={Pizza} alt={product.name} />
-
-            <VStack align="start" p={4}>
-              <Text fontWeight="bold" fontSize="xl">
-                {product.name}
-              </Text>
-              <Text fontSize="lg" color="gray.600">
-                {product.price}
-              </Text>
-
-              <HStack spacing={2}>
-                <Badge colorScheme="blue">Event: {product.event}</Badge>
-                <Badge colorScheme="purple">Shop: {product.shop}</Badge>
-              </HStack>
-
-              <Text fontSize="md" color="gray.500">
-                Quantity: {product.quantity}
-              </Text>
-
-              <Button
-                leftIcon={<EditIcon />}
-                colorScheme="teal"
-                variant="outline"
-                size="sm"
-                onClick={() => openEditModal(product)}
-              >
-                Edit
+      {/* Bảng sản phẩm */}
+      <Table variant="simple" bg="white" borderRadius="lg" boxShadow="md">
+        <Thead bg="gray.200">
+          <Tr>
+            <Th>Name</Th>
+            <Th>Image</Th>
+            <Th>
+              Price{" "}
+              <Button size="xs" onClick={handleSort}>
+                {sortOrder === "asc" ? "↑" : "↓"}
               </Button>
-            </VStack>
-          </Box>
-        ))}
-      </Grid>
+            </Th>
+            <Th>Shop</Th>
+            <Th>Actions</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {filteredProducts.map((product) => (
+            <Tr key={product.id}>
+              <Td>{product.name}</Td>
+              <Td>
+                <Image src={product.image} alt={product.name} boxSize="50px" />
+              </Td>
+              <Td>{product.price} VND</Td>
+              <Td>{product.shop}</Td>
+              <Td>
+                <Flex gap={2}>
+                  <IconButton
+                    aria-label="Edit"
+                    icon={<EditIcon />}
+                    size="sm"
+                    onClick={() => openEditModal(product)}
+                  />
+                  <IconButton
+                    aria-label="Delete"
+                    icon={<DeleteIcon />}
+                    size="sm"
+                    onClick={() => handleDelete(product.id)}
+                  />
+                </Flex>
+              </Td>
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
 
-      {/* Modal for Create/Edit */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -232,26 +285,18 @@ const ManageProduct = () => {
               />
             </FormControl>
             <FormControl mt={4}>
-              <FormLabel>Quantity</FormLabel>
-              <Input
-                name="quantity"
-                value={formState.quantity}
-                onChange={handleInputChange}
-              />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Event</FormLabel>
-              <Input
-                name="event"
-                value={formState.event}
-                onChange={handleInputChange}
-              />
-            </FormControl>
-            <FormControl mt={4}>
               <FormLabel>Shop</FormLabel>
               <Input
                 name="shop"
                 value={formState.shop}
+                onChange={handleInputChange}
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Image URL</FormLabel>
+              <Input
+                name="image"
+                value={formState.image}
                 onChange={handleInputChange}
               />
             </FormControl>

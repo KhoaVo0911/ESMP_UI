@@ -27,6 +27,10 @@ const HostHeader = ({ collapsed }) => {
       return "Event Management";
     } else if (location.pathname.startsWith("/accounts")) {
       return "Account Managers";
+    } else if (location.pathname.startsWith("/settings")) {
+      return "Settings";
+    } else if (location.pathname.startsWith("/packages")) {
+      return "Packages";
     }
     return "Event Information";
   };

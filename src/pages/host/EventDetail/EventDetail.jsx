@@ -11,7 +11,7 @@ import {
   Grid,
   GridItem,
 } from "@chakra-ui/react";
-import ArrowBack from "@mui/icons-material/ArrowBack"; // For back button
+import ArrowBack from "@mui/icons-material/ArrowBack";
 
 const EventDetails = () => {
   const location = useLocation();

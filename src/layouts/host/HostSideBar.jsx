@@ -24,22 +24,16 @@ const HostSideBar = ({ collapsed }) => {
       setSelectedMenuItem("1");
     } else if (location.pathname.startsWith("/events")) {
       setSelectedMenuItem("2");
-    } else if (location.pathname.startsWith("/settings")) {
-      setSelectedMenuItem("3");
-    } else if (location.pathname.startsWith("/packages")) {
-      setSelectedMenuItem("4");
-    } else if (location.pathname.startsWith("/accounts")) {
-      setSelectedMenuItem("5");
     } else if (location.pathname.startsWith("/manage-product")) {
       setSelectedMenuItem("3");
     } else if (location.pathname.startsWith("/accounts")) {
       setSelectedMenuItem("4");
     } else if (location.pathname.startsWith("/settings")) {
       setSelectedMenuItem("5");
-    } else if (location.pathname.startsWith("/package")) {
+    } else if (location.pathname.startsWith("/packages")) {
       setSelectedMenuItem("6");
     } else if (location.pathname.startsWith("/event-detail")) {
-      setSelectedMenuItem("7");
+      setSelectedMenuItem("10");
     }
   }, [location.pathname]);
 
@@ -48,7 +42,7 @@ const HostSideBar = ({ collapsed }) => {
       type: "group",
       children: [
         {
-          key: "7",
+          key: "10",
           icon: <InfoIcon />,
           label: (
             <span
@@ -60,7 +54,7 @@ const HostSideBar = ({ collapsed }) => {
           onClick: () => navigate(`/event-detail/${eventId}`),
         },
         {
-          key: "8",
+          key: "7",
           icon: <LocalGroceryStoreIcon />,
           label: (
             <span
@@ -70,10 +64,9 @@ const HostSideBar = ({ collapsed }) => {
             </span>
           ),
           onClick: () => navigate(`/event/transactions`),
-          // onClick: () => navigate(`/event/transactions/${eventId}`),
         },
         {
-          key: "9",
+          key: "8",
           icon: <StorefrontIcon />,
           label: (
             <span
@@ -83,13 +76,23 @@ const HostSideBar = ({ collapsed }) => {
             </span>
           ),
           onClick: () => navigate(`/event/booth-plan`),
-          // onClick: () => navigate(`/event/transactions/${eventId}`),
+        },
+        {
+          key: "9",
+          icon: <LocalGroceryStoreIcon />,
+          label: (
+            <span
+              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
+            >
+              Manage Product
+            </span>
+          ),
+          onClick: () => navigate(`/manage-product`),
         },
       ],
     },
   ];
 
-  // Sidebar items mặc định (Menu cha)
   const defaultItems = [
     {
       type: "group",
@@ -122,18 +125,6 @@ const HostSideBar = ({ collapsed }) => {
             </span>
           ),
           onClick: () => navigate("/events"),
-        },
-        {
-          key: "3",
-          icon: <LocalGroceryStoreIcon />,
-          label: (
-            <span
-              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
-            >
-              Manage Product
-            </span>
-          ),
-          onClick: () => navigate("/manage-product"),
         },
         {
           key: "4",
@@ -179,7 +170,7 @@ const HostSideBar = ({ collapsed }) => {
               Package
             </span>
           ),
-          onClick: () => navigate("/package"),
+          onClick: () => navigate("/packages"),
         },
       ],
     },
@@ -195,19 +186,28 @@ const HostSideBar = ({ collapsed }) => {
         navigate("/events");
         break;
       case "3":
-        navigate("/settings");
-        break;
-      case "4":
-        navigate("/packages");
-        break;
-      case "5":
-        navigate("/accounts");
-        break;
-      case "6":
         navigate("/manage-product");
         break;
+      case "4":
+        navigate("/accounts");
+        break;
+      case "5":
+        navigate("/settings");
+        break;
+      case "6":
+        navigate("/packages");
+        break;
       case "7":
-        navigate("/event/transactions");
+        navigate(`/event/transactions`);
+        break;
+      case "8":
+        navigate(`/event/booth-plan`);
+        break;
+      case "9":
+        navigate(`/manage-product`);
+        break;
+      case "10":
+        navigate(`/event-detail/${eventId}`);
         break;
       default:
         navigate("/dashboard");
@@ -247,7 +247,8 @@ const HostSideBar = ({ collapsed }) => {
           items={
             location.pathname.startsWith("/event-detail") ||
             location.pathname.startsWith("/event/transactions") ||
-            location.pathname.startsWith("/event/booth-plan")
+            location.pathname.startsWith("/event/booth-plan") ||
+            location.pathname.startsWith("/manage-product")
               ? eventDetailItems
               : defaultItems
           }
