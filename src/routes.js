@@ -20,10 +20,13 @@ import Settings from "./pages/host/Settings";
 import PackagePage from "./pages/host/Package";
 import ManageProduct from "./pages/host/ManageProduct";
 import LoginPage from "./shared/Login";
-import EventList from "./components/vendor/Test/abc";
-import EventDetail from "./components/vendor/Test/zxc";
+
 import ViewWebsitePage from "./pages/host/ViewWebsitePage";
 import BoothPlan from "./pages/host/BoothPlan";
+import EventStaff from "./components/staff/Event/StaffEvent";
+import StaffLayout from "./components/staff/Layout/StaffLayout";
+import EventPageStaff from "./components/staff/EventDetail/EventPageStaff";
+import StaffShop from "./components/staff/Shop/Shop";
 // import Transaction from "./components/vendor/Transaction/Transaction";
 
 const AppRoutes = () => {
@@ -85,6 +88,22 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/eventStaff"
+        element={
+          <StaffLayout>
+            <EventStaff />
+          </StaffLayout>
+        }
+      />
+      <Route
+        path="/eventStaff/:eventId"
+        element={
+          <StaffLayout>
+            <EventPageStaff />
+          </StaffLayout>
+        }
+      />
+      <Route
         path="/transaction"
         element={
           <VendorLayout>
@@ -106,6 +125,14 @@ const AppRoutes = () => {
           <VendorLayout>
             <Shop />
           </VendorLayout>
+        }
+      />
+      <Route
+        path="/StaffShop"
+        element={
+          <StaffLayout>
+            <StaffShop />
+          </StaffLayout>
         }
       />
       <Route

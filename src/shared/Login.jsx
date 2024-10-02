@@ -12,7 +12,7 @@ import {
   useToast,
   Icon,
 } from "@chakra-ui/react";
-import { FaUserShield, FaStore, FaUserTie } from "react-icons/fa";
+import { FaUserShield, FaStore, FaUserTie, FaUsers } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../shared/auth/AuthContext";
@@ -61,10 +61,12 @@ const LoginPage = () => {
 
           if (userRole === "admin") {
             navigate("/admin");
-          } else if (userRole === "vendor") {
-            navigate("/DashboardVendor");
           } else if (userRole === "host") {
             navigate("/dashboard");
+          } else if (userRole === "manager") {
+            navigate("/dashboardVendor");
+          } else if (userRole === "staff") {
+            navigate("/eventStaff");
           }
         }
       } else {
@@ -137,7 +139,7 @@ const LoginPage = () => {
             Choose Account Type
           </Text>
           <RadioGroup value={role} onChange={setRole}>
-            <HStack spacing={8}>
+            <HStack spacing={4} justifyContent="space-around" w="full">
               <VStack
                 as="label"
                 border="2px"
@@ -145,6 +147,8 @@ const LoginPage = () => {
                 borderRadius="md"
                 p={4}
                 cursor="pointer"
+                width="full"
+                textAlign="center"
               >
                 <Icon as={FaUserShield} boxSize={10} />
                 <Text>Admin</Text>
@@ -153,26 +157,44 @@ const LoginPage = () => {
               <VStack
                 as="label"
                 border="2px"
-                borderColor={role === "Vendor" ? "blue.500" : "gray.300"}
-                borderRadius="md"
-                p={4}
-                cursor="pointer"
-              >
-                <Icon as={FaStore} boxSize={10} />
-                <Text>Vendor</Text>
-                <Radio value="Vendor" />
-              </VStack>
-              <VStack
-                as="label"
-                border="2px"
                 borderColor={role === "Host" ? "blue.500" : "gray.300"}
                 borderRadius="md"
                 p={4}
                 cursor="pointer"
+                width="full"
+                textAlign="center"
               >
                 <Icon as={FaUserTie} boxSize={10} />
                 <Text>Host</Text>
                 <Radio value="Host" />
+              </VStack>
+              <VStack
+                as="label"
+                border="2px"
+                borderColor={role === "Manager" ? "blue.500" : "gray.300"}
+                borderRadius="md"
+                p={4}
+                cursor="pointer"
+                width="full"
+                textAlign="center"
+              >
+                <Icon as={FaStore} boxSize={10} />
+                <Text>Manager</Text>
+                <Radio value="Manager" />
+              </VStack>
+              <VStack
+                as="label"
+                border="2px"
+                borderColor={role === "Staff" ? "blue.500" : "gray.300"}
+                borderRadius="md"
+                p={4}
+                cursor="pointer"
+                width="full"
+                textAlign="center"
+              >
+                <Icon as={FaUsers} boxSize={10} />
+                <Text>Staff</Text>
+                <Radio value="Staff" />
               </VStack>
             </HStack>
           </RadioGroup>

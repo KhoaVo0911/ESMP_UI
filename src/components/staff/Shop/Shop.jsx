@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   SimpleGrid,
   Box,
@@ -15,64 +15,67 @@ import {
 } from "@chakra-ui/react";
 import ProductCard from "./ProductCard";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import Sushi from "./../../../assets/images/Pizza.png";
 import Cart from "./Cart";
 import AddProductModal from "./AddProductModal";
 import CreateProductModal from "./CreateProductModal";
 import { Link } from "react-router-dom"; // Import the Link component
-import axios from "axios";
 
-const Shop = () => {
+const products = [
+  { id: 1, name: "Margherita Pizza", price: 49000, quantity: 10, image: Sushi },
+  { id: 2, name: "Pepperoni Pizza", price: 52000, quantity: 8, image: Sushi },
+  { id: 3, name: "Hawaiian Pizza", price: 51000, quantity: 15, image: Sushi },
+  { id: 4, name: "BBQ Chicken Pizza", price: 53000, quantity: 5, image: Sushi },
+  { id: 5, name: "Veggie Pizza", price: 47000, quantity: 12, image: Sushi },
+  { id: 6, name: "Buffalo Pizza", price: 55000, quantity: 9, image: Sushi },
+  { id: 7, name: "Four Cheese Pizza", price: 60000, quantity: 6, image: Sushi },
+  {
+    id: 8,
+    name: "Meat Lover's Pizza",
+    price: 65000,
+    quantity: 7,
+    image: Sushi,
+  },
+  {
+    id: 9,
+    name: "Spinach and Feta Pizza",
+    price: 54000,
+    quantity: 4,
+    image: Sushi,
+  },
+  {
+    id: 10,
+    name: "Garlic Chicken Pizza",
+    price: 58000,
+    quantity: 11,
+    image: Sushi,
+  },
+];
+
+const StaffShop = () => {
   const [cart, setCart] = useState([]);
-  const [allProducts, setAllProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState(products);
   const {
     isOpen: isCartOpen,
     onOpen: onOpenCart,
     onClose: onCloseCart,
   } = useDisclosure();
+
   const {
     isOpen: isAddOpen,
     onOpen: onOpenAdd,
     onClose: onCloseAdd,
   } = useDisclosure();
+
   const {
     isOpen: isCreateOpen,
     onOpen: onOpenCreate,
     onClose: onCloseCreate,
   } = useDisclosure();
 
-  // Fetch products from the mock API
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get(
-        "https://668e540abf9912d4c92dcd67.mockapi.io/products"
-      );
-      setAllProducts(response.data);
-    } catch (error) {
-      console.error("Error fetching products", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   // Function to add items to the cart
   const addToCart = (product) => {
-    setCart((prevCart) => {
-      const existingProductIndex = prevCart.findIndex(
-        (cartItem) => cartItem.id === product.id
-      );
-
-      if (existingProductIndex !== -1) {
-        // If product is already in the cart, update its quantity
-        const updatedCart = [...prevCart];
-        updatedCart[existingProductIndex].quantity += product.quantity;
-        return updatedCart;
-      } else {
-        // If product is not in the cart, add it with the selected quantity
-        return [...prevCart, product];
-      }
-    });
+    setCart((prevCart) => [...prevCart, { ...product, quantity: 1 }]);
   };
 
   // Function to create new product
@@ -134,7 +137,7 @@ const Shop = () => {
       {/* Cart Drawer */}
       <Drawer isOpen={isCartOpen} placement="right" onClose={onCloseCart}>
         <DrawerOverlay>
-          <DrawerContent maxWidth="700px">
+          <DrawerContent maxWidth="600px">
             <DrawerHeader>Your Cart</DrawerHeader>
             <DrawerBody>
               <Cart
@@ -178,4 +181,4 @@ const Shop = () => {
   );
 };
 
-export default Shop;
+export default StaffShop;

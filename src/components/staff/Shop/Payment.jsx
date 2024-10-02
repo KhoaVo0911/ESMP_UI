@@ -9,21 +9,25 @@ import {
   Image,
   IconButton,
 } from "@chakra-ui/react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowBackIcon, DeleteIcon } from "@chakra-ui/icons";
 
-const Payment = ({ removeItem }) => {
+const Payment = ({ updateQuantity, removeItem }) => {
+  const location = useLocation();
   const navigate = useNavigate();
 
-  // Retrieve cart data from session storage
-  const cartItems = JSON.parse(sessionStorage.getItem("cartItems")) || [];
-  const totalPrice = sessionStorage.getItem("totalPrice") || 0;
+  // Retrieve cart data from location state or session storage
+  const cartItems =
+    location.state?.cartItems ||
+    JSON.parse(sessionStorage.getItem("cartItems"));
+  const totalPrice =
+    location.state?.totalPrice || sessionStorage.getItem("totalPrice");
 
-  // Function to calculate total quantity
-  const totalQuantity = cartItems.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
+  React.useEffect(() => {
+    if (!cartItems || cartItems.length === 0) {
+      navigate("/", { replace: true });
+    }
+  }, [cartItems, navigate]);
 
   return (
     <Box p={5} bgGradient="linear(to-r, blue.100, pink.100)" minH="100vh">
@@ -48,7 +52,7 @@ const Payment = ({ removeItem }) => {
       <Text fontSize="xl" mb={5} fontWeight="bold">
         There are{" "}
         <Text as="span" color="red">
-          {totalQuantity}
+          {cartItems.length}
         </Text>{" "}
         products in your cart
       </Text>
@@ -62,7 +66,7 @@ const Payment = ({ removeItem }) => {
           boxShadow="lg"
           bg="white"
           width="60%"
-          spacing={5}
+          spacing={5} // Add some spacing between items
         >
           {cartItems.map((item, index) => (
             <HStack
@@ -78,6 +82,27 @@ const Payment = ({ removeItem }) => {
               <HStack>
                 <Image src={item.image} alt={item.name} boxSize="50px" />
                 <Text>{item.name}</Text>
+              </HStack>
+
+              <HStack>
+                {/* Quantity Controller */}
+                <Button
+                  onClick={() => updateQuantity(index, item.quantity - 1)}
+                  isDisabled={item.quantity <= 1}
+                >
+                  -
+                </Button>
+                <Input
+                  width="50px"
+                  textAlign="center"
+                  value={item.quantity}
+                  readOnly
+                />
+                <Button
+                  onClick={() => updateQuantity(index, item.quantity + 1)}
+                >
+                  +
+                </Button>
               </HStack>
 
               <Text>{item.price.toLocaleString()} VND</Text>
@@ -125,7 +150,7 @@ const Payment = ({ removeItem }) => {
           {/* Items count and total price */}
           <HStack justify="space-between" mt={8}>
             <Text color="red.500" fontWeight="bold">
-              {totalQuantity} Items
+              {cartItems.length} Items
             </Text>
             <Text fontWeight="bold">
               {Number(totalPrice).toLocaleString()} VND
