@@ -27,13 +27,15 @@ import EventStaff from "./components/staff/Event/StaffEvent";
 import StaffLayout from "./components/staff/Layout/StaffLayout";
 import EventPageStaff from "./components/staff/EventDetail/EventPageStaff";
 import StaffShop from "./components/staff/Shop/Shop";
+import LandingPage from "./pages/host/LandingPage/LandingPage";
 // import Transaction from "./components/vendor/Transaction/Transaction";
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Redirect base URL to login page */}
-      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/" element={<Navigate to="/home" />} />
+      <Route path="/home" element={<LandingPage />} />
       {/* <Route path="/eventss" element={<EventList />} />
       <Route path="/events/:eventId" element={<EventDetail />} /> */}
       <Route path="/login" element={<LoginPage />} />
