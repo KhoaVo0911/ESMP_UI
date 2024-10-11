@@ -28,6 +28,9 @@ import StaffLayout from "./components/staff/Layout/StaffLayout";
 import EventPageStaff from "./components/staff/EventDetail/EventPageStaff";
 import StaffShop from "./components/staff/Shop/Shop";
 import LandingPage from "./pages/host/LandingPage/LandingPage";
+import CourseList from "./pages/host/QR/QRCode.jsx";
+import TransactionHistory from "./pages/host/QR/TransHistory";
+
 // import Transaction from "./components/vendor/Transaction/Transaction";
 
 const AppRoutes = () => {
@@ -41,6 +44,8 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/DashboardVendor" element={<DashboardVendor />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="qrcode" element={<CourseList />} />
+      <Route path="qrcodehist" element={<TransactionHistory />} />
       <Route
         path="/events/:eventId"
         element={
