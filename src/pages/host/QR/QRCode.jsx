@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
   Button,
@@ -30,6 +30,7 @@ const CourseList = () => {
   const [remainingTime, setRemainingTime] = useState(120); // Countdown timer initialized to 120 seconds
   const { isOpen, onOpen, onClose } = useDisclosure(); // Chakra UI hook for modal state
   const toast = useToast(); // Chakra UI hook for toast notifications
+  const countdownIntervalRef = useRef(null); // Reference to store the countdown interval
 
   useEffect(() => {
     // Sample data for course items
@@ -76,10 +77,15 @@ const CourseList = () => {
 
     setRemainingTime(120); // Reset the countdown timer to 120 seconds
 
-    const countdownInterval = setInterval(() => {
+    // Clear any existing countdown intervals before creating a new one
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+
+    countdownIntervalRef.current = setInterval(() => {
       setRemainingTime((prevTime) => {
         if (prevTime <= 1) {
-          clearInterval(countdownInterval); // Stop countdown when time runs out
+          clearInterval(countdownIntervalRef.current); // Stop countdown when time runs out
           toast({
             title: "Thanh toán thất bại",
             description: "Hết thời gian chờ. Vui lòng thử lại.",
@@ -127,6 +133,7 @@ const CourseList = () => {
         transactionTime > startTimestamp // Ensure the transaction time is strictly greater than the start time
       ) {
         clearInterval(intervalId); // Stop checking once payment is confirmed
+        clearInterval(countdownIntervalRef.current); // Stop the countdown timer on successful payment
         toast({
           title: "Thanh toán thành công",
           description: "Bạn đã thanh toán thành công cho khóa học.",
@@ -141,7 +148,6 @@ const CourseList = () => {
       console.error("Lỗi:", error);
     }
   };
-
   return (
     <VStack spacing={8} align="center" padding={4} bg="#f5f5dc" minH="100vh">
       <Flex wrap="wrap" justify="center" gap={6}>

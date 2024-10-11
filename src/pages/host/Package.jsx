@@ -1,137 +1,206 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
   Button,
-  Grid,
+  Flex,
+  Heading,
+  Image,
   Text,
   VStack,
-  Image,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
   useToast,
+  Progress,
+  Grid,
 } from "@chakra-ui/react";
 import axios from "axios";
 
 const Package = () => {
-  const [selectedPlan, setSelectedPlan] = useState(null); // Plan đã chọn
-  const [qrCode, setQrCode] = useState(""); // QR code tương ứng với gói chọn
-  const toast = useToast();
+  const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState({
+    content: "",
+    price: "",
+    showQR: false,
+    qrUrl: "",
+  });
+  const [remainingTime, setRemainingTime] = useState(120); // Countdown timer initialized to 120 seconds
+  const { isOpen, onOpen, onClose } = useDisclosure(); // Chakra UI hook for modal state
+  const toast = useToast(); // Chakra UI hook for toast notifications
+  const countdownIntervalRef = useRef(null); // Reference to store the countdown interval
 
-  // Fake API Call để lấy QR code
-  const getQrCode = async (plan) => {
-    try {
-      const response = await axios.get(`/api/qrcode?plan=${plan}`);
-      setQrCode(response.data.qrCode);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to get QR Code.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+  useEffect(() => {
+    // Update the course data structure to align with the Package component
+    const courseData = [
+      {
+        courseID: "COURSE001",
+
+        courseName: "Gold Plan - Buy 3 months get 1 month free",
+        coursePrice: 400000,
+      },
+      {
+        courseID: "COURSE002",
+
+        courseName: "Premiere Plan - Buy 6 months get 2 months free",
+        coursePrice: 750000,
+      },
+    ];
+
+    setCourses(courseData);
+  }, []);
+
+  const handleCourseClick = (course, index) => {
+    const paidPrice = courses[index].coursePrice;
+    const paidContent = courses[index].courseID;
+    const qrUrl = `https://img.vietqr.io/image/ACB-18254271-compact2.png?amount=${paidPrice}&addInfo=${paidContent}&accountName=Dinh Quang Minh`;
+
+    const newStartTime = new Date(); // Create a new Date object to use as the start time
+
+    setSelectedCourse({
+      content: paidContent,
+      price: paidPrice,
+      showQR: true,
+      qrUrl: qrUrl,
+    });
+
+    setRemainingTime(120); // Reset the countdown timer to 120 seconds
+
+    // Clear any existing countdown intervals before creating a new one
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
     }
-  };
 
-  const handlePlanSelection = (plan) => {
-    setSelectedPlan(plan);
-    getQrCode(plan);
+    countdownIntervalRef.current = setInterval(() => {
+      setRemainingTime((prevTime) => {
+        if (prevTime <= 1) {
+          clearInterval(countdownIntervalRef.current); // Stop countdown when time runs out
+          toast({
+            title: "Thanh toán thất bại",
+            description: "Hết thời gian chờ. Vui lòng thử lại.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          setSelectedCourse((prevState) => ({ ...prevState, showQR: false })); // Hide QR code
+          onClose(); // Close the modal if the payment fails
+          return 0;
+        }
+        return prevTime - 1; // Decrease the countdown by 1 second
+      });
+    }, 1000);
+
+    onOpen(); // Open the modal when a course is clicked
   };
 
   return (
-    <Box p={8}>
+    <VStack spacing={8} align="center" padding={4} bg="white" minH="80vh">
       <Text fontSize="2xl" fontWeight="bold" mb={8}>
         Compare Plans
       </Text>
       <Text fontSize="md" mb={8}>
         Choose your workspace plan according to Platform usage time.
       </Text>
-
-      {/* Các lựa chọn Plan */}
       <Grid templateColumns="repeat(2, 1fr)" gap={6}>
-        <Box
-          p={6}
-          border="1px"
-          borderColor={selectedPlan === "400k" ? "blue.400" : "gray.200"}
-          borderRadius="md"
-          textAlign="center"
-          onClick={() => handlePlanSelection("400k")}
-          cursor="pointer"
-          _hover={{ borderColor: "blue.500" }}
-        >
-          <Text fontSize="2xl" fontWeight="bold">
-            400.000 đ
-          </Text>
-          <Button
-            mt={4}
-            variant={selectedPlan === "400k" ? "solid" : "outline"}
+        {courses.map((item, index) => (
+          <Box
+            key={item.courseID}
+            position="relative"
+            maxW="280px"
+            textAlign="center"
+            bg="white"
+            borderRadius="lg"
+            boxShadow="xl"
+            p={4}
+            _hover={{ transform: "scale(1.05)" }}
+            transition="0.3s ease-in-out"
+            border="1px solid #d4af37"
           >
-            {selectedPlan === "400k" ? "Your Plan" : "Choose This Plan"}
-          </Button>
-          <Text mt={4} fontSize="sm" color="gray.500">
-            Gold Plan - Buy 3 months get 1 month free
-          </Text>
-        </Box>
-
-        <Box
-          p={6}
-          border="1px"
-          borderColor={selectedPlan === "750k" ? "blue.400" : "gray.200"}
-          borderRadius="md"
-          textAlign="center"
-          onClick={() => handlePlanSelection("750k")}
-          cursor="pointer"
-          _hover={{ borderColor: "blue.500" }}
-        >
-          <Text fontSize="2xl" fontWeight="bold">
-            750.000 đ
-          </Text>
-          <Button
-            mt={4}
-            variant={selectedPlan === "750k" ? "solid" : "outline"}
-          >
-            {selectedPlan === "750k" ? "Your Plan" : "Choose This Plan"}
-          </Button>
-          <Text mt={4} fontSize="sm" color="gray.500">
-            Premiere Plan - Buy 6 months get 2 months free
-          </Text>
-        </Box>
+            <Heading size="md" color="#6b4226" mb={2}>
+              {item.courseName}
+            </Heading>
+            <Text fontSize="lg" fontWeight="bold" color="#8b4513" mb={4}>
+              {item.coursePrice.toLocaleString()} VND
+            </Text>
+            <Button
+              colorScheme="yellow"
+              variant="outline"
+              borderColor="#d4af37"
+              color="#6b4226"
+              _hover={{ bg: "#d4af37", color: "white" }}
+              onClick={() => handleCourseClick(item, index)}
+            >
+              Mua
+            </Button>
+          </Box>
+        ))}
       </Grid>
 
-      {/* QR Code và thông tin thanh toán */}
-      {selectedPlan && (
-        <VStack
-          mt={12}
-          spacing={4}
-          border="1px"
-          borderColor="gray.200"
-          p={8}
-          borderRadius="md"
-        >
-          <Text fontSize="xl" fontWeight="bold">
-            Scan QR Code
-          </Text>
-          <Text fontSize="md" color="gray.500">
-            Scan the QR code below using Internet Banking application to pay for{" "}
-            {selectedPlan} Plan.
-          </Text>
-          {qrCode ? (
+      {/* Modal for displaying the QR code */}
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent position="relative">
+          <ModalHeader textAlign="center">Mã QR thanh toán tự động</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody textAlign="center">
             <Image
-              src={qrCode}
+              src={selectedCourse.qrUrl}
               alt="QR Code"
-              boxSize="200px"
-              objectFit="contain"
+              mx="auto"
+              mb={4}
+              boxShadow="md"
+              width={["80%", "70%", "60%"]} // Responsive size for different screen sizes
             />
-          ) : (
-            <Text>Loading QR Code...</Text>
-          )}
-          <Text fontSize="sm" color="gray.500">
-            Note: This QR code will expire 30 minutes after creation.
-          </Text>
-          <Button colorScheme="red" size="lg">
-            I HAVE COMPLETED THE PAYMENT ON THE APP
-          </Button>
-        </VStack>
-      )}
-    </Box>
+            <Text fontSize="lg" mb={2} color="yellow.400">
+              Mã QR thanh toán tự động
+            </Text>
+            <Text fontSize="sm" color="gray.500" p={5}>
+              (Xác nhận tự động - Thường không quá 3')
+            </Text>
+            <Flex
+              alignItems="center"
+              justifyContent="space-between"
+              width="100%"
+            >
+              <Text>Số tiền: {selectedCourse.price.toLocaleString()} VND</Text>
+              <Text>Nội dung: {selectedCourse.content}</Text>
+            </Flex>
+
+            <Box mt={4} p={2} borderTop="1px solid gray">
+              <Flex
+                alignItems="center"
+                justifyContent="space-between"
+                width="100%"
+              >
+                <Text>Đang chờ thanh toán</Text>
+                <Text>
+                  Thời gian còn lại:{" "}
+                  {`${Math.floor(remainingTime / 60)}:${String(
+                    remainingTime % 60
+                  ).padStart(2, "0")}`}
+                </Text>
+              </Flex>
+              <Progress
+                value={(remainingTime / 120) * 100} // Calculate progress based on remaining time
+                size="sm"
+                colorScheme="yellow"
+                mt={2}
+                width="100%" // Make the progress bar span the full width of the modal
+              />
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={onClose}>
+              Đóng
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </VStack>
   );
 };
 
