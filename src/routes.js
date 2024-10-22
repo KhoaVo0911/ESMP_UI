@@ -30,6 +30,9 @@ import StaffShop from "./components/staff/Shop/Shop";
 import LandingPage from "./pages/host/LandingPage/LandingPage";
 import CourseList from "./pages/host/QR/QRCode.jsx";
 import TransactionHistory from "./pages/host/QR/TransHistory";
+import AdminLayout from "./components/admin/Layout/AdminLayout.jsx";
+import AdminAccountManagement from "./components/admin/AccountManagement.jsx";
+import AdminTransactionHistory from "./components/admin/TransHistory.jsx";
 
 // import Transaction from "./components/vendor/Transaction/Transaction";
 
@@ -60,6 +63,23 @@ const AppRoutes = () => {
           <VendorLayout>
             <ListProducts />
           </VendorLayout>
+        }
+      />
+
+<Route
+        path="/admin"
+        element={
+          <AdminLayout>
+            <AdminAccountManagement/>
+          </AdminLayout>
+        }
+      />
+      <Route
+        path="/adtransaction"
+        element={
+          <AdminLayout>
+            <AdminTransactionHistory/>
+          </AdminLayout>
         }
       />
       <Route
