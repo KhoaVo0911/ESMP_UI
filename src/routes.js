@@ -19,7 +19,7 @@ import AccountManagement from "./pages/host/Account";
 import Settings from "./pages/host/Settings";
 import PackagePage from "./pages/host/Package";
 import ManageProduct from "./pages/host/ManageProduct";
-import LoginPage from "./shared/Login";
+import LoginPage from "./shared/LoginPage.jsx";
 
 import ViewWebsitePage from "./pages/host/ViewWebsitePage";
 import BoothPlan from "./pages/host/BoothPlan";
@@ -33,8 +33,8 @@ import TransactionHistory from "./pages/host/QR/TransHistory";
 import AdminLayout from "./components/admin/Layout/AdminLayout.jsx";
 import AdminAccountManagement from "./components/admin/AccountManagement.jsx";
 import AdminTransactionHistory from "./components/admin/TransHistory.jsx";
-
-// import Transaction from "./components/vendor/Transaction/Transaction";
+import ProductSample from "./components/vendor/MostOderProduct/ProductSample.jsx";
+import ManageProductsItem from "./components/vendor/MostOderProduct/ManageProductItems";
 
 const AppRoutes = () => {
   return (
@@ -45,10 +45,12 @@ const AppRoutes = () => {
       {/* <Route path="/eventss" element={<EventList />} />
       <Route path="/events/:eventId" element={<EventDetail />} /> */}
       <Route path="/login" element={<LoginPage />} />
+     <Route path="/productSample" element={<ManageProductsItem/>}/>
       <Route path="/DashboardVendor" element={<DashboardVendor />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="qrcode" element={<CourseList />} />
       <Route path="qrcodehist" element={<TransactionHistory />} />
+  
       <Route
         path="/events/:eventId"
         element={

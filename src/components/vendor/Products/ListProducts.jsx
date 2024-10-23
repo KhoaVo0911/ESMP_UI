@@ -15,7 +15,7 @@ import { SearchOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 
-const ProductList = () => {
+const ProductList = ({ accessToken }) => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,12 +25,18 @@ const ProductList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("name");
 
-  // Fetch data from API
+  // Fetch data from API with Authorization token
   const fetchData = async () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "https://668e540abf9912d4c92dcd67.mockapi.io/products"
+        "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product", // API endpoint đã cập nhật
+        {
+          headers: {
+            Authorization: `${accessToken}`, // Thêm Authorization header
+            "Content-Type": "application/json",
+          },
+        }
       );
       setData(response.data);
       setFilteredData(response.data);
@@ -45,12 +51,10 @@ const ProductList = () => {
     fetchData();
   }, []);
 
-  // Function to format price as VND
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price);
+  // Function to format date
+  const formatDate = (date) => {
+    const formattedDate = new Date(date);
+    return formattedDate.toLocaleDateString("vi-VN");
   };
 
   // Show modal to create/edit product
@@ -79,25 +83,41 @@ const ProductList = () => {
       if (editingProduct) {
         // Update product
         await axios.put(
-          `https://668e540abf9912d4c92dcd67.mockapi.io/products/${editingProduct.id}`,
-          values
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${editingProduct.productId}`,
+          values,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
         );
         setData(
           data.map((item) =>
-            item.id === editingProduct.id ? { ...item, ...values } : item
+            item.productId === editingProduct.productId
+              ? { ...item, ...values }
+              : item
           )
         );
         setFilteredData(
           filteredData.map((item) =>
-            item.id === editingProduct.id ? { ...item, ...values } : item
+            item.productId === editingProduct.productId
+              ? { ...item, ...values }
+              : item
           )
         );
         message.success("Sản phẩm đã được cập nhật!");
       } else {
         // Create new product
         const response = await axios.post(
-          "https://668e540abf9912d4c92dcd67.mockapi.io/products",
-          values
+          "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product",
+          values,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
         );
         setData([...data, response.data]);
         setFilteredData([...filteredData, response.data]);
@@ -114,10 +134,16 @@ const ProductList = () => {
   const handleDelete = async (id) => {
     try {
       await axios.delete(
-        `https://668e540abf9912d4c92dcd67.mockapi.io/products/${id}`
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${id}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
-      setData(data.filter((item) => item.id !== id));
-      setFilteredData(filteredData.filter((item) => item.id !== id));
+      setData(data.filter((item) => item.productId !== id));
+      setFilteredData(filteredData.filter((item) => item.productId !== id));
       message.success("Sản phẩm đã được xóa!");
     } catch (error) {
       message.error("Đã xảy ra lỗi khi xóa sản phẩm!");
@@ -129,7 +155,7 @@ const ProductList = () => {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
     const filtered = data.filter((item) =>
-      item.name.toLowerCase().includes(value)
+      item.productName.toLowerCase().includes(value)
     );
     setFilteredData(filtered);
   };
@@ -139,14 +165,11 @@ const ProductList = () => {
     setSortOrder(value);
     const sorted = [...filteredData].sort((a, b) => {
       if (value === "name") {
-        return a.name.localeCompare(b.name);
+        return a.productName.localeCompare(b.productName);
       } else if (value === "quantity") {
         return a.quantity - b.quantity;
       } else {
-        return (
-          parseFloat(a.price.replace(/\./g, "")) -
-          parseFloat(b.price.replace(/\./g, ""))
-        );
+        return a.count - b.count;
       }
     });
     setFilteredData(sorted);
@@ -156,8 +179,8 @@ const ProductList = () => {
   const columns = [
     {
       title: "Product Name",
-      dataIndex: "name",
-      key: "name",
+      dataIndex: "productName",
+      key: "productName",
       render: (text) => (
         <HStack>
           <Text>{text}</Text>
@@ -165,15 +188,31 @@ const ProductList = () => {
       ),
     },
     {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+    },
+    {
       title: "Quantity",
       dataIndex: "quantity",
       key: "quantity",
     },
     {
-      title: "Price",
-      dataIndex: "price",
-      key: "price",
-      render: (price) => <Text>{formatPrice(price)}</Text>, // Format price as VND
+      title: "Count",
+      dataIndex: "count",
+      key: "count",
+    },
+    {
+      title: "Create Date",
+      dataIndex: "createAt",
+      key: "createAt",
+      render: (date) => <Text>{formatDate(date)}</Text>,
+    },
+    {
+      title: "Update Date",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
+      render: (date) => <Text>{formatDate(date)}</Text>,
     },
     {
       title: "Actions",
@@ -192,7 +231,7 @@ const ProductList = () => {
             icon={<Delete />}
             colorScheme="red"
             size="sm"
-            onClick={() => handleDelete(record.id)}
+            onClick={() => handleDelete(record.productId)}
           />
         </HStack>
       ),
@@ -224,7 +263,7 @@ const ProductList = () => {
             >
               <Option value="name">Sort by Name</Option>
               <Option value="quantity">Sort by Quantity</Option>
-              <Option value="price">Sort by Price</Option>
+              <Option value="count">Sort by Count</Option>
             </Select>
             <AntdButton
               type="primary"
@@ -242,7 +281,7 @@ const ProductList = () => {
             pageSize: 10, // Show a maximum of 10 products per page
           }}
           bordered
-          rowKey="id"
+          rowKey="productId"
           style={{ textAlign: "center", marginTop: "20px", width: "100%" }}
           loading={loading}
         />
@@ -258,7 +297,7 @@ const ProductList = () => {
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="name"
+            name="productName"
             label="Product Name"
             rules={[
               { required: true, message: "Please input the product name!" },
@@ -274,11 +313,20 @@ const ProductList = () => {
             <Input type="number" />
           </Form.Item>
           <Form.Item
-            name="price"
-            label="Price (VND)"
-            rules={[{ required: true, message: "Please input the price!" }]}
+            name="description"
+            label="Description"
+            rules={[
+              { required: true, message: "Please input the description!" },
+            ]}
           >
             <Input />
+          </Form.Item>
+          <Form.Item
+            name="count"
+            label="Count"
+            rules={[{ required: true, message: "Please input the count!" }]}
+          >
+            <Input type="number" />
           </Form.Item>
         </Form>
       </Modal>

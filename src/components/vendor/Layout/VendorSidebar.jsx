@@ -15,11 +15,14 @@ const VendorSideBar = ({ collapsed }) => {
   const location = useLocation();
   const [selectedMenuItem, setSelectedMenuItem] = useState("1");
 
-  // Update selectedMenuItem based on current URL
+  // Kiểm tra nếu location.state tồn tại, nếu không thì đặt giá trị mặc định
+  const accessToken = location.state?.accessToken || ""; // Nếu không có state thì dùng chuỗi rỗng
+  const vendorId = location.state?.vendorId || ""; // Nếu không có state thì dùng chuỗi rỗng
+
   useEffect(() => {
     if (location.pathname.startsWith("/dashboardVendor")) {
       setSelectedMenuItem("1");
-    } else if (location.pathname.startsWith("/listProducts")) {
+    } else if (location.pathname.startsWith("/productSample")) {
       setSelectedMenuItem("2");
     } else if (location.pathname.startsWith("/ManageProductItems")) {
       setSelectedMenuItem("3");
@@ -33,7 +36,7 @@ const VendorSideBar = ({ collapsed }) => {
   const defaultItems = [
     {
       type: "group",
-      label: <h3 style={{ fontWeight: "bold", color: "#A0AEC0" }}>MENU</h3>, // Adjusting group title style
+      label: <h3 style={{ fontWeight: "bold", color: "#A0AEC0" }}>MENU</h3>,
       children: [
         {
           key: "1",
@@ -48,9 +51,7 @@ const VendorSideBar = ({ collapsed }) => {
         {
           key: "3",
           icon: <FastfoodIcon />,
-          label: (
-            <span style={{ fontWeight: "bold" }}>Manage Product Items</span>
-          ),
+          label: <span style={{ fontWeight: "bold" }}>Manage Product Items</span>,
         },
         {
           key: "4",
@@ -70,22 +71,22 @@ const VendorSideBar = ({ collapsed }) => {
     setSelectedMenuItem(e.key);
     switch (e.key) {
       case "1":
-        navigate("/dashboardVendor");
+        navigate("/dashboardVendor", { state: { accessToken, vendorId } });
         break;
       case "2":
-        navigate("/productsList");
+        navigate("/productsList", { state: { accessToken, vendorId } });
         break;
       case "3":
-        navigate("/ManageProductItems");
+        navigate("/productSample", { state: { accessToken, vendorId } });
         break;
       case "4":
-        navigate("/eventsVendor");
+        navigate("/eventsVendor", { state: { accessToken, vendorId } });
         break;
       case "5":
-        navigate("/Transaction");
+        navigate("/Transaction", { state: { accessToken, vendorId } });
         break;
       default:
-        navigate("/dashboardVendor");
+        navigate("/dashboardVendor", { state: { accessToken, vendorId } });
     }
   };
 

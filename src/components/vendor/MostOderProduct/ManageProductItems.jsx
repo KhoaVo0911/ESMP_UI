@@ -1,311 +1,264 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Grid,
-  Text,
-  Image,
-  IconButton,
-  VStack,
-  HStack,
   Button,
-  Input,
-  useToast,
+  Grid,
+  GridItem,
+  Image,
+  Text,
+  Flex,
+  useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalBody,
   ModalCloseButton,
+  ModalBody,
   ModalFooter,
   FormControl,
   FormLabel,
+  Input,
+  Select,
+  List,
+  ListItem,
+  IconButton,
+  useToast,
 } from "@chakra-ui/react";
-import { EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import axios from "axios";
+import { useForm } from "react-hook-form";
 
-const ManageProductItems = () => {
+const ManageProducts = () => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [products, setProducts] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [name, setName] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [price, setPrice] = useState("");
-  const [image, setImage] = useState("");
-  const [activeCard, setActiveCard] = useState(null); // Track card click
+  const [combos, setCombos] = useState([]);
+  const [comboProducts, setComboProducts] = useState([]); // For storing selected products in a combo
+  const { register, handleSubmit, reset, setValue } = useForm();
   const toast = useToast();
 
-  // Hàm định dạng tiền theo VND
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(value);
-  };
-
-  // Fetch dữ liệu từ API
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get(
-        "https://668e540abf9912d4c92dcd67.mockapi.io/products"
-      );
-      setProducts(response.data);
-    } catch (error) {
-      toast({
-        title: "Error loading products",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
+  // Fetch Products from the MockAPI
   useEffect(() => {
-    fetchProducts();
+    axios.get("https://668e540abf9912d4c92dcd67.mockapi.io/products").then((res) => setProducts(res.data));
+    axios.get("https://668e540abf9912d4c92dcd67.mockapi.io/combo").then((res) => setCombos(res.data));
   }, []);
 
-  // Hàm để xử lý tạo hoặc cập nhật sản phẩm
-  const handleSave = async () => {
-    const productData = { name, quantity, price, image };
+  // Add product to comboProducts list with selected quantity
+  const addProductToCombo = (selectedProductId, selectedQuantity) => {
+    const quantity = Math.max(1, selectedQuantity); // Ensure quantity is at least 1
+    const selectedProduct = products.find((p) => p.id === selectedProductId);
+    if (selectedProduct && !comboProducts.find((p) => p.id === selectedProduct.id)) {
+      setComboProducts([...comboProducts, { ...selectedProduct, quantity }]);
+    }
+  };
 
-    try {
-      if (editingProduct) {
-        await axios.put(
-          `https://668e540abf9912d4c92dcd67.mockapi.io/products/${editingProduct.id}`,
-          productData
-        );
-        setProducts(
-          products.map((item) =>
-            item.id === editingProduct.id ? { ...item, ...productData } : item
-          )
-        );
-        toast({
-          title: "Product updated successfully",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        const response = await axios.post(
-          "https://668e540abf9912d4c92dcd67.mockapi.io/products",
-          productData
-        );
-        setProducts([...products, response.data]);
-        toast({
-          title: "Product created successfully",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
+  // Remove a product from the comboProducts list
+  const removeProductFromCombo = (productId) => {
+    setComboProducts(comboProducts.filter((p) => p.id !== productId));
+  };
+
+  // Handle form submit for adding products or combos
+  const onSubmit = (data) => {
+    if (comboProducts.length === 0) {
       toast({
-        title: "Failed to save product",
+        title: "Error",
+        description: "You must add at least one product.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
-    } finally {
-      setIsModalOpen(false);
-      clearForm();
+      return;
     }
-  };
 
-  // Hàm để xóa sản phẩm
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(
-        `https://668e540abf9912d4c92dcd67.mockapi.io/products/${id}`
-      );
-      setProducts(products.filter((item) => item.id !== id));
+    if (comboProducts.length > 1 && (!data.comboName || !data.comboPrice)) {
       toast({
-        title: "Product deleted successfully",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      toast({
-        title: "Failed to delete product",
+        title: "Error",
+        description: "You must provide a name and price for the combo.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
+      return;
     }
-  };
 
-  // Xử lý mở modal cho chỉnh sửa hoặc tạo mới sản phẩm
-  const showModal = (product = null) => {
-    setEditingProduct(product);
-    if (product) {
-      setName(product.name);
-      setQuantity(product.quantity);
-      setPrice(product.price);
-      setImage(product.image);
-    } else {
-      clearForm();
+    let name = data.comboName;
+    let price = data.comboPrice;
+
+    if (comboProducts.length === 1) {
+      // If only one product is added, automatically use its name and price
+      name = comboProducts[0].name;
+      price = comboProducts[0].price;
     }
-    setIsModalOpen(true);
-  };
 
-  // Hàm để xóa dữ liệu form sau khi hoàn thành
-  const clearForm = () => {
-    setName("");
-    setQuantity("");
-    setPrice("");
-    setImage("");
-    setEditingProduct(null);
-  };
+    const comboData = {
+      name,
+      price,
+      image: comboProducts[0]?.image || "https://via.placeholder.com/150", // Default image
+      products: comboProducts.map((p) => ({ name: p.name, quantity: p.quantity })),
+    };
 
-  // Hàm để kiểm tra card hiện tại có đang được nhấn hay không
-  const handleCardClick = (id) => {
-    setActiveCard(activeCard === id ? null : id);
+    axios.post("https://668e540abf9912d4c92dcd67.mockapi.io/combo", comboData).then(() => {
+      setCombos([...combos, comboData]);
+      alert(comboProducts.length === 1 ? "Single product created!" : "Combo created!");
+      setComboProducts([]); // Reset combo products after saving
+      reset();
+      onClose();
+    });
   };
 
   return (
-    <Box padding={5}>
-      {/* Nút tạo sản phẩm mới */}
-      <HStack justifyContent="space-between" marginBottom={4}>
-        <Text fontSize="2xl" fontWeight="bold">
-          List of Products
-        </Text>
-        <Button
-          leftIcon={<AddIcon />}
-          colorScheme="blue"
-          onClick={() => showModal()}
-        >
-          Create Product
-        </Button>
-      </HStack>
+    <Box p={5}>
+      {/* Button to trigger adding products */}
+      <Button colorScheme="blue" onClick={onOpen}>
+        Add Products
+      </Button>
 
-      {/* Danh sách sản phẩm */}
-      <Grid templateColumns="repeat(4, 1fr)" gap={6}>
-        {products.map((product) => (
-          <Box
-            key={product.id}
-            maxW="sm"
-            borderWidth="1px"
-            borderRadius="lg"
+      {/* Product/Combo Display Section */}
+      <Grid templateColumns="repeat(4, 1fr)" gap={6} mt={10}>
+        {combos.map((combo) => (
+          <GridItem
+            key={combo.id}
+            border="1px solid #e0e0e0"
+            borderRadius="md"
             overflow="hidden"
-            boxShadow="lg"
-            position="relative"
-            cursor="pointer"
-            _hover={{ boxShadow: "0 0 15px rgba(0, 0, 0, 0.2)" }}
-            transition="all 0.3s ease" // Animation
-            onClick={() => handleCardClick(product.id)}
-            height="400px" // Đặt chiều cao cố định cho card
+            boxShadow="md"
+            _hover={{ boxShadow: "lg" }}
           >
             <Image
-              src={product.image || "https://via.placeholder.com/300x200"}
-              alt={product.name}
-              width="100%"
-              height="60%" // Đặt chiều cao cho hình ảnh
+              src={combo.image}
+              alt={combo.name}
               objectFit="cover"
+              width="100%"
+              height="150px"
             />
-            <VStack
-              spacing={2}
-              p={3}
-              textAlign="center"
-              height="40%" // Cố định chiều cao của phần nội dung
-              justifyContent={
-                activeCard === product.id ? "space-between" : "center"
-              } // Đưa nội dung lên khi nhấn vào
-              transform={
-                activeCard === product.id
-                  ? "translateY(-14px)"
-                  : "translateY(0px)"
-              } // Di chuyển nội dung lên khi nhấn
-              transition="all 0.1s ease" // Thêm animation khi di chuyển
-            >
+            <Box p={4}>
               <Text fontWeight="bold" fontSize="lg">
-                {product.name}
+                {combo.name}
               </Text>
-              <Text fontSize="sm" color="gray.600">
-                Quantity: {product.quantity}
+              <Text>{combo.price} VND</Text>
+              <Text fontSize="sm" mt={2} color="gray.500">
+                Includes:
               </Text>
-              <Text fontSize="md" color="gray.800">
-                {formatCurrency(product.price)}
-              </Text>
-
-              {/* Thêm nút Edit và Delete với absolute position */}
-              {activeCard === product.id && (
-                <HStack spacing={4} justify="center" pt={2}>
-                  <IconButton
-                    aria-label="Edit Product"
-                    icon={<EditIcon boxSize={5} />}
-                    onClick={() => showModal(product)}
-                    variant="ghost"
-                    colorScheme="blue"
-                    _hover={{ bg: "transparent" }} // Bỏ viền nền khi hover
-                  />
-                  <IconButton
-                    aria-label="Delete Product"
-                    icon={<DeleteIcon boxSize={5} />}
-                    onClick={() => handleDelete(product.id)}
-                    variant="ghost"
-                    colorScheme="red"
-                    _hover={{ bg: "transparent" }} // Bỏ viền nền khi hover
-                  />
-                </HStack>
-              )}
-            </VStack>
-          </Box>
+              <Flex direction="column">
+                {combo.products.map((product, index) => (
+                  <Text key={index} fontSize="sm">
+                    - {product.name} x {product.quantity}
+                  </Text>
+                ))}
+              </Flex>
+            </Box>
+            <Flex justifyContent="flex-end" p={4}>
+              <Button
+                leftIcon={<FaEdit />}
+                size="sm"
+                colorScheme="teal"
+                variant="outline"
+              >
+                Edit
+              </Button>
+            </Flex>
+          </GridItem>
         ))}
       </Grid>
 
-      {/* Modal tạo/sửa sản phẩm */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      {/* Modal for Adding Product/Combo */}
+      <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
-            {editingProduct ? "Edit Product" : "Create Product"}
-          </ModalHeader>
+          <ModalHeader>Add Product</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <VStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>Product Name</FormLabel>
-                <Input
-                  placeholder="Enter product name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+            <form onSubmit={handleSubmit(onSubmit)}>
+              {comboProducts.length > 1 ? (
+                <>
+                  {/* Name and Price fields required for combo */}
+                  <FormControl mt={4} isRequired>
+                    <FormLabel>Name</FormLabel>
+                    <Input
+                      {...register("comboName")}
+                      placeholder="Enter name"
+                    />
+                  </FormControl>
+                  <FormControl mt={4} isRequired>
+                    <FormLabel>Price</FormLabel>
+                    <Input
+                      {...register("comboPrice")}
+                      placeholder="Enter price"
+                    />
+                  </FormControl>
+                </>
+              ) : null}
+
+              <FormControl mt={4}>
+                <FormLabel>Select Product and Quantity</FormLabel>
+                <Select
+                  placeholder="Select a product"
+                  {...register("comboProductId")}
+                >
+                  {products.map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.name}
+                    </option>
+                  ))}
+                </Select>
+                <FormControl mt={2}>
+                  <FormLabel>Quantity</FormLabel>
+                  <Input
+                    type="number"
+                    defaultValue={1}
+                    min={1}
+                    {...register("comboProductQuantity")}
+                    placeholder="Enter quantity"
+                  />
+                </FormControl>
+                <Button
+                  mt={2}
+                  colorScheme="teal"
+                  onClick={() =>
+                    addProductToCombo(
+                      document.querySelector("select[name=comboProductId]").value,
+                      document.querySelector("input[name=comboProductQuantity]").value
+                    )
+                  }
+                >
+                  Add Product
+                </Button>
               </FormControl>
-              <FormControl isRequired>
-                <FormLabel>Quantity</FormLabel>
-                <Input
-                  placeholder="Enter quantity"
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                />
-              </FormControl>
-              <FormControl isRequired>
-                <FormLabel>Price (VND)</FormLabel>
-                <Input
-                  placeholder="Enter price"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Image URL</FormLabel>
-                <Input
-                  placeholder="Enter image URL"
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                />
-              </FormControl>
-            </VStack>
+
+              {/* Display selected products */}
+              {comboProducts.length > 0 && (
+                <Box mt={4}>
+                  <Text>Selected Products:</Text>
+                  <List>
+                    {comboProducts.map((product) => (
+                      <ListItem key={product.id}>
+                        <Flex justifyContent="space-between" alignItems="center">
+                          <Text>
+                            {product.name} x {product.quantity}
+                          </Text>
+                          <IconButton
+                            icon={<FaTrash />}
+                            size="sm"
+                            colorScheme="red"
+                            onClick={() => removeProductFromCombo(product.id)}
+                          />
+                        </Flex>
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+              )}
+              <ModalFooter>
+                <Button colorScheme="blue" mr={3} type="submit">
+                  Save
+                </Button>
+                <Button onClick={onClose}>Cancel</Button>
+              </ModalFooter>
+            </form>
           </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={handleSave}>
-              {editingProduct ? "Update" : "Create"}
-            </Button>
-          </ModalFooter>
         </ModalContent>
       </Modal>
     </Box>
   );
 };
 
-export default ManageProductItems;
+export default ManageProducts;
