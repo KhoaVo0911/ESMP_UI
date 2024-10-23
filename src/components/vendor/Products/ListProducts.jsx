@@ -12,18 +12,23 @@ import {
 import { Box, HStack, Text, VStack, IconButton } from "@chakra-ui/react";
 import { Delete, Edit } from "@mui/icons-material";
 import { SearchOutlined } from "@ant-design/icons";
+import { useLocation } from "react-router-dom";
+
 
 const { Option } = Select;
 
-const ProductList = ({ accessToken }) => {
+const ProductList = ({ }) => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("name");
+  const accessToken = location.state?.accessToken || ""; // Kiểm tra nếu accessToken tồn tại
+  const vendorId = location.state?.vendorId || ""; 
 
   // Fetch data from API with Authorization token
   const fetchData = async () => {
@@ -76,15 +81,25 @@ const ProductList = ({ accessToken }) => {
 
   // Save new or updated product
   const handleSave = async () => {
+    console.log("Save function triggered");
     try {
       const values = await form.validateFields();
-      values.price = parseFloat(values.price.replace(/,/g, "")); // Ensure price is a number
-
+      console.log("Form values: ", values);  // Log the form values
+      
+      const payload = {
+        ...values,
+        categoryId: editingProduct ? editingProduct.categoryId : values.categoryId,
+        status: true,
+      };
+  
+      console.log("Payload to be sent: ", payload); // Log the payload to be sent
+  
       if (editingProduct) {
-        // Update product
-        await axios.put(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${editingProduct.productId}`,
-          values,
+        // Log the PUT URL
+        console.log(`Sending PUT request to: /api/product/${vendorId}/${editingProduct.productId}`);
+        const response = await axios.put(
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}/${editingProduct.productId}`,
+          payload,
           {
             headers: {
               Authorization: `${accessToken}`,
@@ -92,17 +107,20 @@ const ProductList = ({ accessToken }) => {
             },
           }
         );
+  
+        console.log("PUT response: ", response.data); // Log response from API
+  
         setData(
           data.map((item) =>
             item.productId === editingProduct.productId
-              ? { ...item, ...values }
+              ? { ...item, ...payload }
               : item
           )
         );
         setFilteredData(
           filteredData.map((item) =>
             item.productId === editingProduct.productId
-              ? { ...item, ...values }
+              ? { ...item, ...payload }
               : item
           )
         );
@@ -110,11 +128,11 @@ const ProductList = ({ accessToken }) => {
       } else {
         // Create new product
         const response = await axios.post(
-          "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product",
-          values,
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product`,
+          payload,  // Use the payload including categoryId
           {
             headers: {
-              Authorization: `${accessToken}`,
+              Authorization: `${accessToken}`, // Ensure Bearer is added
               "Content-Type": "application/json",
             },
           }
@@ -123,18 +141,20 @@ const ProductList = ({ accessToken }) => {
         setFilteredData([...filteredData, response.data]);
         message.success("Sản phẩm mới đã được thêm!");
       }
+  
       setIsModalOpen(false);
       form.resetFields();
     } catch (error) {
+      console.error("API Error: ", error.response?.data || error.message); // Log any error
       message.error("Đã xảy ra lỗi!");
     }
   };
-
+  
   // Delete product
   const handleDelete = async (id) => {
     try {
       await axios.delete(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${id}`,
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}/${id}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -149,7 +169,7 @@ const ProductList = ({ accessToken }) => {
       message.error("Đã xảy ra lỗi khi xóa sản phẩm!");
     }
   };
-
+  
   // Search for products
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();

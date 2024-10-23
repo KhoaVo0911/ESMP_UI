@@ -27,33 +27,83 @@ import {
 import { FaEdit, FaTrash } from "react-icons/fa";
 import axios from "axios";
 import { useForm } from "react-hook-form";
+import { useLocation } from "react-router-dom";
 
 const ManageProducts = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [products, setProducts] = useState([]);
   const [combos, setCombos] = useState([]);
   const [comboProducts, setComboProducts] = useState([]); // For storing selected products in a combo
-  const { register, handleSubmit, reset, setValue } = useForm();
+  const { register, handleSubmit, reset, setValue, watch } = useForm();
   const toast = useToast();
+  const [loading, setLoading] = useState(false); 
+  const location = useLocation();
+  const accessToken = location.state?.accessToken || ""; 
+  const vendorId = location.state?.vendorId || "";
 
-  // Fetch Products from the MockAPI
+  // Fetch Products from the real API
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product",
+        {
+          headers: {
+            Authorization: `${accessToken}`, 
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setProducts(response.data); 
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Lỗi khi lấy dữ liệu từ API!",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    axios.get("https://668e540abf9912d4c92dcd67.mockapi.io/products").then((res) => setProducts(res.data));
+    fetchData();
     axios.get("https://668e540abf9912d4c92dcd67.mockapi.io/combo").then((res) => setCombos(res.data));
   }, []);
 
   // Add product to comboProducts list with selected quantity
   const addProductToCombo = (selectedProductId, selectedQuantity) => {
-    const quantity = Math.max(1, selectedQuantity); // Ensure quantity is at least 1
-    const selectedProduct = products.find((p) => p.id === selectedProductId);
-    if (selectedProduct && !comboProducts.find((p) => p.id === selectedProduct.id)) {
+    const quantity = Math.max(1, selectedQuantity);
+    const selectedProduct = products.find((p) => p.productId === selectedProductId);
+    if (selectedProduct && !comboProducts.find((p) => p.productId === selectedProduct.productId)) {
       setComboProducts([...comboProducts, { ...selectedProduct, quantity }]);
+      
+      // Automatically set the product name if only one product is selected
+      if (comboProducts.length === 0) {
+        setValue("comboName", selectedProduct.productName); // Auto-fill name
+        setValue("comboPrice", ""); // Keep price empty and editable
+      } else {
+        setValue("comboName", "");
+        setValue("comboPrice", "");
+      }
     }
   };
 
   // Remove a product from the comboProducts list
   const removeProductFromCombo = (productId) => {
-    setComboProducts(comboProducts.filter((p) => p.id !== productId));
+    const updatedComboProducts = comboProducts.filter((p) => p.productId !== productId);
+    setComboProducts(updatedComboProducts);
+
+    // Reset fields if only one product remains
+    if (updatedComboProducts.length === 1) {
+      setValue("comboName", updatedComboProducts[0].productName);
+      setValue("comboPrice", "");
+    } else {
+      setValue("comboName", "");
+      setValue("comboPrice", "");
+    }
   };
 
   // Handle form submit for adding products or combos
@@ -84,16 +134,14 @@ const ManageProducts = () => {
     let price = data.comboPrice;
 
     if (comboProducts.length === 1) {
-      // If only one product is added, automatically use its name and price
-      name = comboProducts[0].name;
-      price = comboProducts[0].price;
+      name = comboProducts[0].productName;
     }
 
     const comboData = {
       name,
       price,
       image: comboProducts[0]?.image || "https://via.placeholder.com/150", // Default image
-      products: comboProducts.map((p) => ({ name: p.name, quantity: p.quantity })),
+      products: comboProducts.map((p) => ({ name: p.productName, quantity: p.quantity })),
     };
 
     axios.post("https://668e540abf9912d4c92dcd67.mockapi.io/combo", comboData).then(() => {
@@ -168,17 +216,18 @@ const ManageProducts = () => {
           <ModalCloseButton />
           <ModalBody>
             <form onSubmit={handleSubmit(onSubmit)}>
-              {comboProducts.length > 1 ? (
+              { (
                 <>
                   {/* Name and Price fields required for combo */}
-                  <FormControl mt={4} isRequired>
+                  <FormControl mt={4}>
                     <FormLabel>Name</FormLabel>
                     <Input
                       {...register("comboName")}
                       placeholder="Enter name"
+                      isDisabled={comboProducts.length === 1} // Disable name field if only one product is selected
                     />
                   </FormControl>
-                  <FormControl mt={4} isRequired>
+                  <FormControl mt={4}>
                     <FormLabel>Price</FormLabel>
                     <Input
                       {...register("comboPrice")}
@@ -186,7 +235,7 @@ const ManageProducts = () => {
                     />
                   </FormControl>
                 </>
-              ) : null}
+              ) }
 
               <FormControl mt={4}>
                 <FormLabel>Select Product and Quantity</FormLabel>
@@ -195,8 +244,8 @@ const ManageProducts = () => {
                   {...register("comboProductId")}
                 >
                   {products.map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.name}
+                    <option key={product.productId} value={product.productId}>
+                      {product.productName}
                     </option>
                   ))}
                 </Select>
@@ -230,16 +279,16 @@ const ManageProducts = () => {
                   <Text>Selected Products:</Text>
                   <List>
                     {comboProducts.map((product) => (
-                      <ListItem key={product.id}>
+                      <ListItem key={product.productId}>
                         <Flex justifyContent="space-between" alignItems="center">
                           <Text>
-                            {product.name} x {product.quantity}
+                            {product.productName} x {product.quantity}
                           </Text>
                           <IconButton
                             icon={<FaTrash />}
                             size="sm"
                             colorScheme="red"
-                            onClick={() => removeProductFromCombo(product.id)}
+                            onClick={() => removeProductFromCombo(product.productId)}
                           />
                         </Flex>
                       </ListItem>

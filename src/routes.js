@@ -45,7 +45,9 @@ const AppRoutes = () => {
       {/* <Route path="/eventss" element={<EventList />} />
       <Route path="/events/:eventId" element={<EventDetail />} /> */}
       <Route path="/login" element={<LoginPage />} />
-     <Route path="/productSample" element={<ManageProductsItem/>}/>
+     <Route path="/productSample" element={<VendorLayout>
+            <ManageProductItems/>
+          </VendorLayout>}/>
       <Route path="/DashboardVendor" element={<DashboardVendor />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="qrcode" element={<CourseList />} />
