@@ -35,6 +35,8 @@ import AdminAccountManagement from "./components/admin/AccountManagement.jsx";
 import AdminTransactionHistory from "./components/admin/TransHistory.jsx";
 import ProductSample from "./components/vendor/MostOderProduct/ProductSample.jsx";
 import ManageProductsItem from "./components/vendor/MostOderProduct/ManageProductItems";
+import ManageProductsItems from "./components/vendor/MostOderProduct/ProductItem/ManageProduct.jsx";
+import ManageProducts from "./components/vendor/MostOderProduct/ManageProductItems";
 
 const AppRoutes = () => {
   return (
@@ -46,7 +48,7 @@ const AppRoutes = () => {
       <Route path="/events/:eventId" element={<EventDetail />} /> */}
       <Route path="/login" element={<LoginPage />} />
      <Route path="/productSample" element={<VendorLayout>
-            <ManageProductItems/>
+            <ManageProducts/>
           </VendorLayout>}/>
       <Route path="/DashboardVendor" element={<DashboardVendor />} />
       <Route path="/dashboard" element={<Dashboard />} />

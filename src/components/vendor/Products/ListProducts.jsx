@@ -8,14 +8,14 @@ import {
   Button as AntdButton,
   Select,
   message,
+ 
 } from "antd";
 import { Box, HStack, Text, VStack, IconButton } from "@chakra-ui/react";
 import { Delete, Edit } from "@mui/icons-material";
 import { SearchOutlined } from "@ant-design/icons";
 import { useLocation } from "react-router-dom";
-
-
-const { Option } = Select;
+import { v4 as uuidv4 } from 'uuid'; // Import uuid
+import { Option } from "antd/es/mentions";
 
 const ProductList = ({ }) => {
   const [data, setData] = useState([]);
@@ -81,23 +81,18 @@ const ProductList = ({ }) => {
 
   // Save new or updated product
   const handleSave = async () => {
-    console.log("Save function triggered");
     try {
       const values = await form.validateFields();
-      console.log("Form values: ", values);  // Log the form values
-      
+  
       const payload = {
         ...values,
-        categoryId: editingProduct ? editingProduct.categoryId : values.categoryId,
+        categoryId: editingProduct ? editingProduct.categoryId : uuidv4(),
         status: true,
       };
   
-      console.log("Payload to be sent: ", payload); // Log the payload to be sent
-  
       if (editingProduct) {
-        // Log the PUT URL
-        console.log(`Sending PUT request to: /api/product/${vendorId}/${editingProduct.productId}`);
-        const response = await axios.put(
+        // Cập nhật sản phẩm
+        await axios.put(
           `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}/${editingProduct.productId}`,
           payload,
           {
@@ -107,53 +102,36 @@ const ProductList = ({ }) => {
             },
           }
         );
-  
-        console.log("PUT response: ", response.data); // Log response from API
-  
-        setData(
-          data.map((item) =>
-            item.productId === editingProduct.productId
-              ? { ...item, ...payload }
-              : item
-          )
-        );
-        setFilteredData(
-          filteredData.map((item) =>
-            item.productId === editingProduct.productId
-              ? { ...item, ...payload }
-              : item
-          )
-        );
-        message.success("Sản phẩm đã được cập nhật!");
       } else {
-        // Create new product
-        const response = await axios.post(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product`,
-          payload,  // Use the payload including categoryId
+        // Tạo sản phẩm mới
+        await axios.post(
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
+          payload,
           {
             headers: {
-              Authorization: `${accessToken}`, // Ensure Bearer is added
+              Authorization: `${accessToken}`,
               "Content-Type": "application/json",
             },
           }
         );
-        setData([...data, response.data]);
-        setFilteredData([...filteredData, response.data]);
-        message.success("Sản phẩm mới đã được thêm!");
       }
   
+      // Sau khi lưu thành công, gọi lại API để đồng bộ hóa dữ liệu
+      await fetchData();  // Gọi lại hàm fetchData để tải lại danh sách sản phẩm
+  
+      message.success("Sản phẩm đã được lưu!");
       setIsModalOpen(false);
       form.resetFields();
     } catch (error) {
-      console.error("API Error: ", error.response?.data || error.message); // Log any error
       message.error("Đã xảy ra lỗi!");
     }
   };
   
+  
   // Delete product
   const handleDelete = async (id) => {
     try {
-      await axios.delete(
+      const response = await axios.delete(
         `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}/${id}`,
         {
           headers: {
@@ -162,13 +140,22 @@ const ProductList = ({ }) => {
           },
         }
       );
-      setData(data.filter((item) => item.productId !== id));
-      setFilteredData(filteredData.filter((item) => item.productId !== id));
-      message.success("Sản phẩm đã được xóa!");
+  
+      console.log('Delete response:', response.data);
+  
+      if (response.status === 200) {
+        // Sau khi xóa thành công, gọi lại API để tải lại danh sách sản phẩm
+        await fetchData();
+        message.success("Sản phẩm đã được xóa!");
+      } else {
+        message.error("Không thể xóa sản phẩm!");
+      }
     } catch (error) {
+      console.error('Delete error:', error.response?.data || error.message);
       message.error("Đã xảy ra lỗi khi xóa sản phẩm!");
     }
   };
+  
   
   // Search for products
   const handleSearch = (e) => {
