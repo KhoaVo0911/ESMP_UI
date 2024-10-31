@@ -18,12 +18,18 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import Cart from "./Cart";
 import AddProductModal from "./AddProductModal";
 import CreateProductModal from "./CreateProductModal";
-import { Link } from "react-router-dom"; // Import the Link component
+import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const Shop = () => {
+  const location = useLocation();
+  const accessToken = location.state?.accessToken || "";
+  const vendorId = location.state?.vendorId || "";
+  const eventId = location.state?.eventId || "";
+
   const [cart, setCart] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
+  const [productItems, setProductItems] = useState([]);
   const {
     isOpen: isCartOpen,
     onOpen: onOpenCart,
@@ -40,47 +46,116 @@ const Shop = () => {
     onClose: onCloseCreate,
   } = useDisclosure();
 
-  // Fetch products from the mock API
+  // Fetch product items for the vendor
+  const fetchProductItems = async () => {
+    try {
+      const response = await axios.get(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setProductItems(response.data);
+      console.log("Product items fetched:", response.data); // Debugging
+    } catch (error) {
+      console.error("Error fetching product items", error);
+    }
+  };
+
+  // Fetch products from the menu API and filter product items
   const fetchProducts = async () => {
     try {
       const response = await axios.get(
-        "https://668e540abf9912d4c92dcd67.mockapi.io/products"
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/menu/${vendorId}/${eventId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
-      setAllProducts(response.data);
+
+      const productItemIds = response.data.productItemIds || [];
+      console.log("ProductItemIds from menu:", productItemIds); // Debugging
+
+      const filteredProducts = productItems.filter((item) =>
+        productItemIds.includes(item.productItemId)
+      );
+
+      console.log("Filtered products to display:", filteredProducts); // Debugging
+      setAllProducts(filteredProducts);
     } catch (error) {
       console.error("Error fetching products", error);
     }
   };
+  const addProductItemToMenu = async (productItemId) => {
+    try {
+      // Fetch the current menu to get existing productItemIds
+      const response = await axios.get(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/menu/${vendorId}/${eventId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      const existingMenu = response.data;
+      const updatedProductItemIds = [...new Set([...existingMenu.productItemIds, productItemId])]; // Ensure no duplicates
+  
+      // Update the menu with the new productItemIds
+      await axios.put(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/menu/${vendorId}/${eventId}`,
+        {
+          ...existingMenu,
+          productItemIds: updatedProductItemIds,
+        },
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      console.log("Product item added successfully:", productItemId);
+      // Optionally, refresh the product list
+      fetchProducts();
+    } catch (error) {
+      console.error("Error adding product item to menu:", error);
+    }
+  };
+  
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    fetchProductItems();
+  }, [vendorId, accessToken]);
+
+  useEffect(() => {
+    if (productItems.length > 0) {
+      fetchProducts();
+    }
+  }, [productItems, vendorId, eventId, accessToken]);
 
   // Function to add items to the cart
   const addToCart = (product) => {
     setCart((prevCart) => {
       const existingProductIndex = prevCart.findIndex(
-        (cartItem) => cartItem.id === product.id
+        (cartItem) => cartItem.productItemId === product.productItemId
       );
 
       if (existingProductIndex !== -1) {
-        // If product is already in the cart, update its quantity
         const updatedCart = [...prevCart];
         updatedCart[existingProductIndex].quantity += product.quantity;
         return updatedCart;
       } else {
-        // If product is not in the cart, add it with the selected quantity
         return [...prevCart, product];
       }
     });
-  };
-
-  // Function to create new product
-  const handleCreateProduct = (newProduct) => {
-    setAllProducts((prevProducts) => [
-      ...prevProducts,
-      { id: prevProducts.length + 1, ...newProduct },
-    ]);
   };
 
   return (
@@ -90,12 +165,7 @@ const Shop = () => {
       minH="100vh"
       textAlign="center"
     >
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={5}
-      >
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={5}>
         <Text fontSize="3xl" fontWeight="bold">
           Manage Products
         </Text>
@@ -121,15 +191,15 @@ const Shop = () => {
         </Box>
       </Box>
 
-      <SimpleGrid columns={[2, null, 5]} spacing="20px" mt={10}>
-        {allProducts.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            addToCart={addToCart}
-          />
-        ))}
-      </SimpleGrid>
+      {allProducts.length > 0 ? (
+        <SimpleGrid columns={[2, null, 5]} spacing="20px" mt={10}>
+          {allProducts.map((product) => (
+            <ProductCard key={product.productItemId} product={product} addToCart={addToCart} />
+          ))}
+        </SimpleGrid>
+      ) : (
+        <Text>No products available to display</Text>
+      )}
 
       {/* Cart Drawer */}
       <Drawer isOpen={isCartOpen} placement="right" onClose={onCloseCart}>
@@ -162,17 +232,28 @@ const Shop = () => {
 
       {/* Add Products Modal */}
       <AddProductModal
-        isOpen={isAddOpen}
-        onClose={onCloseAdd}
-        products={allProducts}
-        addToCart={addToCart}
-      />
+  isOpen={isAddOpen}
+  onClose={onCloseAdd}
+  vendorId={vendorId}
+  accessToken={accessToken}
+  onAdd={(productId) => {
+    console.log("Adding product ID:", productId); // Debugging
+    addProductItemToMenu(productId); // Call the function to add the product item ID
+  }}
+/>
+
+
 
       {/* Create New Product Modal */}
       <CreateProductModal
         isOpen={isCreateOpen}
         onClose={onCloseCreate}
-        onCreateProduct={handleCreateProduct}
+        onCreateProduct={(newProduct) =>
+          setAllProducts((prevProducts) => [
+            ...prevProducts,
+            { id: prevProducts.length + 1, ...newProduct },
+          ])
+        }
       />
     </Box>
   );

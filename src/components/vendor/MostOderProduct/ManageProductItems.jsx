@@ -32,9 +32,9 @@ import { useLocation } from "react-router-dom";
 const ManageProducts = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [products, setProducts] = useState([]);
-  const [productItems, setProductItems] = useState([]); // Dữ liệu API trả về
-  const [productOriginBy, setProductOriginBy] = useState([]); // Lưu danh sách sản phẩm trong productItem
-  const [editingProductItem, setEditingProductItem] = useState(null); // Lưu thông tin sản phẩm đang chỉnh sửa
+  const [productItems, setProductItems] = useState([]);
+  const [details, setDetails] = useState([]);
+  const [editingProductItem, setEditingProductItem] = useState(null);
   const { register, handleSubmit, reset, setValue, watch } = useForm();
   const toast = useToast();
   const [loading, setLoading] = useState(false);
@@ -42,12 +42,12 @@ const ManageProducts = () => {
   const accessToken = location.state?.accessToken || "";
   const vendorId = location.state?.vendorId || "";
 
-  // Fetch Products from API
+  // Fetch products from API
   const fetchData = async () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product",
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -59,7 +59,7 @@ const ManageProducts = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Lỗi khi lấy dữ liệu từ API!",
+        description: "Failed to fetch products from API.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -69,44 +69,59 @@ const ManageProducts = () => {
     }
   };
 
-  // Fetch Product Items from API
-  const fetchProductItems = async () => {
-    try {
-      const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
-        {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      setProductItems(Array.isArray(response.data.productItems) ? response.data.productItems : Object.values(response.data.productItems));
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Lỗi khi lấy dữ liệu từ API!",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+// Fetch Product Items from API
+const fetchProductItems = async () => {
+  setLoading(true);
+  try {
+    const response = await axios.get(
+      `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+      {
+        headers: {
+          Authorization: `${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("Full API response:", response); // Debug log for full response
+    console.log("API response data:", response.data); // Debug log for response data
+
+    // Set productItems directly if response data is an array
+    if (Array.isArray(response.data)) {
+      setProductItems(response.data);
+    } else {
+      throw new Error("Unexpected response format from API");
     }
-  };
+  } catch (error) {
+    console.error("Error fetching product items:", error); // Improved error logging
+    toast({
+      title: "Error",
+      description: `Failed to fetch product items from API. ${error.message}`,
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   useEffect(() => {
     fetchData();
     fetchProductItems();
   }, []);
 
-  // Add product to productOriginBy list with selected quantity
-  const addProductToItem = (selectedProductId, selectedQuantity) => {
+  // Add product to details list with selected quantity and unit
+  const addProductToDetails = (selectedProductId, selectedQuantity) => {
     const quantity = Math.max(1, selectedQuantity);
     const selectedProduct = products.find((p) => p.productId === selectedProductId);
-    if (selectedProduct && !productOriginBy.find((p) => p.productId === selectedProduct.productId)) {
-      setProductOriginBy([...productOriginBy, { productId: selectedProduct.productId, quantity }]);
-      if (productOriginBy.length === 0) {
-        setValue("productName", selectedProduct.productName); // Auto-fill name
-        setValue("productPrice", ""); // Keep price empty and editable
+    if (selectedProduct && !details.find((d) => d.productId === selectedProduct.productId)) {
+      setDetails([...details, { productId: selectedProduct.productId, quantity, unit: "kg" }]);
+      if (details.length === 0) {
+        setValue("productName", selectedProduct.productName);
+        setValue("productPrice", "");
       } else {
         setValue("productName", "");
         setValue("productPrice", "");
@@ -114,12 +129,12 @@ const ManageProducts = () => {
     }
   };
 
-  // Remove a product from the productOriginBy list
-  const removeProductFromItem = (productId) => {
-    const updatedProductOriginBy = productOriginBy.filter((p) => p.productId !== productId);
-    setProductOriginBy(updatedProductOriginBy);
-    if (updatedProductOriginBy.length === 1) {
-      setValue("productName", updatedProductOriginBy[0].productName);
+  // Remove a product from the details list
+  const removeProductFromDetails = (productId) => {
+    const updatedDetails = details.filter((d) => d.productId !== productId);
+    setDetails(updatedDetails);
+    if (updatedDetails.length === 1) {
+      setValue("productName", updatedDetails[0].productName);
       setValue("productPrice", "");
     } else {
       setValue("productName", "");
@@ -127,9 +142,9 @@ const ManageProducts = () => {
     }
   };
 
-  // Handle form submit for adding or editing product items
+  // Handle form submission for adding or editing product items
   const onSubmit = (data) => {
-    if (productOriginBy.length === 0) {
+    if (details.length === 0) {
       toast({
         title: "Error",
         description: "You must add at least one product.",
@@ -140,7 +155,7 @@ const ManageProducts = () => {
       return;
     }
 
-    if (productOriginBy.length > 1 && (!data.productName || !data.productPrice)) {
+    if (details.length > 1 && (!data.productName || !data.productPrice)) {
       toast({
         title: "Error",
         description: "You must provide a name and price for the product item.",
@@ -154,29 +169,33 @@ const ManageProducts = () => {
     let name = data.productName;
     let price = data.productPrice;
 
-    if (productOriginBy.length === 1) {
-      name = products.find((p) => p.productId === productOriginBy[0].productId).productName;
+    if (details.length === 1) {
+      name = products.find((p) => p.productId === details[0].productId).productName;
     }
 
     const productItemData = {
-      productId: productOriginBy[0]?.productId || "",
+      vendorId,
       name,
       description: data.description || "This is a sample product item description.",
-      productOriginBy: productOriginBy.map((p) => `${p.productId} : ${p.quantity}`).join(", "),
+      details,
       price: data.productPrice,
-      unit: data.unit || "kg",
-      status: false,
+      status: true,
+      createAt: new Date().toISOString(),
+      updateAt: new Date().toISOString(),
     };
 
-    // Nếu đang chỉnh sửa sản phẩm, cập nhật sản phẩm
     if (editingProductItem) {
       axios
-        .put(`http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${editingProductItem.productItemId}`, productItemData, {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        })
+        .put(
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${editingProductItem.productItemId}`,
+          productItemData,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        )
         .then(() => {
           const updatedProductItems = productItems.map((item) =>
             item.productItemId === editingProductItem.productItemId ? productItemData : item
@@ -189,10 +208,10 @@ const ManageProducts = () => {
             duration: 3000,
             isClosable: true,
           });
-          setProductOriginBy([]);
+          setDetails([]);
           reset();
           onClose();
-          setEditingProductItem(null); // Clear editing state
+          setEditingProductItem(null);
         })
         .catch((error) => {
           toast({
@@ -205,14 +224,17 @@ const ManageProducts = () => {
           console.error("Error updating product item:", error);
         });
     } else {
-      // Thực hiện thêm sản phẩm mới
       axios
-        .post(`http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem`, productItemData, {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        })
+        .post(
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+          productItemData,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        )
         .then(() => {
           setProductItems([...productItems, productItemData]);
           toast({
@@ -222,7 +244,7 @@ const ManageProducts = () => {
             duration: 3000,
             isClosable: true,
           });
-          setProductOriginBy([]);
+          setDetails([]);
           reset();
           onClose();
         })
@@ -239,26 +261,26 @@ const ManageProducts = () => {
     }
   };
 
-  // Handle Edit
+  // Handle edit
   const handleEdit = (productItem) => {
     setEditingProductItem(productItem);
     setValue("productName", productItem.name);
     setValue("productPrice", productItem.price);
-    setProductOriginBy(productItem.productOriginBy.split(",").map((p) => {
-      const [productId, quantity] = p.split(":").map((item) => item.trim());
-      return { productId, quantity };
-    }));
+    setDetails(productItem.details);
     onOpen();
   };
 
-  // Handle Delete
+  // Handle delete
   const handleDelete = async (productItemId) => {
     try {
-      await axios.delete(`http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${productItemId}`, {
-        headers: {
-          Authorization: `${accessToken}`,
-        },
-      });
+      await axios.delete(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${productItemId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+          },
+        }
+      );
       setProductItems(productItems.filter((item) => item.productItemId !== productItemId));
       toast({
         title: "Success",
@@ -281,12 +303,10 @@ const ManageProducts = () => {
 
   return (
     <Box p={5}>
-      {/* Button to trigger adding products */}
       <Button colorScheme="blue" onClick={onOpen}>
         Add Product Item
       </Button>
 
-      {/* Product Item Display Section */}
       <Grid templateColumns="repeat(4, 1fr)" gap={6} mt={10}>
         {productItems.length > 0 ? (
           productItems.map((productItem) => (
@@ -308,12 +328,11 @@ const ManageProducts = () => {
                   Products in item:
                 </Text>
                 <Flex direction="column">
-                  {productItem.productOriginBy.split(",").map((productData, index) => {
-                    const [productId, quantity] = productData.split(":").map((item) => item.trim());
-                    const foundProduct = products.find((p) => p.productId === productId);
+                  {productItem.details.map((detail, index) => {
+                    const foundProduct = products.find((p) => p.productId === detail.productId);
                     return (
                       <Text key={index} fontSize="sm">
-                        - {foundProduct ? foundProduct.productName : "Unknown Product"} x {quantity}
+                        - {foundProduct ? foundProduct.productName : "Unknown Product"} x {detail.quantity} {detail.unit}
                       </Text>
                     );
                   })}
@@ -334,7 +353,6 @@ const ManageProducts = () => {
         )}
       </Grid>
 
-      {/* Modal for Adding/Editing Product Item */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -344,7 +362,7 @@ const ManageProducts = () => {
             <form onSubmit={handleSubmit(onSubmit)}>
               <FormControl mt={4}>
                 <FormLabel>Name</FormLabel>
-                <Input {...register("productName")} placeholder="Enter name" isDisabled={productOriginBy.length === 1} />
+                <Input {...register("productName")} placeholder="Enter name" isDisabled={details.length === 1} />
               </FormControl>
               <FormControl mt={4}>
                 <FormLabel>Price</FormLabel>
@@ -364,23 +382,31 @@ const ManageProducts = () => {
                   <FormLabel>Quantity</FormLabel>
                   <Input type="number" defaultValue={1} min={1} {...register("productQuantity")} placeholder="Enter quantity" />
                 </FormControl>
-                <Button mt={2} colorScheme="teal" onClick={() => addProductToItem(document.querySelector("select[name=productId]").value, document.querySelector("input[name=productQuantity]").value)}>
+                <Button
+                  mt={2}
+                  colorScheme="teal"
+                  onClick={() =>
+                    addProductToDetails(
+                      document.querySelector("select[name=productId]").value,
+                      document.querySelector("input[name=productQuantity]").value
+                    )
+                  }
+                >
                   Add Product
                 </Button>
               </FormControl>
 
-              {/* Display selected products */}
-              {productOriginBy.length > 0 && (
+              {details.length > 0 && (
                 <Box mt={4}>
                   <Text>Selected Products:</Text>
                   <List>
-                    {productOriginBy.map((product, index) => (
+                    {details.map((detail, index) => (
                       <ListItem key={index}>
                         <Flex justifyContent="space-between" alignItems="center">
                           <Text>
-                            {products.find((p) => p.productId === product.productId)?.productName} x {product.quantity}
+                            {products.find((p) => p.productId === detail.productId)?.productName} x {detail.quantity} {detail.unit}
                           </Text>
-                          <IconButton icon={<FaTrash />} size="sm" colorScheme="red" onClick={() => removeProductFromItem(product.productId)} />
+                          <IconButton icon={<FaTrash />} size="sm" colorScheme="red" onClick={() => removeProductFromDetails(detail.productId)} />
                         </Flex>
                       </ListItem>
                     ))}

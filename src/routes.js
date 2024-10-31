@@ -33,10 +33,7 @@ import TransactionHistory from "./pages/host/QR/TransHistory";
 import AdminLayout from "./components/admin/Layout/AdminLayout.jsx";
 import AdminAccountManagement from "./components/admin/AccountManagement.jsx";
 import AdminTransactionHistory from "./components/admin/TransHistory.jsx";
-import ProductSample from "./components/vendor/MostOderProduct/ProductSample.jsx";
-import ManageProductsItem from "./components/vendor/MostOderProduct/ManageProductItems";
-import ManageProductsItems from "./components/vendor/MostOderProduct/ProductItem/ManageProduct.jsx";
-import ManageProducts from "./components/vendor/MostOderProduct/ManageProductItems";
+import ManageProducts from "./components/vendor/MostOderProduct/ManageProductItems.jsx";
 
 const AppRoutes = () => {
   return (

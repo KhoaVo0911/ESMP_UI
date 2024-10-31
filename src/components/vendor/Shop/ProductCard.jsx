@@ -1,29 +1,29 @@
 import React, { useState } from "react";
-import { Box, Image, Text, IconButton } from "@chakra-ui/react";
+import { Box, Image, Text, IconButton, VStack } from "@chakra-ui/react";
 import { AddIcon, MinusIcon } from "@chakra-ui/icons";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 
 const ProductCard = ({ product, addToCart }) => {
-  const [selectedQuantity, setSelectedQuantity] = useState(1); // Số lượng đã chọn cho giỏ hàng
-  const [selected, setSelected] = useState(false); // Trạng thái chọn
+  const [selectedQuantity, setSelectedQuantity] = useState(1); // Selected quantity for the cart
+  const [selected, setSelected] = useState(false); // Selection state
 
   const handleAdd = (e) => {
-    e.stopPropagation(); // Ngăn sự kiện lan ra toàn bộ thẻ
-    setSelectedQuantity((prevQuantity) => prevQuantity + 1); // Tăng số lượng
+    e.stopPropagation(); // Prevent event propagation
+    setSelectedQuantity((prevQuantity) => prevQuantity + 1); // Increase quantity
   };
 
   const handleRemove = (e) => {
-    e.stopPropagation(); // Ngăn sự kiện lan ra toàn bộ thẻ
+    e.stopPropagation(); // Prevent event propagation
     if (selectedQuantity > 1) {
-      setSelectedQuantity((prevQuantity) => prevQuantity - 1); // Giảm số lượng
+      setSelectedQuantity((prevQuantity) => prevQuantity - 1); // Decrease quantity
     }
   };
 
-  const toggleSelected = () => setSelected(!selected); // Đổi trạng thái chọn
+  const toggleSelected = () => setSelected(!selected); // Toggle selection state
 
   const handleAddToCart = (e) => {
-    e.stopPropagation(); // Ngăn sự kiện lan ra toàn bộ thẻ
-    addToCart({ ...product, quantity: selectedQuantity }); // Thêm vào giỏ hàng với số lượng đã chọn
+    e.stopPropagation(); // Prevent event propagation
+    addToCart({ ...product, quantity: selectedQuantity }); // Add to cart with the selected quantity
   };
 
   // Function to format price to VND
@@ -44,10 +44,10 @@ const ProductCard = ({ product, addToCart }) => {
       textAlign="center"
       background={
         selected ? "linear-gradient(135deg,#3B5284 1%, #5BA8A0 120%)" : "white"
-      } // Hiệu ứng gradient khi được chọn
-      onClick={toggleSelected} // Bật/tắt trạng thái chọn khi nhấp
+      } // Gradient effect when selected
+      onClick={toggleSelected} // Toggle selection on click
       cursor="pointer"
-      height="350px" // Chiều cao cố định cho tất cả các thẻ
+      height="400px" // Adjust height as needed
       display="flex"
       flexDirection="column"
       justifyContent="space-between"
@@ -63,10 +63,6 @@ const ProductCard = ({ product, addToCart }) => {
         {product.name}
       </Text>
 
-      <Text color={selected ? "white" : "black"}>
-        Available: {product.availableQuantity} units
-      </Text>
-
       <Text
         fontWeight="bold"
         fontSize="lg"
@@ -75,6 +71,21 @@ const ProductCard = ({ product, addToCart }) => {
         {formatPrice(product.price)}
       </Text>
 
+      <VStack align="start" mt={2}>
+        <Text fontWeight="bold" color={selected ? "white" : "black"}>
+          Details:
+        </Text>
+        {product.details.map((detail, index) => (
+          <Text
+            key={index}
+            fontSize="sm"
+            color={selected ? "white" : "black"}
+          >
+            - {detail.productId} x {detail.quantity} {detail.unit}
+          </Text>
+        ))}
+      </VStack>
+
       {selected ? (
         <Box mt={3} display="flex" justifyContent="center" alignItems="center">
           <IconButton
@@ -82,8 +93,8 @@ const ProductCard = ({ product, addToCart }) => {
             size="sm"
             onClick={handleRemove}
             aria-label="Decrease quantity"
-            background="none" // Loại bỏ background
-            color="white" // Màu trắng khi được chọn
+            background="none" // Remove background
+            color="white" // White color when selected
           />
           <Text mx={2} fontSize="lg" color="white">
             {selectedQuantity}
@@ -93,8 +104,8 @@ const ProductCard = ({ product, addToCart }) => {
             size="sm"
             onClick={handleAdd}
             aria-label="Increase quantity"
-            background="none" // Loại bỏ background
-            color="white" // Màu trắng khi được chọn
+            background="none" // Remove background
+            color="white" // White color when selected
           />
           <IconButton
             icon={<ShoppingCartIcon style={{ fontSize: "20px" }} />}
@@ -102,12 +113,12 @@ const ProductCard = ({ product, addToCart }) => {
             onClick={handleAddToCart}
             ml={10}
             aria-label="Add to Cart"
-            background="none" // Loại bỏ background
-            color="white" // Màu trắng khi được chọn
+            background="none" // Remove background
+            color="white" // White color when selected
           />
         </Box>
       ) : (
-        <Box height="40px" /> // Placeholder để giữ layout đồng nhất
+        <Box height="40px" /> // Placeholder to maintain layout consistency
       )}
     </Box>
   );

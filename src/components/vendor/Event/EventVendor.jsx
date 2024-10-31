@@ -137,7 +137,7 @@ const EventVendor = ({}) => {
   onClick={() =>
     navigate(`/events/${event.eventId}`, {
       state: {
-        accessToken,  // Truyền accessToken từ component cha
+        accessToken, vendorId  // Truyền accessToken từ component cha
       },
     })
   }
