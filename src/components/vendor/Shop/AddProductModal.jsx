@@ -21,10 +21,10 @@ const AddProductModal = ({ isOpen, onClose, vendorId, accessToken, onAdd }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch product items when the modal opens
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
+      // Fetch product items
       axios
         .get(`http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`, {
           headers: {
@@ -34,14 +34,13 @@ const AddProductModal = ({ isOpen, onClose, vendorId, accessToken, onAdd }) => {
         })
         .then((response) => {
           setProducts(response.data);
-          console.log("Product items fetched:", response.data); // Debug log for product items
           setLoading(false);
         })
         .catch((error) => {
           console.error("Error fetching product items:", error);
           setLoading(false);
         });
-  
+
       // Fetch product data to get product names
       axios
         .get(`http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`, {
@@ -53,17 +52,15 @@ const AddProductModal = ({ isOpen, onClose, vendorId, accessToken, onAdd }) => {
         .then((response) => {
           const productNameMap = {};
           response.data.forEach((product) => {
-            productNameMap[product.productId] = product.productName; // Use productName instead of name
+            productNameMap[product.productId] = product.productName;
           });
           setProductNames(productNameMap);
-          console.log("Product names mapping:", productNameMap); // Debug log for product names
         })
         .catch((error) => {
           console.error("Error fetching product data:", error);
         });
     }
   }, [isOpen, vendorId, accessToken]);
-  
 
   const handleSelectProduct = (product) => {
     setSelectedProduct(product);
@@ -71,7 +68,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, accessToken, onAdd }) => {
 
   const handleAddProduct = () => {
     if (selectedProduct) {
-      onAdd(selectedProduct.productItemId);
+      onAdd(selectedProduct);
       onClose();
     }
   };
@@ -124,7 +121,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, accessToken, onAdd }) => {
                 justifyContent="space-between"
               >
                 <Image
-                  src={product.image || "https://via.placeholder.com/150"} // Placeholder image if none provided
+                  src={product.image || "https://via.placeholder.com/150"}
                   alt={product.name}
                   boxSize="100px"
                   mx="auto"
@@ -139,7 +136,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, accessToken, onAdd }) => {
                       : "black"
                   }
                 >
-                  {product.name}
+                  {productNames[product.productId] || product.name}
                 </Text>
                 <Text
                   fontWeight="bold"

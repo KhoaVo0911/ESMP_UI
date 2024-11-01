@@ -18,14 +18,17 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import Cart from "./Cart";
 import AddProductModal from "./AddProductModal";
 import CreateProductModal from "./CreateProductModal";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const Shop = () => {
   const location = useLocation();
-  const accessToken = location.state?.accessToken || "";
-  const vendorId = location.state?.vendorId || "";
-  const eventId = location.state?.eventId || "";
+  const navigate = useNavigate();
+
+  // Lấy các giá trị accessToken, vendorId, eventId từ location.state hoặc sessionStorage
+  const accessToken = location.state?.accessToken || sessionStorage.getItem("accessToken") || "";
+  const vendorId = location.state?.vendorId || sessionStorage.getItem("vendorId") || "";
+  const eventId = location.state?.eventId || sessionStorage.getItem("eventId") || "";
 
   const [cart, setCart] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
@@ -59,7 +62,6 @@ const Shop = () => {
         }
       );
       setProductItems(response.data);
-      console.log("Product items fetched:", response.data); // Debugging
     } catch (error) {
       console.error("Error fetching product items", error);
     }
@@ -79,64 +81,23 @@ const Shop = () => {
       );
 
       const productItemIds = response.data.productItemIds || [];
-      console.log("ProductItemIds from menu:", productItemIds); // Debugging
-
       const filteredProducts = productItems.filter((item) =>
         productItemIds.includes(item.productItemId)
       );
-
-      console.log("Filtered products to display:", filteredProducts); // Debugging
       setAllProducts(filteredProducts);
     } catch (error) {
       console.error("Error fetching products", error);
     }
   };
-  const addProductItemToMenu = async (productItemId) => {
-    try {
-      // Fetch the current menu to get existing productItemIds
-      const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/menu/${vendorId}/${eventId}`,
-        {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-  
-      const existingMenu = response.data;
-      const updatedProductItemIds = [...new Set([...existingMenu.productItemIds, productItemId])]; // Ensure no duplicates
-  
-      // Update the menu with the new productItemIds
-      await axios.put(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/menu/${vendorId}/${eventId}`,
-        {
-          ...existingMenu,
-          productItemIds: updatedProductItemIds,
-        },
-        {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-  
-      console.log("Product item added successfully:", productItemId);
-      // Optionally, refresh the product list
-      fetchProducts();
-    } catch (error) {
-      console.error("Error adding product item to menu:", error);
-    }
-  };
-  
 
   useEffect(() => {
-    fetchProductItems();
+    if (vendorId && accessToken) {
+      fetchProductItems();
+    }
   }, [vendorId, accessToken]);
 
   useEffect(() => {
-    if (productItems.length > 0) {
+    if (productItems.length > 0 && eventId) {
       fetchProducts();
     }
   }, [productItems, vendorId, eventId, accessToken]);
@@ -158,34 +119,33 @@ const Shop = () => {
     });
   };
 
-  return (
-    <Box
-      p={5}
-      bgGradient="linear(to-r, blue.100, pink.100)"
-      minH="100vh"
-      textAlign="center"
-    >
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={5}>
-        <Text fontSize="3xl" fontWeight="bold">
-          Manage Products
-        </Text>
+  // Save session data and open the cart
+  const onOpenCartWithSessionData = () => {
+    sessionStorage.setItem("accessToken", accessToken);
+    sessionStorage.setItem("vendorId", vendorId);
+    sessionStorage.setItem("eventId", eventId);
+    onOpenCart();
+  };
 
-        {/* Cart, Add, Create, and Ordered Buttons */}
+  // Điều hướng đến OrderedList với các thông tin cần thiết
+  const handleGoToOrderedList = () => {
+    navigate("/ordered-list", {
+      state: { accessToken, vendorId, eventId },
+    });
+  };
+
+  return (
+    <Box p={5} bgGradient="linear(to-r, blue.100, pink.100)" minH="100vh" textAlign="center">
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={5}>
+        <Text fontSize="3xl" fontWeight="bold">Shop</Text>
+
+        {/* Cart, Add, and Ordered Buttons */}
         <Box display="flex" alignItems="center">
-          <Link to="/ordered-list">
-            <Button mr={4} colorScheme="blue">
-              Ordered List
-            </Button>
-          </Link>
-          <Button mr={4} onClick={onOpenAdd}>
-            Add
-          </Button>
-          <Button mr={4} colorScheme="teal" onClick={onOpenCreate}>
-            Create
-          </Button>
+          <Button mr={4} colorScheme="blue" onClick={handleGoToOrderedList}>Ordered List</Button>
+          <Button mr={4} onClick={onOpenAdd}>Add</Button>
           <IconButton
             icon={<ShoppingCartIcon />}
-            onClick={onOpenCart}
+            onClick={onOpenCartWithSessionData}
             aria-label="View Cart"
           />
         </Box>
@@ -222,39 +182,17 @@ const Shop = () => {
               />
             </DrawerBody>
             <DrawerFooter>
-              <Button colorScheme="teal" onClick={onCloseCart}>
-                Close
-              </Button>
+              <Button colorScheme="teal" onClick={onCloseCart}>Close</Button>
             </DrawerFooter>
           </DrawerContent>
         </DrawerOverlay>
       </Drawer>
 
       {/* Add Products Modal */}
-      <AddProductModal
-  isOpen={isAddOpen}
-  onClose={onCloseAdd}
-  vendorId={vendorId}
-  accessToken={accessToken}
-  onAdd={(productId) => {
-    console.log("Adding product ID:", productId); // Debugging
-    addProductItemToMenu(productId); // Call the function to add the product item ID
-  }}
-/>
-
-
+      <AddProductModal isOpen={isAddOpen} onClose={onCloseAdd} vendorId={vendorId} accessToken={accessToken} />
 
       {/* Create New Product Modal */}
-      <CreateProductModal
-        isOpen={isCreateOpen}
-        onClose={onCloseCreate}
-        onCreateProduct={(newProduct) =>
-          setAllProducts((prevProducts) => [
-            ...prevProducts,
-            { id: prevProducts.length + 1, ...newProduct },
-          ])
-        }
-      />
+      <CreateProductModal isOpen={isCreateOpen} onClose={onCloseCreate} />
     </Box>
   );
 };

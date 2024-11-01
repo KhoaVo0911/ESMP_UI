@@ -28,9 +28,7 @@ const VendorSideBar = ({ collapsed }) => {
       setSelectedMenuItem("3");
     } else if (location.pathname.startsWith("/eventsVendor")) {
       setSelectedMenuItem("4");
-    } else if (location.pathname.startsWith("/transaction")) {
-      setSelectedMenuItem("5");
-    }
+    } 
   }, [location.pathname]);
 
   const defaultItems = [
@@ -58,11 +56,7 @@ const VendorSideBar = ({ collapsed }) => {
           icon: <EventIcon />,
           label: <span style={{ fontWeight: "bold" }}>Events</span>,
         },
-        {
-          key: "5",
-          icon: <PaidIcon />,
-          label: <span style={{ fontWeight: "bold" }}>Transaction</span>,
-        },
+        
       ],
     },
   ];
