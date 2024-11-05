@@ -12,6 +12,13 @@ import {
   Spinner,
   Tooltip,
   useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
 } from "@chakra-ui/react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -25,7 +32,10 @@ const OrderedList = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [orderDetails, setOrderDetails] = useState({});
+  const [productItems, setProductItems] = useState([]);
   const [loadingDetails, setLoadingDetails] = useState({});
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -39,7 +49,6 @@ const OrderedList = () => {
             },
           }
         );
-
         if (Array.isArray(response.data) && response.data.length > 0) {
           setOrders(response.data);
         } else {
@@ -52,7 +61,25 @@ const OrderedList = () => {
       }
     };
 
+    const fetchProductItems = async () => {
+      try {
+        const response = await axios.get(
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        setProductItems(response.data);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách product items:", error);
+      }
+    };
+
     fetchOrders();
+    fetchProductItems();
   }, [accessToken, vendorId, eventId]);
 
   const handleBack = () => {
@@ -62,10 +89,14 @@ const OrderedList = () => {
   };
 
   const handleViewDetails = async (orderId) => {
-    console.log("Đang xem chi tiết cho ID đơn hàng:", orderId); // Log ID đơn hàng
+    console.log("Đang xem chi tiết cho ID đơn hàng:", orderId);
 
-    if (orderDetails[orderId]) return; // Nếu đã có dữ liệu thì không cần gọi lại
-    setLoadingDetails((prev) => ({ ...prev, [orderId]: true })); // Đánh dấu đang tải dữ liệu chi tiết
+    if (orderDetails[orderId]) {
+      openDetail(orderId);
+      return;
+    }
+
+    setLoadingDetails((prev) => ({ ...prev, [orderId]: true }));
 
     try {
       const response = await axios.get(
@@ -78,12 +109,25 @@ const OrderedList = () => {
         }
       );
 
-      console.log("Chi tiết đơn hàng:", response.data); // Log dữ liệu nhận được từ API
+      const enrichedDetails = response.data.map((detail) => {
+        const productItem = productItems.find(
+          (item) => item.productItemId === detail.productitemId
+        );
+        console.log("Chi tiết Product Item tìm thấy:", productItem);
+
+        return {
+          ...detail,
+          productItemName: productItem ? productItem.name : "Unknown Product Item",
+        };
+      });
+
+      console.log("Chi tiết đơn hàng sau khi làm giàu dữ liệu:", enrichedDetails);
 
       setOrderDetails((prevDetails) => ({
         ...prevDetails,
-        [orderId]: response.data,
+        [orderId]: enrichedDetails,
       }));
+      openDetail(orderId);
     } catch (error) {
       console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
       toast({
@@ -94,8 +138,25 @@ const OrderedList = () => {
         isClosable: true,
       });
     } finally {
-      setLoadingDetails((prev) => ({ ...prev, [orderId]: false })); // Kết thúc trạng thái loading
+      setLoadingDetails((prev) => ({ ...prev, [orderId]: false }));
     }
+  };
+
+  const openDetail = (orderId) => {
+    setSelectedOrder(orderId);
+    setIsDetailOpen(true);
+  };
+
+  const closeDetail = () => {
+    setSelectedOrder(null);
+    setIsDetailOpen(false);
+  };
+
+  const formatCurrency = (value) => {
+    return parseInt(value).toLocaleString("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    });
   };
 
   return (
@@ -118,7 +179,6 @@ const OrderedList = () => {
                 <Th textAlign="center">Name</Th>
                 <Th textAlign="center">Date</Th>
                 <Th textAlign="center">Total Amount</Th>
-               
                 <Th textAlign="center">Status</Th>
               </Tr>
             </Thead>
@@ -130,7 +190,7 @@ const OrderedList = () => {
                       label="Click to view details"
                       hasArrow
                       placement="top"
-                      onMouseEnter={() => handleViewDetails(order.orderId)} // Gọi để lấy chi tiết khi hover
+                      onMouseEnter={() => handleViewDetails(order.orderId)}
                     >
                       <Text
                         as="span"
@@ -145,25 +205,27 @@ const OrderedList = () => {
                   </Td>
                   <Td textAlign="center">{order.name}</Td>
                   <Td textAlign="center">
-                    {new Date(order.createAt).toLocaleString('vi-VN', {
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                      hour12: false, // Không định dạng 12 giờ
+                    {new Date(order.createAt).toLocaleString("vi-VN", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                      hour12: false,
                     })}
                   </Td>
                   <Td textAlign="center">{order.totalAmount}</Td>
                   <Td textAlign="center">
-                    <Text color={
-                      order.status === "Prepared"
-                        ? "orange"
-                        : order.status === "Success"
-                        ? "green"
-                        : "red"
-                    }>
+                    <Text
+                      color={
+                        order.status === "Prepared"
+                          ? "orange"
+                          : order.status === "Success"
+                          ? "green"
+                          : "red"
+                      }
+                    >
                       {order.status}
                     </Text>
                   </Td>
@@ -175,6 +237,44 @@ const OrderedList = () => {
       ) : (
         <Text>No orders found.</Text>
       )}
+
+      <Modal isOpen={isDetailOpen} onClose={closeDetail}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            Chi tiết đơn hàng:{" "}
+            {selectedOrder && orders.find((order) => order.orderId === selectedOrder)?.name}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedOrder && orderDetails[selectedOrder] ? (
+              orderDetails[selectedOrder].map((detail, index) => (
+                <Box key={index} mb={3}>
+                  <Text>
+                    <strong>Product Item Name:</strong> {detail.productItemName}
+                  </Text>
+                  <Text>
+                    <strong>Quantity:</strong> {detail.quantity}
+                  </Text>
+                  <Text>
+                    <strong>Unit Price:</strong> {formatCurrency(detail.unitPrice)}
+                  </Text>
+                  <Text>
+                    <strong>Total Price:</strong> {formatCurrency(detail.totalPrice)}
+                  </Text>
+                </Box>
+              ))
+            ) : (
+              <Text>Loading details...</Text>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={closeDetail}>
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

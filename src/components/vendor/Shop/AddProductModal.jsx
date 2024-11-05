@@ -12,14 +12,16 @@ import {
   Image,
   Text,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
 
-const AddProductModal = ({ isOpen, onClose, vendorId, accessToken, onAdd }) => {
+const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAdd }) => {
   const [products, setProducts] = useState([]);
   const [productNames, setProductNames] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -66,10 +68,48 @@ const AddProductModal = ({ isOpen, onClose, vendorId, accessToken, onAdd }) => {
     setSelectedProduct(product);
   };
 
-  const handleAddProduct = () => {
+  const handleAddProductToMenu = () => {
     if (selectedProduct) {
-      onAdd(selectedProduct);
-      onClose();
+      const payload = {
+        productItem: [
+          {
+            id: selectedProduct.productItemId,
+          },
+        ],
+      };
+
+      axios
+        .post(
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/menu/${vendorId}/${eventId}`,
+          payload,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        )
+        .then((response) => {
+          toast({
+            title: "Product added successfully",
+            description: `Product ${selectedProduct.name} has been added to the menu.`,
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+          onAdd(selectedProduct);
+          onClose();
+        })
+        .catch((error) => {
+          console.error("Error adding product to menu:", error);
+          toast({
+            title: "Error",
+            description: "Failed to add product to the menu.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+        });
     }
   };
 
@@ -98,94 +138,89 @@ const AddProductModal = ({ isOpen, onClose, vendorId, accessToken, onAdd }) => {
       <ModalContent>
         <ModalHeader>Select Product</ModalHeader>
         <ModalBody>
-          <SimpleGrid columns={4} spacing={5}>
-            {products.map((product) => (
-              <Box
-                key={product.productItemId}
-                maxW="sm"
-                borderWidth="1px"
-                borderRadius="lg"
-                overflow="hidden"
-                p="4"
-                textAlign="left"
-                background={
+  <Box maxHeight="500px" overflowY="auto">
+    <SimpleGrid columns={4} spacing={5}>
+      {products.map((product) => (
+        <Box
+          key={product.productItemId}
+          maxW="sm"
+          borderWidth="1px"
+          borderRadius="lg"
+          overflow="hidden"
+          p="4"
+          textAlign="left"
+          background={
+            selectedProduct && selectedProduct.productItemId === product.productItemId
+              ? "linear-gradient(135deg,#3B5284 1%, #5BA8A0 120%)"
+              : "white"
+          }
+          onClick={() => handleSelectProduct(product)}
+          cursor="pointer"
+          height="350px"
+          display="flex"
+          flexDirection="column"
+          justifyContent="space-between"
+        >
+          <Image
+            src={product.image || "https://via.placeholder.com/150"}
+            alt={product.name}
+            boxSize="100px"
+            mx="auto"
+          />
+          <Text
+            fontWeight="bold"
+            fontSize="xl"
+            mt={2}
+            color={
+              selectedProduct && selectedProduct.productItemId === product.productItemId
+                ? "white"
+                : "black"
+            }
+          >
+            {productNames[product.productId] || product.name}
+          </Text>
+          <Text
+            fontWeight="bold"
+            fontSize="lg"
+            color={
+              selectedProduct && selectedProduct.productItemId === product.productItemId
+                ? "white"
+                : "black"
+            }
+          >
+            {parseInt(product.price).toLocaleString("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            })}
+          </Text>
+          <VStack align="start" spacing={1} mt={2}>
+            {product.details.map((detail, index) => (
+              <Text
+                key={index}
+                fontSize="sm"
+                color={
                   selectedProduct && selectedProduct.productItemId === product.productItemId
-                    ? "linear-gradient(135deg,#3B5284 1%, #5BA8A0 120%)"
-                    : "white"
+                    ? "white"
+                    : "gray.800"
                 }
-                onClick={() => handleSelectProduct(product)}
-                cursor="pointer"
-                height="350px"
-                display="flex"
-                flexDirection="column"
-                justifyContent="space-between"
               >
-                <Image
-                  src={product.image || "https://via.placeholder.com/150"}
-                  alt={product.name}
-                  boxSize="100px"
-                  mx="auto"
-                />
-                <Text
-                  fontWeight="bold"
-                  fontSize="xl"
-                  mt={2}
-                  color={
-                    selectedProduct && selectedProduct.productItemId === product.productItemId
-                      ? "white"
-                      : "black"
-                  }
-                >
-                  {productNames[product.productId] || product.name}
-                </Text>
-                <Text
-                  fontWeight="bold"
-                  fontSize="lg"
-                  color={
-                    selectedProduct && selectedProduct.productItemId === product.productItemId
-                      ? "white"
-                      : "black"
-                  }
-                >
-                  {parseInt(product.price).toLocaleString("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  })}
-                </Text>
-                <Text
-                  fontSize="sm"
-                  fontWeight="bold"
-                  color={selectedProduct && selectedProduct.productItemId === product.productItemId ? "white" : "gray.600"}
-                  mt={2}
-                >
-                  Products in item:
-                </Text>
-                <VStack align="start" spacing={1}>
-                  {product.details.map((detail, index) => (
-                    <Text
-                      key={index}
-                      fontSize="sm"
-                      color={
-                        selectedProduct && selectedProduct.productItemId === product.productItemId
-                          ? "white"
-                          : "gray.800"
-                      }
-                    >
-                      - {productNames[detail.productId] || detail.productId} x {detail.quantity} {detail.unit}
-                    </Text>
-                  ))}
-                </VStack>
-              </Box>
+                - {productNames[detail.productId] || detail.productId} x {detail.quantity} {detail.unit}
+              </Text>
             ))}
-          </SimpleGrid>
-        </ModalBody>
+          </VStack>
+        </Box>
+      ))}
+    </SimpleGrid>
+  </Box>
+</ModalBody>
+
         <ModalFooter>
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
           <Button
             colorScheme="blue"
-            onClick={handleAddProduct}
+            onClick={handleAddProductToMenu}
             isDisabled={!selectedProduct}
           >
             Add
