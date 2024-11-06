@@ -34,6 +34,8 @@ import AdminLayout from "./components/admin/Layout/AdminLayout.jsx";
 import AdminAccountManagement from "./components/admin/AccountManagement.jsx";
 import AdminTransactionHistory from "./components/admin/TransHistory.jsx";
 import ManageProducts from "./components/vendor/MostOderProduct/ManageProductItems.jsx";
+import LocationMap from "./pages/host/LocationMap.jsx";
+import LocationTypePage from "./pages/host/LocationTypePage.jsx";
 
 const AppRoutes = () => {
   return (
