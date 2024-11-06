@@ -21,6 +21,7 @@
     "antd": "^5.20.2",
     "axios": "^1.6.8",
     "chart.js": "^4.4.4",
+    "firebase": "^11.0.1",
     "firebase": "^10.14.0",
     "framer-motion": "^11.5.4",
     "konva": "^9.3.15",

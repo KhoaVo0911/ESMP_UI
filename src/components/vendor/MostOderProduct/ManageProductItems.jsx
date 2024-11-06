@@ -28,6 +28,8 @@ import { FaEdit, FaTrash } from "react-icons/fa";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router-dom";
+import { storage } from "./../../../shared/firebase/firebaseConfig";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const ManageProducts = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -35,16 +37,41 @@ const ManageProducts = () => {
   const [productItems, setProductItems] = useState([]);
   const [details, setDetails] = useState([]);
   const [editingProductItem, setEditingProductItem] = useState(null);
-  const { register, handleSubmit, reset, setValue, watch } = useForm();
+  const { register, handleSubmit, reset, setValue } = useForm();
   const toast = useToast();
-  const [loading, setLoading] = useState(false);
   const location = useLocation();
   const accessToken = location.state?.accessToken || "";
   const vendorId = location.state?.vendorId || "";
+  const [imageFile, setImageFile] = useState(null);
 
-  // Fetch products from API
+  // Xử lý chọn ảnh
+  const handleImageChange = (e) => {
+    if (e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+    }
+  };
+
+  // Upload ảnh lên Firebase Storage
+  const uploadImage = async (productItemId) => {
+    if (!imageFile) return null;
+    const imageRef = ref(storage, `${vendorId}/${productItemId}`);
+    await uploadBytes(imageRef, imageFile);
+    return await getDownloadURL(imageRef);
+  };
+
+  // Lấy URL ảnh từ Firebase Storage
+  const fetchImageURL = async (productItemId) => {
+    try {
+      const imageRef = ref(storage, `${vendorId}/${productItemId}`);
+      return await getDownloadURL(imageRef);
+    } catch (error) {
+      console.error("Error fetching image URL:", error);
+      return "https://via.placeholder.com/150";
+    }
+  };
+
+  // Fetch products từ API
   const fetchData = async () => {
-    setLoading(true);
     try {
       const response = await axios.get(
         `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
@@ -64,49 +91,40 @@ const ManageProducts = () => {
         duration: 3000,
         isClosable: true,
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-// Fetch Product Items from API
-const fetchProductItems = async () => {
-  setLoading(true);
-  try {
-    const response = await axios.get(
-      `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
-      {
-        headers: {
-          Authorization: `${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+  // Fetch Product Items từ API và lấy URL ảnh
+  const fetchProductItems = async () => {
+    try {
+      const response = await axios.get(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    console.log("Full API response:", response); // Debug log for full response
-    console.log("API response data:", response.data); // Debug log for response data
+      const itemsWithImages = await Promise.all(
+        response.data.map(async (item) => {
+          const imageURL = await fetchImageURL(item.productItemId);
+          return { ...item, imageURL };
+        })
+      );
 
-    // Set productItems directly if response data is an array
-    if (Array.isArray(response.data)) {
-      setProductItems(response.data);
-    } else {
-      throw new Error("Unexpected response format from API");
+      setProductItems(itemsWithImages);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to fetch product items from API.`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
-  } catch (error) {
-    console.error("Error fetching product items:", error); // Improved error logging
-    toast({
-      title: "Error",
-      description: `Failed to fetch product items from API. ${error.message}`,
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   useEffect(() => {
     fetchData();
@@ -143,7 +161,7 @@ const fetchProductItems = async () => {
   };
 
   // Handle form submission for adding or editing product items
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     if (details.length === 0) {
       toast({
         title: "Error",
@@ -196,9 +214,13 @@ const fetchProductItems = async () => {
             },
           }
         )
-        .then(() => {
-          const updatedProductItems = productItems.map((item) =>
-            item.productItemId === editingProductItem.productItemId ? productItemData : item
+        .then(async () => {
+          const updatedProductItems = await Promise.all(
+            productItems.map(async (item) =>
+              item.productItemId === editingProductItem.productItemId
+                ? { ...productItemData, imageURL: await fetchImageURL(editingProductItem.productItemId) }
+                : item
+            )
           );
           setProductItems(updatedProductItems);
           toast({
@@ -235,8 +257,12 @@ const fetchProductItems = async () => {
             },
           }
         )
-        .then(() => {
-          setProductItems([...productItems, productItemData]);
+        .then(async (response) => {
+          const newProductItemId = response.data.id;
+          const imageURL = await uploadImage(newProductItemId);
+          const updatedProductItem = { ...productItemData, productItemId: newProductItemId, imageURL };
+          setProductItems([...productItems, updatedProductItem]);
+        
           toast({
             title: "Success",
             description: "Product item created successfully!",
@@ -261,46 +287,6 @@ const fetchProductItems = async () => {
     }
   };
 
-  // Handle edit
-  const handleEdit = (productItem) => {
-    setEditingProductItem(productItem);
-    setValue("productName", productItem.name);
-    setValue("productPrice", productItem.price);
-    setDetails(productItem.details);
-    onOpen();
-  };
-
-  // Handle delete
-  const handleDelete = async (productItemId) => {
-    try {
-      await axios.delete(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${productItemId}`,
-        {
-          headers: {
-            Authorization: `${accessToken}`,
-          },
-        }
-      );
-      setProductItems(productItems.filter((item) => item.productItemId !== productItemId));
-      toast({
-        title: "Success",
-        description: "Product item deleted successfully!",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete product item!",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      console.error("Error deleting product item:", error);
-    }
-  };
-
   return (
     <Box p={5}>
       <Button colorScheme="blue" onClick={onOpen}>
@@ -318,15 +304,12 @@ const fetchProductItems = async () => {
               boxShadow="md"
               _hover={{ boxShadow: "lg" }}
             >
-              <Image src="https://via.placeholder.com/150" alt={productItem.name} objectFit="cover" width="100%" height="150px" />
+              <Image src={productItem.imageURL || "https://via.placeholder.com/150"} alt={productItem.name} objectFit="cover" width="100%" height="150px" />
               <Box p={4}>
                 <Text fontWeight="bold" fontSize="lg">
                   {productItem.name}
                 </Text>
                 <Text>{productItem.price} VND</Text>
-                <Text fontSize="sm" mt={2} color="gray.500">
-                  Products in item:
-                </Text>
                 <Flex direction="column">
                   {productItem.details.map((detail, index) => {
                     const foundProduct = products.find((p) => p.productId === detail.productId);
@@ -339,12 +322,12 @@ const fetchProductItems = async () => {
                 </Flex>
               </Box>
               <Flex justifyContent="flex-end" p={4}>
-                <Button leftIcon={<FaEdit />} size="sm" colorScheme="teal" variant="outline" onClick={() => handleEdit(productItem)}>
+                {/* <Button leftIcon={<FaEdit />} size="sm" colorScheme="teal" variant="outline" onClick={() => handleEdit(productItem)}>
                   Edit
                 </Button>
                 <Button leftIcon={<FaTrash />} size="sm" colorScheme="red" variant="outline" onClick={() => handleDelete(productItem.productItemId)}>
                   Delete
-                </Button>
+                </Button> */}
               </Flex>
             </GridItem>
           ))
@@ -367,6 +350,11 @@ const fetchProductItems = async () => {
               <FormControl mt={4}>
                 <FormLabel>Price</FormLabel>
                 <Input {...register("productPrice")} placeholder="Enter price" />
+              </FormControl>
+
+              <FormControl mt={4}>
+                <FormLabel>Product Image</FormLabel>
+                <Input type="file" accept="image/*" onChange={handleImageChange} />
               </FormControl>
 
               <FormControl mt={4}>

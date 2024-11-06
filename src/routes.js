@@ -34,6 +34,7 @@ import AdminLayout from "./components/admin/Layout/AdminLayout.jsx";
 import AdminAccountManagement from "./components/admin/AccountManagement.jsx";
 import AdminTransactionHistory from "./components/admin/TransHistory.jsx";
 import ManageProducts from "./components/vendor/MostOderProduct/ManageProductItems.jsx";
+import ImageUpload from "./shared/firebase/imageUpload.jsx";
 import LocationMap from "./pages/host/LocationMap.jsx";
 import LocationTypePage from "./pages/host/LocationTypePage.jsx";
 
@@ -58,6 +59,7 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="qrcode" element={<CourseList />} />
       <Route path="qrcodehist" element={<TransactionHistory />} />
+      <Route path="testanh" element={<ImageUpload />} />
 
       <Route
         path="/events/:eventId"
