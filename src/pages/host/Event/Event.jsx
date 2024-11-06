@@ -1,27 +1,47 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "./Event.css";
+import { useNavigate } from "react-router-dom";
 import {
   Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  InputGroup,
+  InputLeftElement,
   Input,
   Button,
-  Card,
-  Row,
-  Col,
+  Box,
+  Flex,
+  Grid,
+  GridItem,
   Modal,
-  Divider,
-  Typography,
-  Form,
-  message,
-  Upload,
-  Space,
-} from "antd"; // Import necessary Ant Design components
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Textarea,
+  FormControl,
+  FormLabel,
+  useDisclosure,
+  useToast,
+  Image,
+} from "@chakra-ui/react";
 import axios from "axios";
-import SearchIcon from "@mui/icons-material/Search";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { UploadOutlined } from "@ant-design/icons"; // Import icon
-
-const { TextArea } = Input;
+import {
+  SearchIcon,
+  AddIcon,
+  CalendarIcon,
+  TimeIcon,
+  InfoIcon,
+} from "@chakra-ui/icons";
+import { AiOutlineArrowLeft } from "react-icons/ai";
+import { MdEventNote } from "react-icons/md";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../firebaseConfig";
+import ServiceSelection from "../../../components/host/services/ServiceSelection";
 
 const URL = "https://668e540abf9912d4c92dcd67.mockapi.io/events";
 
@@ -30,16 +50,20 @@ const Event = () => {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState("1");
-  const [form] = Form.useForm();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [thumbnail, setThumbnail] = useState(null);
   const [fileName, setFileName] = useState("");
+  const [activeTab, setActiveTab] = useState(0);
+  const [eventName, setEventName] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [description, setDescription] = useState("");
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [services, setServices] = useState([]);
   const navigate = useNavigate();
-
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
+  const toast = useToast();
 
   useEffect(() => {
     axios
@@ -48,7 +72,7 @@ const Event = () => {
         setEvents(response.data);
         setFilteredEvents(
           response.data.filter(
-            (event) => event.details?.status?.toLowerCase() === "on-going"
+            (event) => event.status?.toLowerCase() === "on-going"
           )
         );
       })
@@ -66,28 +90,28 @@ const Event = () => {
     setFilteredEvents(filtered);
   };
 
-  const handleTabChange = (key) => {
-    setActiveTab(key);
+  const handleTabChange = (index) => {
+    setActiveTab(index);
 
     let filtered;
 
-    switch (key) {
-      case "1":
+    switch (index) {
+      case 0:
         filtered = events.filter(
-          (event) => event.details?.status?.toLowerCase() === "on-going"
+          (event) => event.status?.toLowerCase() === "on-going"
         );
         break;
-      case "2":
+      case 1:
         filtered = events.filter(
-          (event) => event.details?.status?.toLowerCase() === "running"
+          (event) => event.status?.toLowerCase() === "running"
         );
         break;
-      case "3":
+      case 2:
         filtered = events.filter(
-          (event) => event.details?.status?.toLowerCase() === "cancelled"
+          (event) => event.status?.toLowerCase() === "cancelled"
         );
         break;
-      case "4":
+      case 3:
       default:
         filtered = events;
         break;
@@ -96,299 +120,297 @@ const Event = () => {
     setFilteredEvents(filtered);
   };
 
-  const handleCancel = () => {
-    setIsModalVisible(false);
-    form.resetFields(); // Reset form khi cancel
-    setThumbnail(null); // Clear thumbnail
-  };
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (file.size / 1024 / 1024 < 5) {
+      const storageRef = ref(storage, `images/${file.name}`);
 
-  const handleCreate = () => {
-    form
-      .validateFields()
-      .then((values) => {
-        const newEvent = {
-          ...values,
-          image: thumbnail,
-          id: events.length + 1,
-        };
+      const uploadTask = uploadBytesResumable(storageRef, file);
 
-        axios
-          .post(URL, newEvent)
-          .then((response) => {
-            setEvents((prevEvents) => [...prevEvents, response.data]);
-            message.success("Event created successfully!");
-            setIsModalVisible(false);
-            form.resetFields();
-            setThumbnail(null);
-          })
-          .catch((error) => {
-            console.error("Error creating event:", error);
-            message.error("Failed to create event. Please try again.");
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log("Upload is " + progress + "% done");
+        },
+        (error) => {
+          console.error("Error uploading file:", error);
+          toast({
+            title: "Error uploading image",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
           });
-      })
-      .catch((errorInfo) => {
-        console.error("Validation failed: ", errorInfo);
-      });
-  };
-
-  const handleFileChange = (file) => {
-    if (
-      typeof window !== "undefined" &&
-      typeof window.URL.createObjectURL === "function"
-    ) {
-      if (file.size / 1024 / 1024 < 5) {
-        // Kiểm tra kích thước file
-        setThumbnail(window.URL.createObjectURL(file));
-        setFileName(file.name);
-      } else {
-        message.error("File size must be smaller than 5MB");
-      }
-    } else {
-      console.error(
-        "URL.createObjectURL is not available in this environment."
+        },
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            setThumbnail(downloadURL);
+            console.log("File available at", downloadURL);
+          });
+        }
       );
+    } else {
+      toast({
+        title: "File size must be smaller than 5MB",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
-  const items = [
-    { key: "1", label: "On-going" },
-    { key: "2", label: "Running" },
-    { key: "3", label: "Cancelled" },
-    { key: "4", label: "All" },
-  ];
+  const handleEventClick = (event, services) => {
+    sessionStorage.setItem("selectedEvent", JSON.stringify(event));
+    sessionStorage.setItem("eventId", event.eventId);
+    sessionStorage.setItem("eventServices", JSON.stringify(services));
+    navigate(`/event-detail/${event.eventId}`);
+  };
+
+  const handleCreate = () => {
+    if (!thumbnail) {
+      toast({
+        title: "Please upload an image.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const newEvent = {
+      eventName: eventName,
+      image: thumbnail,
+      startDate: startDate,
+      endDate: endDate,
+      startTime: startTime,
+      endTime: endTime,
+      description: description,
+      status: "on-going",
+    };
+
+    axios
+      .post(URL, newEvent)
+      .then((response) => {
+        const updatedEvents = [...events, response.data];
+        setEvents(updatedEvents);
+
+        handleTabChange(activeTab);
+
+        toast({
+          title: "Event created successfully!",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        onClose();
+
+        setShowServiceModal(true);
+      })
+      .catch((error) => {
+        toast({
+          title: "Failed to create event.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      });
+  };
+
+  const handleSaveServices = (selectedServices) => {
+    setServices(selectedServices);
+    setShowServiceModal(false);
+  };
 
   return (
     <>
-      <div className="header-container">
-        <div className="header-left">
+      <Flex justify="space-between" align="center" mb="16px">
+        <Flex align="center">
           {selectedEvent && (
-            <ArrowBackIcon
+            <AiOutlineArrowLeft
+              boxSize={6}
               onClick={() => setSelectedEvent(null)}
-              className="header-container-button"
-              style={{ cursor: "pointer", fontSize: "20px" }}
+              cursor="pointer"
             />
           )}
-          <h1
-            className="headername"
-            style={{ fontSize: "22px", fontWeight: "700", color: "#1B2559" }}
-          >
+          <Box as="h1" fontSize="2xl" fontWeight="bold" ml="4">
             Events
-          </h1>
-        </div>
+          </Box>
+        </Flex>
         {!selectedEvent && (
           <Button
-            type="primary"
-            className="create-event-button"
-            style={{
-              backgroundColor: "#3d7eff",
-              borderRadius: "8px",
-              fontWeight: "700",
-              fontSize: "14px",
-              padding: "8px 16px",
-            }}
-            onClick={showModal}
+            leftIcon={<AddIcon />}
+            colorScheme="blue"
+            onClick={onOpen}
+            rounded="md"
           >
-            + Create Event
+            Create Event
           </Button>
         )}
-      </div>
+      </Flex>
 
-      {!selectedEvent && (
-        <>
-          <Tabs
-            defaultActiveKey="1"
-            items={items}
-            onChange={handleTabChange}
-            style={{
-              marginBottom: "24px",
-              fontWeight: "700",
-              fontSize: "16px",
-            }}
-          />
-          <Input
-            placeholder="Search..."
-            className="inputsearch"
-            suffix={<SearchIcon />}
-            value={searchTerm}
-            onChange={handleSearch}
-            style={{
-              borderRadius: "10px",
-              height: "32px",
-              width: "40%",
-              fontWeight: "200",
-              fontSize: "14px",
-            }}
-          />
-        </>
-      )}
+      <InputGroup>
+        <InputLeftElement pointerEvents="none">
+          <SearchIcon color="gray.300" />
+        </InputLeftElement>
+        <Input
+          placeholder="Search events"
+          value={searchTerm}
+          onChange={handleSearch}
+          mb={4}
+          variant="filled"
+        />
+      </InputGroup>
 
-      <Row gutter={[40, 20]} style={{ marginTop: "20px" }}>
-        {filteredEvents.map((event) => (
-          <Col key={event.id} xs={24} sm={12} md={8} lg={8}>
-            <Card
-              className="event-card"
-              hoverable
-              onClick={() =>
-                navigate(`/event-detail/${event.id}`, { state: { event } })
-              }
-              cover={
-                <div className="event-card-cover">
-                  <img alt={event.eventName} src={event.image} />
-                </div>
-              }
+      <Tabs index={activeTab} onChange={handleTabChange}>
+        <TabList>
+          <Tab>On-going</Tab>
+          <Tab>Running</Tab>
+          <Tab>Cancelled</Tab>
+          <Tab>All</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel>
+            <Grid
+              templateColumns="repeat(3, 1fr)"
+              gap={6}
+              mt={4}
+              className="event-list"
             >
-              <div className="event-info-container">
-                <div className="event-date">
-                  <div className="event-date-box">
-                    <span
-                      className="event-date-day"
-                      style={{
-                        fontSize: "18px",
-                        fontWeight: "700",
-                        color: "#4A90E2",
-                      }}
-                    >
-                      {event.startDate.split(" ")[0]}
-                    </span>
-                    <span
-                      className="event-date-month"
-                      style={{ fontSize: "14px", color: "#4A90E2" }}
-                    >
-                      {event.startDate.split(" ")[1]}
-                    </span>
-                  </div>
-                </div>
-                <div className="event-details">
-                  <h3
-                    className="event-title"
-                    style={{
-                      fontSize: "18px",
-                      fontWeight: "700",
-                      color: "#002766",
-                    }}
-                  >
-                    {event.eventName}
-                  </h3>
-                  <p
-                    className="event-description"
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      color: "#1B2559",
-                    }}
-                  >
-                    {event.description}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+              {filteredEvents.map((event) => (
+                <GridItem
+                  key={event.eventId}
+                  onClick={() => handleEventClick(event, services)}
+                  className="event-card"
+                >
+                  <Box className="event-card-content">
+                    <Box className="event-card-cover">
+                      <Image
+                        src={event.image || thumbnail}
+                        alt={event.eventName}
+                        className="event-image"
+                      />
+                    </Box>
+                    <Box className="event-info-container">
+                      <Box className="event-title">{event.eventName}</Box>
+                      <Box className="event-dates">
+                        <Box>
+                          <CalendarIcon /> <strong>Start Date:</strong>{" "}
+                          {event.startDate}
+                        </Box>
+                        <Box>
+                          <CalendarIcon /> <strong>End Date:</strong>{" "}
+                          {event.endDate}
+                        </Box>
+                      </Box>
+                      <Box className="event-times">
+                        <Box>
+                          <TimeIcon /> <strong>Start Time:</strong>{" "}
+                          {event.startTime || "N/A"}
+                        </Box>
+                        <Box>
+                          <TimeIcon /> <strong>End Time:</strong>{" "}
+                          {event.endTime || "N/A"}
+                        </Box>
+                      </Box>
+                      <Box className="event-description">
+                        <InfoIcon /> <strong>Event Description:</strong>{" "}
+                        {event.description}
+                      </Box>
+                    </Box>
+                  </Box>
+                </GridItem>
+              ))}
+            </Grid>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
 
-      <Modal
-        title="Create Event"
-        open={isModalVisible}
-        onCancel={handleCancel}
-        footer={[
-          <Button key="create" type="primary" onClick={handleCreate}>
-            Create
-          </Button>,
-          <Button key="cancel" onClick={handleCancel}>
-            Cancel
-          </Button>,
-        ]}
-      >
-        <Divider />
-        <Form layout="vertical" form={form} className="modal-content">
-          <Form.Item
-            label="Event Name"
-            name="eventName"
-            rules={[{ required: true, message: "Please enter event name" }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Space.Compact>
-            <Form.Item
-              label="Start Date"
-              name="startDate"
-              rules={[{ required: true, message: "Please select start date" }]}
-              style={{ width: "48%" }}
-            >
-              <Input type="date" />
-            </Form.Item>
-
-            <Form.Item
-              label="End Date"
-              name="endDate"
-              rules={[{ required: true, message: "Please select end date" }]}
-              style={{ width: "48%" }}
-            >
-              <Input type="date" />
-            </Form.Item>
-          </Space.Compact>
-
-          <Space.Compact>
-            <Form.Item
-              label="Start Time"
-              name="startTime"
-              rules={[{ required: true, message: "Please select start time" }]}
-              style={{ width: "48%" }}
-            >
-              <Input type="time" />
-            </Form.Item>
-
-            <Form.Item
-              label="End Time"
-              name="endTime"
-              rules={[{ required: true, message: "Please select end time" }]}
-              style={{ width: "48%" }}
-            >
-              <Input type="time" />
-            </Form.Item>
-          </Space.Compact>
-
-          <Form.Item
-            label="Event Description"
-            name="description"
-            rules={[
-              { required: true, message: "Please enter event description" },
-            ]}
-          >
-            <TextArea rows={4} />
-          </Form.Item>
-
-          <Form.Item label="Event Thumbnail" className="upload-button">
-            <Upload
-              listType="picture-card"
-              showUploadList={false}
-              beforeUpload={(file) => {
-                handleFileChange(file);
-                return false;
-              }}
-            >
-              {thumbnail ? (
-                <div className="thumbnail-preview-container">
-                  <img
-                    src={thumbnail}
-                    alt="thumbnail"
-                    className="upload-thumbnail"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <UploadOutlined />
-                  <div style={{ marginTop: 8 }}>Upload</div>
-                </div>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Create Event</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl mb={4}>
+              <FormLabel>Event Name</FormLabel>
+              <Input
+                placeholder="Enter event name"
+                value={eventName}
+                onChange={(e) => setEventName(e.target.value)}
+              />
+            </FormControl>
+            <Flex justify="space-between" mb={4}>
+              <FormControl>
+                <FormLabel>Start Date</FormLabel>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>End Date</FormLabel>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </FormControl>
+            </Flex>
+            <Flex justify="space-between" mb={4}>
+              <FormControl>
+                <FormLabel>Start Time</FormLabel>
+                <Input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>End Time</FormLabel>
+                <Input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                />
+              </FormControl>
+            </Flex>
+            <FormControl mb={4}>
+              <FormLabel>Event Description</FormLabel>
+              <Textarea
+                placeholder="Enter event description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </FormControl>
+            <FormControl mb={4}>
+              <FormLabel>Event Thumbnail</FormLabel>
+              <Input type="file" onChange={handleFileChange} />
+              {thumbnail && (
+                <Box mt={2}>
+                  <Image src={thumbnail} alt="Thumbnail Preview" width="100%" />
+                </Box>
               )}
-            </Upload>
-            <Typography.Text type="secondary">
-              File size: Up to 5MB. Optimal dimensions: 600x280px.
-            </Typography.Text>
-          </Form.Item>
-        </Form>
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={handleCreate}>
+              Create
+            </Button>
+            <Button ml={3} onClick={onClose}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </ModalContent>
       </Modal>
+
+      {showServiceModal && (
+        <ServiceSelection
+          onSave={handleSaveServices}
+          onSkip={() => setShowServiceModal(false)}
+        />
+      )}
     </>
   );
 };

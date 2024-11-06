@@ -16,10 +16,11 @@ const { Sider } = Layout;
 const HostSideBar = ({ collapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { eventId } = useParams();
+  const eventId = useParams().eventId || sessionStorage.getItem("eventId");
   const [selectedMenuItem, setSelectedMenuItem] = useState("1");
 
   useEffect(() => {
+    console.log("Current eventId:", eventId);
     if (location.pathname.startsWith("/dashboard")) {
       setSelectedMenuItem("1");
     } else if (location.pathname.startsWith("/events")) {
@@ -34,6 +35,10 @@ const HostSideBar = ({ collapsed }) => {
       setSelectedMenuItem("6");
     } else if (location.pathname.startsWith("/event-detail")) {
       setSelectedMenuItem("10");
+    } else if (
+      location.pathname.startsWith(`/event/${eventId}/location-type`)
+    ) {
+      setSelectedMenuItem("11");
     }
   }, [location.pathname]);
 
@@ -63,7 +68,7 @@ const HostSideBar = ({ collapsed }) => {
               Transaction
             </span>
           ),
-          onClick: () => navigate(`/event/transactions`),
+          onClick: () => navigate(`/event/${eventId}/transactions`),
         },
         {
           key: "8",
@@ -75,7 +80,19 @@ const HostSideBar = ({ collapsed }) => {
               Booth Plan
             </span>
           ),
-          onClick: () => navigate(`/event/booth-plan`),
+          onClick: () => navigate(`/event/${eventId}/booth-plan`),
+        },
+        {
+          key: "11",
+          icon: <StorefrontIcon />,
+          label: (
+            <span
+              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
+            >
+              Location Type
+            </span>
+          ),
+          onClick: () => navigate(`/event/${eventId}/location-type`),
         },
         {
           key: "9",
@@ -176,44 +193,6 @@ const HostSideBar = ({ collapsed }) => {
     },
   ];
 
-  const handleMenuClick = (e) => {
-    setSelectedMenuItem(e.key);
-    switch (e.key) {
-      case "1":
-        navigate("/dashboard");
-        break;
-      case "2":
-        navigate("/events");
-        break;
-      case "3":
-        navigate("/manage-product");
-        break;
-      case "4":
-        navigate("/accounts");
-        break;
-      case "5":
-        navigate("/settings");
-        break;
-      case "6":
-        navigate("/packages");
-        break;
-      case "7":
-        navigate(`/event/transactions`);
-        break;
-      case "8":
-        navigate(`/event/booth-plan`);
-        break;
-      case "9":
-        navigate(`/manage-product`);
-        break;
-      case "10":
-        navigate(`/event-detail/${eventId}`);
-        break;
-      default:
-        navigate("/dashboard");
-    }
-  };
-
   return (
     <>
       <Sider
@@ -243,18 +222,57 @@ const HostSideBar = ({ collapsed }) => {
           style={{ backgroundColor: "#fff", color: "#1B2559" }}
           mode="inline"
           selectedKeys={[selectedMenuItem]}
-          onClick={handleMenuClick}
+          onClick={(e) => {
+            setSelectedMenuItem(e.key);
+            switch (e.key) {
+              case "1":
+                navigate("/dashboard");
+                break;
+              case "2":
+                navigate("/events");
+                break;
+              case "3":
+                navigate("/manage-product");
+                break;
+              case "4":
+                navigate("/accounts");
+                break;
+              case "5":
+                navigate("/settings");
+                break;
+              case "6":
+                navigate("/packages");
+                break;
+              case "7":
+                navigate(`/event/transactions`);
+                break;
+              case "8":
+                navigate(`/event/${eventId}/booth-plan`);
+                break;
+              case "9":
+                navigate(`/manage-product`);
+                break;
+              case "10":
+                navigate(`/event-detail/${eventId}`);
+                break;
+              case "11":
+                navigate(`/event/${eventId}/location-type`);
+                break;
+              default:
+                navigate("/dashboard");
+            }
+          }}
           items={
             location.pathname.startsWith("/event-detail") ||
             location.pathname.startsWith("/event/transactions") ||
-            location.pathname.startsWith("/event/booth-plan") ||
+            location.pathname.startsWith(`/event/${eventId}/booth-plan`) ||
+            location.pathname.startsWith(`/event/${eventId}/location-type`) ||
             location.pathname.startsWith("/manage-product")
               ? eventDetailItems
               : defaultItems
           }
         />
       </Sider>
-
       <div
         style={{
           marginLeft: collapsed ? "80px" : "200px",

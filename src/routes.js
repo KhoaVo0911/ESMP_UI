@@ -24,6 +24,8 @@ import EventList from "./components/vendor/Test/abc";
 import EventDetail from "./components/vendor/Test/zxc";
 import ViewWebsitePage from "./pages/host/ViewWebsitePage";
 import BoothPlan from "./pages/host/BoothPlan";
+import LocationMap from "./pages/host/LocationMap";
+import LocationTypePage from "./pages/host/LocationTypePage";
 // import Transaction from "./components/vendor/Transaction/Transaction";
 
 const AppRoutes = () => {
@@ -69,7 +71,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/event-detail/:id"
+        path="/event-detail/:eventId"
         element={
           <HostLayout>
             <EventDetails />
@@ -141,10 +143,26 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/event/booth-plan"
+        path="/event/:eventId/booth-plan"
+        element={
+          <HostLayout>
+            <LocationMap />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/event/:eventId/booth-plan/:mode"
         element={
           <HostLayout>
             <BoothPlan />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/event/:eventId/location-type"
+        element={
+          <HostLayout>
+            <LocationTypePage />
           </HostLayout>
         }
       />
