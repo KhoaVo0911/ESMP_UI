@@ -45,14 +45,20 @@ const AppRoutes = () => {
       {/* <Route path="/eventss" element={<EventList />} />
       <Route path="/events/:eventId" element={<EventDetail />} /> */}
       <Route path="/login" element={<LoginPage />} />
-     <Route path="/productSample" element={<VendorLayout>
-            <ManageProducts/>
-          </VendorLayout>}/>
+      <Route
+        path="/productSample"
+        element={
+          <VendorLayout>
+            <ManageProducts />
+          </VendorLayout>
+        }
+      />
       <Route path="/DashboardVendor" element={<DashboardVendor />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="qrcode" element={<CourseList />} />
       <Route path="qrcodehist" element={<TransactionHistory />} />
       <Route path="testanh" element={<ImageUpload />} />
+
       <Route
         path="/events/:eventId"
         element={
@@ -70,11 +76,11 @@ const AppRoutes = () => {
         }
       />
 
-<Route
+      <Route
         path="/admin"
         element={
           <AdminLayout>
-            <AdminAccountManagement/>
+            <AdminAccountManagement />
           </AdminLayout>
         }
       />
@@ -82,7 +88,7 @@ const AppRoutes = () => {
         path="/adtransaction"
         element={
           <AdminLayout>
-            <AdminTransactionHistory/>
+            <AdminTransactionHistory />
           </AdminLayout>
         }
       />
@@ -103,7 +109,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/event-detail/:id"
+        path="/event-detail/:eventId"
         element={
           <HostLayout>
             <EventDetails />
@@ -199,10 +205,26 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/event/booth-plan"
+        path="/event/:eventId/booth-plan"
+        element={
+          <HostLayout>
+            <LocationMap />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/event/:eventId/booth-plan/:mode"
         element={
           <HostLayout>
             <BoothPlan />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/event/:eventId/location-type"
+        element={
+          <HostLayout>
+            <LocationTypePage />
           </HostLayout>
         }
       />

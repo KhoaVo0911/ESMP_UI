@@ -1,19 +1,26 @@
 .headername {
     font-size: 20px;
     margin-left: 10px;
+    font-weight: 700;
+    /* Bolder font for better emphasis */
 }
 
 .inputsearch {
     border-radius: 10px;
     height: 32px;
-    width: 40%;
+    width: 100%;
+    max-width: 400px;
+    padding: 0 10px;
 }
+
 
 .header-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+    flex-wrap: wrap;
+    /* Ensure wrapping on smaller screens */
 }
 
 .header-left {
@@ -23,108 +30,94 @@
 
 .create-event-button {
     color: white;
+    background-color: #4a90e2;
     border-radius: 4px;
-    height: 30px;
+    height: 40px;
+    padding: 0 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-left: auto;
-}
-
-.date-end {
-    margin-right: 16%;
-}
-
-.date-time {
-    margin-right: 21%;
+    font-weight: 700;
+    cursor: pointer;
 }
 
 .event-card {
-    border-radius: 10px;
-    overflow: hidden;
+    cursor: pointer;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    /* Đảm bảo card chiếm toàn bộ chiều cao */
-    box-shadow: 0 10px 50px #3d37f140;
-    transition: transform 0.3s ease-in-out;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
     background-color: #fff;
-    /* Màu nền trắng */
+    margin-bottom: 20px;
+    padding: 16px;
+    width: 100%;
+    max-width: 600px;
+    height: auto;
 }
 
 .event-card:hover {
-    transform: translateY(-8px);
-    /* Tăng hiệu ứng hover */
-    transition: transform 0.3s ease-in-out;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.event-card-content {
+    display: flex;
+    flex-direction: column;
+    padding-top: 12px;
 }
 
 .event-card-cover img {
-    border-radius: 10px;
-    object-fit: cover;
-    height: 230px;
     width: 100%;
-    /* border-bottom: 1px solid #e0e0e0;  */
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
 }
-
 
 .event-info-container {
-    display: flex;
-    align-items: flex-start;
-    background-color: #fff;
-    border-radius: 0 0 10px 10px;
-    flex-grow: 1;
-    justify-content: space-between;
-}
-
-.event-date {
-    margin-right: 16px;
-    display: flex;
-    align-items: center;
-}
-
-.event-date-box {
-    background-color: #e0e7ff;
-    border-radius: 8px;
-    padding: 8px;
-    text-align: center;
-    width: 60px;
+    padding-top: 16px;
     display: flex;
     flex-direction: column;
-}
-
-.event-date-day {
-    font-size: 18px;
-    font-weight: bold;
-    color: #4a90e2;
-}
-
-.event-date-month {
-    font-size: 14px;
-    color: #4a90e2;
-    /* Màu cho tháng */
-}
-
-.event-details {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin-top: 4px;
+    gap: 12px;
 }
 
 .event-title {
-    font-size: 16px;
+    font-size: 24px;
     font-weight: bold;
+    margin-bottom: 16px;
+}
+
+.event-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
     color: #333;
+    gap: 16px;
     margin-bottom: 10px;
-    /* Tạo khoảng cách dưới cho tiêu đề */
 }
 
 .event-description {
     font-size: 14px;
     color: #666;
-    text-transform: uppercase;
-    margin-top: -4px;
+    margin-top: 16px;
+}
+
+.event-dates,
+.event-times {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 14px;
+    gap: 46px;
+}
+
+.event-dates>div,
+.event-times>div {
+
+    text-align: left;
+    padding: 0 10px;
 }
 
 .modal-content {
@@ -151,19 +144,43 @@
 .upload-thumbnail {
     width: 100%;
     max-width: 300px;
-    /* Max width for the thumbnail */
     height: auto;
-    /* Let the height adjust automatically */
     object-fit: cover;
-    /* Ensure the image fits within the box without stretching */
     border: 1px solid #ccc;
     border-radius: 8px;
 }
 
-
+/* Improved form item labels */
 .ant-form-item-label>label {
     font-family: 'DM Sans', sans-serif;
     color: #170F49;
     font-weight: 700;
     font-size: 16px;
+}
+
+/* MEDIA QUERIES FOR RESPONSIVENESS */
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .create-event-button {
+        margin-top: 10px;
+        width: 100%;
+    }
+
+    .inputsearch {
+        width: 100%;
+    }
+
+    .event-card {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .event-list {
+        flex-direction: column;
+        align-items: center;
+    }
 }
