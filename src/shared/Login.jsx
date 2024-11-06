@@ -14,73 +14,56 @@ import {
 } from "@chakra-ui/react";
 import { FaUserShield, FaStore, FaUserTie } from "react-icons/fa";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../shared/auth/AuthContext";
 
-const LoginPage = () => {
-  const [role, setRole] = useState("Admin");
+const LoginComponent = ({ onLoginSuccess }) => {
+  const [role, setRole] = useState("vendor"); // Role only for adjusting API link
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const toast = useToast();
-  const navigate = useNavigate();
-  const { login } = useAuth();
+  const hostCode = "default"; // HostCode is set to 'default'
 
-  const handleLogin = async () => {
+  const handleLogin = async (event) => {
+    event.preventDefault();
     setLoading(true);
+    setError(null);
+
     try {
-      const response = await axios.get(
-        "https://668e540abf9912d4c92dcd67.mockapi.io/login"
-      );
+      // Log the data being sent to ensure it is correct
+      console.log("Logging in with:", { username, password, hostCode });
 
-      const user = response.data.find(
-        (u) => u.username === username && u.password === password
-      );
+      // Set the correct API URL dynamically based on the selected role
+      const apiUrl = `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/user/login/${role}`;
 
-      if (user) {
-        const { role: userRole } = user;
+      // Send the login request
+      const response = await axios.post(apiUrl, {
+        username,
+        password,
+        hostCode, // Pass hostCode as part of the request body
+      });
 
-        if (userRole.toLowerCase() !== role.toLowerCase()) {
-          toast({
-            title: "Role mismatch",
-            description: `Loại tài khoản không khớp! Vui lòng chọn ${userRole} để đăng nhập.`,
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-            position: "top",
-          });
-        } else {
-          login(user);
-          toast({
-            title: "Đăng nhập thành công",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-            position: "top",
-          });
+      const { accessToken, userInfo } = response.data;
 
-          if (userRole === "admin") {
-            navigate("/admin");
-          } else if (userRole === "vendor") {
-            navigate("/DashboardVendor");
-          } else if (userRole === "host") {
-            navigate("/dashboard");
-          }
-        }
-      } else {
-        toast({
-          title: "Invalid credentials",
-          description: "Sai tên đăng nhập hoặc mật khẩu.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-          position: "top",
-        });
-      }
-    } catch (error) {
+      // Pass accessToken and userInfo on successful login
+      onLoginSuccess(accessToken, userInfo);
+
+      // Show success toast
       toast({
-        title: "Error",
-        description: "Đã xảy ra lỗi khi kết nối tới server.",
+        title: "Đăng nhập thành công",
+        description: `Logged in as ${role}`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "top",
+      });
+    } catch (err) {
+      console.error("Login error:", err.response); // Log error response for debugging
+
+      setError("Login failed. Please check your credentials.");
+      toast({
+        title: "Đăng nhập thất bại",
+        description: "Invalid username or password",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -141,38 +124,38 @@ const LoginPage = () => {
               <VStack
                 as="label"
                 border="2px"
-                borderColor={role === "Admin" ? "blue.500" : "gray.300"}
+                borderColor={role === "admin" ? "blue.500" : "gray.300"}
                 borderRadius="md"
                 p={4}
                 cursor="pointer"
               >
                 <Icon as={FaUserShield} boxSize={10} />
                 <Text>Admin</Text>
-                <Radio value="Admin" />
+                <Radio value="admin" />
               </VStack>
               <VStack
                 as="label"
                 border="2px"
-                borderColor={role === "Vendor" ? "blue.500" : "gray.300"}
+                borderColor={role === "vendor" ? "blue.500" : "gray.300"}
                 borderRadius="md"
                 p={4}
                 cursor="pointer"
               >
                 <Icon as={FaStore} boxSize={10} />
                 <Text>Vendor</Text>
-                <Radio value="Vendor" />
+                <Radio value="vendor" />
               </VStack>
               <VStack
                 as="label"
                 border="2px"
-                borderColor={role === "Host" ? "blue.500" : "gray.300"}
+                borderColor={role === "host" ? "blue.500" : "gray.300"}
                 borderRadius="md"
                 p={4}
                 cursor="pointer"
               >
                 <Icon as={FaUserTie} boxSize={10} />
                 <Text>Host</Text>
-                <Radio value="Host" />
+                <Radio value="host" />
               </VStack>
             </HStack>
           </RadioGroup>
@@ -202,10 +185,11 @@ const LoginPage = () => {
           >
             Login
           </Button>
+          {error && <Text color="red.500">{error}</Text>}
         </VStack>
       </Box>
     </ChakraProvider>
   );
 };
 
-export default LoginPage;
+export default LoginComponent;

@@ -16,17 +16,17 @@ import { ChevronDownIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../../shared/auth/AuthContext";
 
-const VendorHeader = ({ collapsed }) => {
+const AdminHeader = ({ collapsed }) => {
   const location = useLocation();
   const { logout } = useAuth();
 
   const getPageTitle = () => {
-    if (location.pathname.startsWith("/dashboard")) {
-      return "Dashboard";
+    if (location.pathname.startsWith("/admin")) {
+      return "Account Management";
     } else if (location.pathname.startsWith("/productsList")) {
-      return "List of Products";
-    } else if (location.pathname.startsWith("/productSample")) {
-      return "Manage Product Items";
+      return "Producst List";
+    } else if (location.pathname.startsWith("/adtransaction")) {
+      return "Transaction History";
     } else if (location.pathname.startsWith("/Transaction")) {
       return "Transaction";
     } else if (location.pathname.startsWith("/eventsVendor")) {
@@ -94,7 +94,7 @@ const VendorHeader = ({ collapsed }) => {
           </MenuButton>
           <MenuList boxShadow="lg" borderRadius="lg" padding="12px">
             <MenuItem fontSize="md" fontWeight="700" color="gray.700">
-              👋 Hey, Vendor
+              👋 Hey, Admin
             </MenuItem>
             <MenuItem
               fontSize="md"
@@ -111,4 +111,4 @@ const VendorHeader = ({ collapsed }) => {
   );
 };
 
-export default VendorHeader;
+export default AdminHeader;

@@ -1,0 +1,128 @@
+.headername {
+    font-size: 20px;
+    margin-left: 10px;
+}
+
+.inputsearch {
+    border-radius: 10px;
+    height: 32px;
+    width: 40%;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.create-event-button {
+    color: white;
+    border-radius: 4px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+}
+
+.date-end {
+    margin-right: 16%;
+}
+
+.date-time {
+    margin-right: 21%;
+}
+
+.event-card {
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* Đảm bảo card chiếm toàn bộ chiều cao */
+    box-shadow: 0 10px 50px #3d37f140;
+    transition: transform 0.3s ease-in-out;
+    background-color: #fff;
+    /* Màu nền trắng */
+}
+
+.event-card:hover {
+    transform: translateY(-8px);
+    /* Tăng hiệu ứng hover */
+    transition: transform 0.3s ease-in-out;
+}
+
+.event-card-cover img {
+    border-radius: 10px;
+    object-fit: cover;
+    height: 230px;
+    width: 100%;
+    /* border-bottom: 1px solid #e0e0e0;  */
+}
+
+
+.event-info-container {
+    display: flex;
+    align-items: flex-start;
+    background-color: #fff;
+    border-radius: 0 0 10px 10px;
+    flex-grow: 1;
+    justify-content: space-between;
+}
+
+.event-date {
+    margin-right: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.event-date-box {
+    background-color: #e0e7ff;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    width: 60px;
+    display: flex;
+    flex-direction: column;
+}
+
+.event-date-day {
+    font-size: 18px;
+    font-weight: bold;
+    color: #4a90e2;
+}
+
+.event-date-month {
+    font-size: 14px;
+    color: #4a90e2;
+    /* Màu cho tháng */
+}
+
+.event-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 4px;
+}
+
+.event-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+    /* Tạo khoảng cách dưới cho tiêu đề */
+}
+
+.event-description {
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    margin-top: -4px;
+}

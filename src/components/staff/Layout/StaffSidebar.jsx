@@ -10,53 +10,36 @@ import logo from "../../../assets/images/logo_EIPS.png";
 
 const { Sider } = Layout;
 
-const VendorSideBar = ({ collapsed }) => {
+const StaffSideBar = ({ collapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedMenuItem, setSelectedMenuItem] = useState("1");
 
-  // Kiểm tra nếu location.state tồn tại, nếu không thì đặt giá trị mặc định
-  const accessToken = location.state?.accessToken || ""; // Nếu không có state thì dùng chuỗi rỗng
-  const vendorId = location.state?.vendorId || ""; // Nếu không có state thì dùng chuỗi rỗng
-
+  // Update selectedMenuItem based on current URL
   useEffect(() => {
     if (location.pathname.startsWith("/dashboardVendor")) {
       setSelectedMenuItem("1");
-    } else if (location.pathname.startsWith("/productSample")) {
+    } else if (location.pathname.startsWith("/listProducts")) {
       setSelectedMenuItem("2");
     } else if (location.pathname.startsWith("/ManageProductItems")) {
       setSelectedMenuItem("3");
     } else if (location.pathname.startsWith("/eventsVendor")) {
       setSelectedMenuItem("4");
-    } 
+    } else if (location.pathname.startsWith("/transaction")) {
+      setSelectedMenuItem("5");
+    }
   }, [location.pathname]);
 
   const defaultItems = [
     {
       type: "group",
-      label: <h3 style={{ fontWeight: "bold", color: "#A0AEC0" }}>MENU</h3>,
+      label: <h3 style={{ fontWeight: "bold", color: "#A0AEC0" }}>MENU</h3>, // Adjusting group title style
       children: [
         {
           key: "1",
-          icon: <DashboardIcon />,
-          label: <span style={{ fontWeight: "bold" }}>Dashboard</span>,
-        },
-        {
-          key: "2",
-          icon: <FormatListBulletedIcon />,
-          label: <span style={{ fontWeight: "bold" }}>Products List</span>,
-        },
-        {
-          key: "3",
-          icon: <FastfoodIcon />,
-          label: <span style={{ fontWeight: "bold" }}>Manage Product Items</span>,
-        },
-        {
-          key: "4",
           icon: <EventIcon />,
           label: <span style={{ fontWeight: "bold" }}>Events</span>,
         },
-        
       ],
     },
   ];
@@ -65,22 +48,22 @@ const VendorSideBar = ({ collapsed }) => {
     setSelectedMenuItem(e.key);
     switch (e.key) {
       case "1":
-        navigate("/dashboardVendor", { state: { accessToken, vendorId } });
+        navigate("/eventStaff");
         break;
       case "2":
-        navigate("/productsList", { state: { accessToken, vendorId } });
+        navigate("/productsList");
         break;
       case "3":
-        navigate("/productSample", { state: { accessToken, vendorId } });
+        navigate("/ManageProductItems");
         break;
       case "4":
-        navigate("/eventsVendor", { state: { accessToken, vendorId } });
+        navigate("/eventsVendor");
         break;
       case "5":
-        navigate("/Transaction", { state: { accessToken, vendorId } });
+        navigate("/Transaction");
         break;
       default:
-        navigate("/dashboardVendor", { state: { accessToken, vendorId } });
+        navigate("/dashboardVendor");
     }
   };
 
@@ -137,4 +120,4 @@ const VendorSideBar = ({ collapsed }) => {
   );
 };
 
-export default VendorSideBar;
+export default StaffSideBar;

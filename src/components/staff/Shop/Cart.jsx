@@ -10,11 +10,9 @@ import {
   Input,
 } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Cart = ({ cartItems, updateQuantity, removeItem }) => {
-  const navigate = useNavigate();
-
   // Calculate total price
   const totalPrice = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
@@ -25,21 +23,6 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
   const handleConfirm = () => {
     sessionStorage.setItem("cartItems", JSON.stringify(cartItems));
     sessionStorage.setItem("totalPrice", totalPrice);
-
-    // Lưu thêm accessToken, vendorId, eventId vào sessionStorage
-    const accessToken = sessionStorage.getItem("accessToken");
-    const vendorId = sessionStorage.getItem("vendorId");
-    const eventId = sessionStorage.getItem("eventId");
-
-    // Console log để kiểm tra các giá trị
-    console.log("accessToken:", accessToken);
-    console.log("vendorId:", vendorId);
-    console.log("eventId:", eventId);
-
-    // Điều hướng sang trang thanh toán với các thông tin cần thiết
-    navigate("/payment", {
-      state: { accessToken, vendorId, eventId },
-    });
   };
 
   return (
@@ -61,7 +44,7 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
               borderRadius="md"
               boxShadow="sm"
               bg="white"
-              width="100%"
+              width="100%" // Ensure full width for items
             >
               <HStack>
                 <Image src={item.image} alt={item.name} boxSize="50px" />
@@ -81,7 +64,9 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
                   value={item.quantity}
                   readOnly
                 />
-                <Button onClick={() => updateQuantity(index, item.quantity + 1)}>
+                <Button
+                  onClick={() => updateQuantity(index, item.quantity + 1)}
+                >
                   +
                 </Button>
               </HStack>
@@ -107,9 +92,11 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
 
       {/* Confirm Button */}
       <HStack justify="center" mt={8}>
-        <Button colorScheme="blue" onClick={handleConfirm}>
-          Confirm
-        </Button>
+        <Link to="/payment">
+          <Button colorScheme="blue" onClick={handleConfirm}>
+            Confirm
+          </Button>
+        </Link>
         <Button colorScheme="red" onClick={() => removeItem()}>
           Delete
         </Button>

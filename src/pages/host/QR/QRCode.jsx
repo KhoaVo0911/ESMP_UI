@@ -16,12 +16,10 @@ import {
   ModalFooter,
   useDisclosure,
   useToast,
-  Progress,
-  Grid,
+  Progress, // Import Progress component
 } from "@chakra-ui/react";
-import axios from "axios";
 
-const Package = () => {
+const CourseList = () => {
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState({
     content: "",
@@ -35,19 +33,28 @@ const Package = () => {
   const countdownIntervalRef = useRef(null); // Reference to store the countdown interval
 
   useEffect(() => {
-    // Update the course data structure to align with the Package component
+    // Sample data for course items
     const courseData = [
       {
         courseID: "COURSE001",
-
-        courseName: "Gold Plan - Buy 3 months get 1 month free",
-        coursePrice: 400000,
+        courseAvatar:
+          "https://thumbs.dreamstime.com/b/businessman-using-tablet-laptop-ana",
+        courseName: "Digital Marketing",
+        coursePrice: 8000,
       },
       {
         courseID: "COURSE002",
-
-        courseName: "Premiere Plan - Buy 6 months get 2 months free",
-        coursePrice: 750000,
+        courseAvatar:
+          "https://thumbs.dreamstime.com/b/businessman-using-tablet-laptop-ana",
+        courseName: "Lập trình Javascript",
+        coursePrice: 20000,
+      },
+      {
+        courseID: "COURSE003",
+        courseAvatar:
+          "https://thumbs.dreamstime.com/b/businessman-using-tablet-laptop-ana",
+        courseName: "Lập trình Ruby",
+        coursePrice: 50000,
       },
     ];
 
@@ -94,18 +101,56 @@ const Package = () => {
       });
     }, 1000);
 
+    const transactionCheckInterval = setInterval(() => {
+      checkPaid(paidPrice, paidContent, transactionCheckInterval, newStartTime);
+    }, 2000); // Check for payment every 2 seconds
+
     onOpen(); // Open the modal when a course is clicked
   };
 
+  const checkPaid = async (price, content, intervalId, startTime) => {
+    try {
+      const response = await fetch(
+        "https://script.googleusercontent.com/macros/echo?user_content_key=8mGZWlfGvyWWCS0cgyAlbllHqG0udaCGO6tQG01QDu_wCpCCVmBzuMQkZjU8HftH-T-t8S8NkPOO0HpzZqbIUpIRb8DGG9xPm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnAYXetFrC-zWvA_lqYZvPnJoCEY4_DQEloQ1meRe94z4CqWcnBBqRLMg8PXC-uxuJBvFcvoj2FToq-yfHtQXpYQW0UstbE5dAtz9Jw9Md8uu&lib=MbbErZamKd_6ahvdDuCk2MKVwqDhlS6o-"
+      );
+      const data = await response.json();
+      const lastPaid = data.data[data.data.length - 1];
+
+      const lastPrice =
+        lastPaid && lastPaid["Giá trị"] ? parseFloat(lastPaid["Giá trị"]) : 0;
+      const lastContent =
+        lastPaid && lastPaid["Mô tả"]
+          ? lastPaid["Mô tả"].trim().toLowerCase()
+          : "";
+      const transactionTime = new Date(lastPaid["Ngày diễn ra"]).getTime(); // Convert to timestamp
+
+      const startTimestamp = new Date(startTime).getTime();
+
+      // Ensure the transaction occurred after the QR code was displayed
+      if (
+        lastPrice >= price &&
+        lastContent.includes(content.toLowerCase()) &&
+        transactionTime > startTimestamp // Ensure the transaction time is strictly greater than the start time
+      ) {
+        clearInterval(intervalId); // Stop checking once payment is confirmed
+        clearInterval(countdownIntervalRef.current); // Stop the countdown timer on successful payment
+        toast({
+          title: "Thanh toán thành công",
+          description: "Bạn đã thanh toán thành công cho khóa học.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+        setSelectedCourse((prevState) => ({ ...prevState, showQR: false })); // Hide QR code after success
+        onClose(); // Close the modal after successful payment
+      }
+    } catch (error) {
+      console.error("Lỗi:", error);
+    }
+  };
   return (
-    <VStack spacing={8} align="center" padding={4} bg="white" minH="80vh">
-      <Text fontSize="2xl" fontWeight="bold" mb={8}>
-        Compare Plans
-      </Text>
-      <Text fontSize="md" mb={8}>
-        Choose your workspace plan according to Platform usage time.
-      </Text>
-      <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+    <VStack spacing={8} align="center" padding={4} bg="#f5f5dc" minH="100vh">
+      <Flex wrap="wrap" justify="center" gap={6}>
         {courses.map((item, index) => (
           <Box
             key={item.courseID}
@@ -120,11 +165,21 @@ const Package = () => {
             transition="0.3s ease-in-out"
             border="1px solid #d4af37"
           >
+            <Image
+              src={item.courseAvatar}
+              alt={item.courseName}
+              borderRadius="md"
+              boxShadow="lg"
+              width="100%"
+              height="180px"
+              objectFit="cover"
+              mb={4}
+            />
             <Heading size="md" color="#6b4226" mb={2}>
               {item.courseName}
             </Heading>
             <Text fontSize="lg" fontWeight="bold" color="#8b4513" mb={4}>
-              {item.coursePrice.toLocaleString()} VND
+              {item.coursePrice} VND
             </Text>
             <Button
               colorScheme="yellow"
@@ -138,7 +193,7 @@ const Package = () => {
             </Button>
           </Box>
         ))}
-      </Grid>
+      </Flex>
 
       {/* Modal for displaying the QR code */}
       <Modal isOpen={isOpen} onClose={onClose}>
@@ -204,4 +259,4 @@ const Package = () => {
   );
 };
 
-export default Package;
+export default CourseList;

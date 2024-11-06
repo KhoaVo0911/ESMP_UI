@@ -19,25 +19,44 @@ import AccountManagement from "./pages/host/Account";
 import Settings from "./pages/host/Settings";
 import PackagePage from "./pages/host/Package";
 import ManageProduct from "./pages/host/ManageProduct";
-import LoginPage from "./shared/Login";
-import EventList from "./components/vendor/Test/abc";
-import EventDetail from "./components/vendor/Test/zxc";
+import LoginPage from "./shared/LoginPage.jsx";
+
 import ViewWebsitePage from "./pages/host/ViewWebsitePage";
 import BoothPlan from "./pages/host/BoothPlan";
-import LocationMap from "./pages/host/LocationMap";
-import LocationTypePage from "./pages/host/LocationTypePage";
-// import Transaction from "./components/vendor/Transaction/Transaction";
+import EventStaff from "./components/staff/Event/StaffEvent";
+import StaffLayout from "./components/staff/Layout/StaffLayout";
+import EventPageStaff from "./components/staff/EventDetail/EventPageStaff";
+import StaffShop from "./components/staff/Shop/Shop";
+import LandingPage from "./pages/host/LandingPage/LandingPage";
+import CourseList from "./pages/host/QR/QRCode.jsx";
+import TransactionHistory from "./pages/host/QR/TransHistory";
+import AdminLayout from "./components/admin/Layout/AdminLayout.jsx";
+import AdminAccountManagement from "./components/admin/AccountManagement.jsx";
+import AdminTransactionHistory from "./components/admin/TransHistory.jsx";
+import ManageProducts from "./components/vendor/MostOderProduct/ManageProductItems.jsx";
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Redirect base URL to login page */}
-      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/" element={<Navigate to="/home" />} />
+      <Route path="/home" element={<LandingPage />} />
       {/* <Route path="/eventss" element={<EventList />} />
       <Route path="/events/:eventId" element={<EventDetail />} /> */}
       <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/productSample"
+        element={
+          <VendorLayout>
+            <ManageProducts />
+          </VendorLayout>
+        }
+      />
       <Route path="/DashboardVendor" element={<DashboardVendor />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="qrcode" element={<CourseList />} />
+      <Route path="qrcodehist" element={<TransactionHistory />} />
+
       <Route
         path="/events/:eventId"
         element={
@@ -52,6 +71,23 @@ const AppRoutes = () => {
           <VendorLayout>
             <ListProducts />
           </VendorLayout>
+        }
+      />
+
+      <Route
+        path="/admin"
+        element={
+          <AdminLayout>
+            <AdminAccountManagement />
+          </AdminLayout>
+        }
+      />
+      <Route
+        path="/adtransaction"
+        element={
+          <AdminLayout>
+            <AdminTransactionHistory />
+          </AdminLayout>
         }
       />
       <Route
@@ -87,6 +123,22 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/eventStaff"
+        element={
+          <StaffLayout>
+            <EventStaff />
+          </StaffLayout>
+        }
+      />
+      <Route
+        path="/eventStaff/:eventId"
+        element={
+          <StaffLayout>
+            <EventPageStaff />
+          </StaffLayout>
+        }
+      />
+      <Route
         path="/transaction"
         element={
           <VendorLayout>
@@ -108,6 +160,14 @@ const AppRoutes = () => {
           <VendorLayout>
             <Shop />
           </VendorLayout>
+        }
+      />
+      <Route
+        path="/StaffShop"
+        element={
+          <StaffLayout>
+            <StaffShop />
+          </StaffLayout>
         }
       />
       <Route

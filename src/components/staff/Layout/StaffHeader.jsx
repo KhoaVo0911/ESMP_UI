@@ -16,7 +16,7 @@ import { ChevronDownIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../../shared/auth/AuthContext";
 
-const VendorHeader = ({ collapsed }) => {
+const StaffHeader = ({ collapsed }) => {
   const location = useLocation();
   const { logout } = useAuth();
 
@@ -24,8 +24,8 @@ const VendorHeader = ({ collapsed }) => {
     if (location.pathname.startsWith("/dashboard")) {
       return "Dashboard";
     } else if (location.pathname.startsWith("/productsList")) {
-      return "List of Products";
-    } else if (location.pathname.startsWith("/productSample")) {
+      return "Producst List";
+    } else if (location.pathname.startsWith("/ManageProductItems")) {
       return "Manage Product Items";
     } else if (location.pathname.startsWith("/Transaction")) {
       return "Transaction";
@@ -111,4 +111,4 @@ const VendorHeader = ({ collapsed }) => {
   );
 };
 
-export default VendorHeader;
+export default StaffHeader;

@@ -1,311 +1,430 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Grid,
-  Text,
-  Image,
-  IconButton,
-  VStack,
-  HStack,
   Button,
-  Input,
-  useToast,
+  Grid,
+  GridItem,
+  Image,
+  Text,
+  Flex,
+  useDisclosure,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalBody,
   ModalCloseButton,
+  ModalBody,
   ModalFooter,
   FormControl,
   FormLabel,
+  Input,
+  Select,
+  List,
+  ListItem,
+  IconButton,
+  useToast,
 } from "@chakra-ui/react";
-import { EditIcon, DeleteIcon, AddIcon } from "@chakra-ui/icons";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import axios from "axios";
+import { useForm } from "react-hook-form";
+import { useLocation } from "react-router-dom";
 
-const ManageProductItems = () => {
+const ManageProducts = () => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [products, setProducts] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [name, setName] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [price, setPrice] = useState("");
-  const [image, setImage] = useState("");
-  const [activeCard, setActiveCard] = useState(null); // Track card click
+  const [productItems, setProductItems] = useState([]);
+  const [details, setDetails] = useState([]);
+  const [editingProductItem, setEditingProductItem] = useState(null);
+  const { register, handleSubmit, reset, setValue, watch } = useForm();
   const toast = useToast();
+  const [loading, setLoading] = useState(false);
+  const location = useLocation();
+  const accessToken = location.state?.accessToken || "";
+  const vendorId = location.state?.vendorId || "";
 
-  // Hàm định dạng tiền theo VND
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(value);
-  };
-
-  // Fetch dữ liệu từ API
-  const fetchProducts = async () => {
+  // Fetch products from API
+  const fetchData = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(
-        "https://668e540abf9912d4c92dcd67.mockapi.io/products"
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
       setProducts(response.data);
     } catch (error) {
       toast({
-        title: "Error loading products",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  // Hàm để xử lý tạo hoặc cập nhật sản phẩm
-  const handleSave = async () => {
-    const productData = { name, quantity, price, image };
-
-    try {
-      if (editingProduct) {
-        await axios.put(
-          `https://668e540abf9912d4c92dcd67.mockapi.io/products/${editingProduct.id}`,
-          productData
-        );
-        setProducts(
-          products.map((item) =>
-            item.id === editingProduct.id ? { ...item, ...productData } : item
-          )
-        );
-        toast({
-          title: "Product updated successfully",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        const response = await axios.post(
-          "https://668e540abf9912d4c92dcd67.mockapi.io/products",
-          productData
-        );
-        setProducts([...products, response.data]);
-        toast({
-          title: "Product created successfully",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Failed to save product",
+        title: "Error",
+        description: "Failed to fetch products from API.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
     } finally {
-      setIsModalOpen(false);
-      clearForm();
+      setLoading(false);
     }
   };
 
-  // Hàm để xóa sản phẩm
-  const handleDelete = async (id) => {
+// Fetch Product Items from API
+const fetchProductItems = async () => {
+  setLoading(true);
+  try {
+    const response = await axios.get(
+      `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+      {
+        headers: {
+          Authorization: `${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("Full API response:", response); // Debug log for full response
+    console.log("API response data:", response.data); // Debug log for response data
+
+    // Set productItems directly if response data is an array
+    if (Array.isArray(response.data)) {
+      setProductItems(response.data);
+    } else {
+      throw new Error("Unexpected response format from API");
+    }
+  } catch (error) {
+    console.error("Error fetching product items:", error); // Improved error logging
+    toast({
+      title: "Error",
+      description: `Failed to fetch product items from API. ${error.message}`,
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+  useEffect(() => {
+    fetchData();
+    fetchProductItems();
+  }, []);
+
+  // Add product to details list with selected quantity and unit
+  const addProductToDetails = (selectedProductId, selectedQuantity) => {
+    const quantity = Math.max(1, selectedQuantity);
+    const selectedProduct = products.find((p) => p.productId === selectedProductId);
+    if (selectedProduct && !details.find((d) => d.productId === selectedProduct.productId)) {
+      setDetails([...details, { productId: selectedProduct.productId, quantity, unit: "kg" }]);
+      if (details.length === 0) {
+        setValue("productName", selectedProduct.productName);
+        setValue("productPrice", "");
+      } else {
+        setValue("productName", "");
+        setValue("productPrice", "");
+      }
+    }
+  };
+
+  // Remove a product from the details list
+  const removeProductFromDetails = (productId) => {
+    const updatedDetails = details.filter((d) => d.productId !== productId);
+    setDetails(updatedDetails);
+    if (updatedDetails.length === 1) {
+      setValue("productName", updatedDetails[0].productName);
+      setValue("productPrice", "");
+    } else {
+      setValue("productName", "");
+      setValue("productPrice", "");
+    }
+  };
+
+  // Handle form submission for adding or editing product items
+  const onSubmit = (data) => {
+    if (details.length === 0) {
+      toast({
+        title: "Error",
+        description: "You must add at least one product.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (details.length > 1 && (!data.productName || !data.productPrice)) {
+      toast({
+        title: "Error",
+        description: "You must provide a name and price for the product item.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    let name = data.productName;
+    let price = data.productPrice;
+
+    if (details.length === 1) {
+      name = products.find((p) => p.productId === details[0].productId).productName;
+    }
+
+    const productItemData = {
+      vendorId,
+      name,
+      description: data.description || "This is a sample product item description.",
+      details,
+      price: data.productPrice,
+      status: true,
+      createAt: new Date().toISOString(),
+      updateAt: new Date().toISOString(),
+    };
+
+    if (editingProductItem) {
+      axios
+        .put(
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${editingProductItem.productItemId}`,
+          productItemData,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        )
+        .then(() => {
+          const updatedProductItems = productItems.map((item) =>
+            item.productItemId === editingProductItem.productItemId ? productItemData : item
+          );
+          setProductItems(updatedProductItems);
+          toast({
+            title: "Success",
+            description: "Product item updated successfully!",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+          setDetails([]);
+          reset();
+          onClose();
+          setEditingProductItem(null);
+        })
+        .catch((error) => {
+          toast({
+            title: "Error",
+            description: "Failed to update product item!",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          console.error("Error updating product item:", error);
+        });
+    } else {
+      axios
+        .post(
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+          productItemData,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        )
+        .then(() => {
+          setProductItems([...productItems, productItemData]);
+          toast({
+            title: "Success",
+            description: "Product item created successfully!",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+          setDetails([]);
+          reset();
+          onClose();
+        })
+        .catch((error) => {
+          toast({
+            title: "Error",
+            description: "Failed to create product item!",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          console.error("Error creating product item:", error);
+        });
+    }
+  };
+
+  // Handle edit
+  const handleEdit = (productItem) => {
+    setEditingProductItem(productItem);
+    setValue("productName", productItem.name);
+    setValue("productPrice", productItem.price);
+    setDetails(productItem.details);
+    onOpen();
+  };
+
+  // Handle delete
+  const handleDelete = async (productItemId) => {
     try {
       await axios.delete(
-        `https://668e540abf9912d4c92dcd67.mockapi.io/products/${id}`
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${productItemId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+          },
+        }
       );
-      setProducts(products.filter((item) => item.id !== id));
+      setProductItems(productItems.filter((item) => item.productItemId !== productItemId));
       toast({
-        title: "Product deleted successfully",
+        title: "Success",
+        description: "Product item deleted successfully!",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (error) {
       toast({
-        title: "Failed to delete product",
+        title: "Error",
+        description: "Failed to delete product item!",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
+      console.error("Error deleting product item:", error);
     }
-  };
-
-  // Xử lý mở modal cho chỉnh sửa hoặc tạo mới sản phẩm
-  const showModal = (product = null) => {
-    setEditingProduct(product);
-    if (product) {
-      setName(product.name);
-      setQuantity(product.quantity);
-      setPrice(product.price);
-      setImage(product.image);
-    } else {
-      clearForm();
-    }
-    setIsModalOpen(true);
-  };
-
-  // Hàm để xóa dữ liệu form sau khi hoàn thành
-  const clearForm = () => {
-    setName("");
-    setQuantity("");
-    setPrice("");
-    setImage("");
-    setEditingProduct(null);
-  };
-
-  // Hàm để kiểm tra card hiện tại có đang được nhấn hay không
-  const handleCardClick = (id) => {
-    setActiveCard(activeCard === id ? null : id);
   };
 
   return (
-    <Box padding={5}>
-      {/* Nút tạo sản phẩm mới */}
-      <HStack justifyContent="space-between" marginBottom={4}>
-        <Text fontSize="2xl" fontWeight="bold">
-          List of Products
-        </Text>
-        <Button
-          leftIcon={<AddIcon />}
-          colorScheme="blue"
-          onClick={() => showModal()}
-        >
-          Create Product
-        </Button>
-      </HStack>
+    <Box p={5}>
+      <Button colorScheme="blue" onClick={onOpen}>
+        Add Product Item
+      </Button>
 
-      {/* Danh sách sản phẩm */}
-      <Grid templateColumns="repeat(4, 1fr)" gap={6}>
-        {products.map((product) => (
-          <Box
-            key={product.id}
-            maxW="sm"
-            borderWidth="1px"
-            borderRadius="lg"
-            overflow="hidden"
-            boxShadow="lg"
-            position="relative"
-            cursor="pointer"
-            _hover={{ boxShadow: "0 0 15px rgba(0, 0, 0, 0.2)" }}
-            transition="all 0.3s ease" // Animation
-            onClick={() => handleCardClick(product.id)}
-            height="400px" // Đặt chiều cao cố định cho card
-          >
-            <Image
-              src={product.image || "https://via.placeholder.com/300x200"}
-              alt={product.name}
-              width="100%"
-              height="60%" // Đặt chiều cao cho hình ảnh
-              objectFit="cover"
-            />
-            <VStack
-              spacing={2}
-              p={3}
-              textAlign="center"
-              height="40%" // Cố định chiều cao của phần nội dung
-              justifyContent={
-                activeCard === product.id ? "space-between" : "center"
-              } // Đưa nội dung lên khi nhấn vào
-              transform={
-                activeCard === product.id
-                  ? "translateY(-14px)"
-                  : "translateY(0px)"
-              } // Di chuyển nội dung lên khi nhấn
-              transition="all 0.1s ease" // Thêm animation khi di chuyển
+      <Grid templateColumns="repeat(4, 1fr)" gap={6} mt={10}>
+        {productItems.length > 0 ? (
+          productItems.map((productItem) => (
+            <GridItem
+              key={productItem.productItemId}
+              border="1px solid #e0e0e0"
+              borderRadius="md"
+              overflow="hidden"
+              boxShadow="md"
+              _hover={{ boxShadow: "lg" }}
             >
-              <Text fontWeight="bold" fontSize="lg">
-                {product.name}
-              </Text>
-              <Text fontSize="sm" color="gray.600">
-                Quantity: {product.quantity}
-              </Text>
-              <Text fontSize="md" color="gray.800">
-                {formatCurrency(product.price)}
-              </Text>
-
-              {/* Thêm nút Edit và Delete với absolute position */}
-              {activeCard === product.id && (
-                <HStack spacing={4} justify="center" pt={2}>
-                  <IconButton
-                    aria-label="Edit Product"
-                    icon={<EditIcon boxSize={5} />}
-                    onClick={() => showModal(product)}
-                    variant="ghost"
-                    colorScheme="blue"
-                    _hover={{ bg: "transparent" }} // Bỏ viền nền khi hover
-                  />
-                  <IconButton
-                    aria-label="Delete Product"
-                    icon={<DeleteIcon boxSize={5} />}
-                    onClick={() => handleDelete(product.id)}
-                    variant="ghost"
-                    colorScheme="red"
-                    _hover={{ bg: "transparent" }} // Bỏ viền nền khi hover
-                  />
-                </HStack>
-              )}
-            </VStack>
-          </Box>
-        ))}
+              <Image src="https://via.placeholder.com/150" alt={productItem.name} objectFit="cover" width="100%" height="150px" />
+              <Box p={4}>
+                <Text fontWeight="bold" fontSize="lg">
+                  {productItem.name}
+                </Text>
+                <Text>{productItem.price} VND</Text>
+                <Text fontSize="sm" mt={2} color="gray.500">
+                  Products in item:
+                </Text>
+                <Flex direction="column">
+                  {productItem.details.map((detail, index) => {
+                    const foundProduct = products.find((p) => p.productId === detail.productId);
+                    return (
+                      <Text key={index} fontSize="sm">
+                        - {foundProduct ? foundProduct.productName : "Unknown Product"} x {detail.quantity} {detail.unit}
+                      </Text>
+                    );
+                  })}
+                </Flex>
+              </Box>
+              <Flex justifyContent="flex-end" p={4}>
+                <Button leftIcon={<FaEdit />} size="sm" colorScheme="teal" variant="outline" onClick={() => handleEdit(productItem)}>
+                  Edit
+                </Button>
+                <Button leftIcon={<FaTrash />} size="sm" colorScheme="red" variant="outline" onClick={() => handleDelete(productItem.productItemId)}>
+                  Delete
+                </Button>
+              </Flex>
+            </GridItem>
+          ))
+        ) : (
+          <Text>No products available</Text>
+        )}
       </Grid>
 
-      {/* Modal tạo/sửa sản phẩm */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
-            {editingProduct ? "Edit Product" : "Create Product"}
-          </ModalHeader>
+          <ModalHeader>{editingProductItem ? "Edit Product Item" : "Add Product Item"}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <VStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>Product Name</FormLabel>
-                <Input
-                  placeholder="Enter product name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <FormControl mt={4}>
+                <FormLabel>Name</FormLabel>
+                <Input {...register("productName")} placeholder="Enter name" isDisabled={details.length === 1} />
               </FormControl>
-              <FormControl isRequired>
-                <FormLabel>Quantity</FormLabel>
-                <Input
-                  placeholder="Enter quantity"
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                />
+              <FormControl mt={4}>
+                <FormLabel>Price</FormLabel>
+                <Input {...register("productPrice")} placeholder="Enter price" />
               </FormControl>
-              <FormControl isRequired>
-                <FormLabel>Price (VND)</FormLabel>
-                <Input
-                  placeholder="Enter price"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                />
+
+              <FormControl mt={4}>
+                <FormLabel>Select Product and Quantity</FormLabel>
+                <Select placeholder="Select a product" {...register("productId")}>
+                  {products.map((product) => (
+                    <option key={product.productId} value={product.productId}>
+                      {product.productName}
+                    </option>
+                  ))}
+                </Select>
+                <FormControl mt={2}>
+                  <FormLabel>Quantity</FormLabel>
+                  <Input type="number" defaultValue={1} min={1} {...register("productQuantity")} placeholder="Enter quantity" />
+                </FormControl>
+                <Button
+                  mt={2}
+                  colorScheme="teal"
+                  onClick={() =>
+                    addProductToDetails(
+                      document.querySelector("select[name=productId]").value,
+                      document.querySelector("input[name=productQuantity]").value
+                    )
+                  }
+                >
+                  Add Product
+                </Button>
               </FormControl>
-              <FormControl>
-                <FormLabel>Image URL</FormLabel>
-                <Input
-                  placeholder="Enter image URL"
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                />
-              </FormControl>
-            </VStack>
+
+              {details.length > 0 && (
+                <Box mt={4}>
+                  <Text>Selected Products:</Text>
+                  <List>
+                    {details.map((detail, index) => (
+                      <ListItem key={index}>
+                        <Flex justifyContent="space-between" alignItems="center">
+                          <Text>
+                            {products.find((p) => p.productId === detail.productId)?.productName} x {detail.quantity} {detail.unit}
+                          </Text>
+                          <IconButton icon={<FaTrash />} size="sm" colorScheme="red" onClick={() => removeProductFromDetails(detail.productId)} />
+                        </Flex>
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+              )}
+              <ModalFooter>
+                <Button colorScheme="blue" mr={3} type="submit">
+                  Save
+                </Button>
+                <Button onClick={onClose}>Cancel</Button>
+              </ModalFooter>
+            </form>
           </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={handleSave}>
-              {editingProduct ? "Update" : "Create"}
-            </Button>
-          </ModalFooter>
         </ModalContent>
       </Modal>
     </Box>
   );
 };
 
-export default ManageProductItems;
+export default ManageProducts;

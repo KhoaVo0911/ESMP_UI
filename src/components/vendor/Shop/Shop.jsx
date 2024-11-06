@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   SimpleGrid,
   Box,
@@ -15,129 +15,189 @@ import {
 } from "@chakra-ui/react";
 import ProductCard from "./ProductCard";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import Sushi from "./../../../assets/images/Pizza.png";
 import Cart from "./Cart";
 import AddProductModal from "./AddProductModal";
 import CreateProductModal from "./CreateProductModal";
-import { Link } from "react-router-dom"; // Import the Link component
-
-const products = [
-  { id: 1, name: "Margherita Pizza", price: 49000, quantity: 10, image: Sushi },
-  { id: 2, name: "Pepperoni Pizza", price: 52000, quantity: 8, image: Sushi },
-  { id: 3, name: "Hawaiian Pizza", price: 51000, quantity: 15, image: Sushi },
-  { id: 4, name: "BBQ Chicken Pizza", price: 53000, quantity: 5, image: Sushi },
-  { id: 5, name: "Veggie Pizza", price: 47000, quantity: 12, image: Sushi },
-  { id: 6, name: "Buffalo Pizza", price: 55000, quantity: 9, image: Sushi },
-  { id: 7, name: "Four Cheese Pizza", price: 60000, quantity: 6, image: Sushi },
-  {
-    id: 8,
-    name: "Meat Lover's Pizza",
-    price: 65000,
-    quantity: 7,
-    image: Sushi,
-  },
-  {
-    id: 9,
-    name: "Spinach and Feta Pizza",
-    price: 54000,
-    quantity: 4,
-    image: Sushi,
-  },
-  {
-    id: 10,
-    name: "Garlic Chicken Pizza",
-    price: 58000,
-    quantity: 11,
-    image: Sushi,
-  },
-];
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 
 const Shop = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const accessToken = location.state?.accessToken || sessionStorage.getItem("accessToken") || "";
+  const vendorId = location.state?.vendorId || sessionStorage.getItem("vendorId") || "";
+  const eventId = location.state?.eventId || sessionStorage.getItem("eventId") || "";
+
   const [cart, setCart] = useState([]);
-  const [allProducts, setAllProducts] = useState(products);
-  const {
-    isOpen: isCartOpen,
-    onOpen: onOpenCart,
-    onClose: onCloseCart,
-  } = useDisclosure();
+  const [allProducts, setAllProducts] = useState([]);
+  const [productItems, setProductItems] = useState([]);
+  const [products, setProducts] = useState([]);
+  const { isOpen: isCartOpen, onOpen: onOpenCart, onClose: onCloseCart } = useDisclosure();
+  const { isOpen: isAddOpen, onOpen: onOpenAdd, onClose: onCloseAdd } = useDisclosure();
+  const { isOpen: isCreateOpen, onOpen: onOpenCreate, onClose: onCloseCreate } = useDisclosure();
 
-  const {
-    isOpen: isAddOpen,
-    onOpen: onOpenAdd,
-    onClose: onCloseAdd,
-  } = useDisclosure();
-
-  const {
-    isOpen: isCreateOpen,
-    onOpen: onOpenCreate,
-    onClose: onCloseCreate,
-  } = useDisclosure();
-
-  // Function to add items to the cart
-  const addToCart = (product) => {
-    setCart((prevCart) => [...prevCart, { ...product, quantity: 1 }]);
+  const fetchProductItems = async () => {
+    try {
+      const response = await axios.get(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setProductItems(response.data);
+    } catch (error) {
+      console.error("Error fetching product items", error);
+    }
   };
 
-  // Function to create new product
-  const handleCreateProduct = (newProduct) => {
-    setAllProducts((prevProducts) => [
-      ...prevProducts,
-      { id: prevProducts.length + 1, ...newProduct },
-    ]);
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Error fetching products", error);
+    }
+  };
+
+  const fetchMenuItems = async () => {
+    try {
+      const response = await axios.get(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/menu/${vendorId}/${eventId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const productItemIds = response.data.productItemIds.map((item) => item.productItemId);
+
+      const enrichedProductItems = productItems
+        .filter((item) => productItemIds.includes(item.productItemId))
+        .map((item) => {
+          return {
+            ...item,
+            details: item.details.map((detail) => {
+              const productDetails = products.find((product) => product.productId === detail.productId);
+              return {
+                ...detail,
+                name: productDetails ? productDetails.productName : "Unknown",
+              };
+            }),
+          };
+        });
+      setAllProducts(enrichedProductItems);
+    } catch (error) {
+      console.error("Error fetching menu items", error);
+    }
+  };
+
+  useEffect(() => {
+    if (vendorId && accessToken) {
+      fetchProductItems();
+      fetchProducts();
+    }
+  }, [vendorId, accessToken]);
+
+  useEffect(() => {
+    if (productItems.length > 0 && products.length > 0 && eventId) {
+      fetchMenuItems();
+    }
+  }, [productItems, products, vendorId, eventId, accessToken]);
+
+  const addToCart = (product) => {
+    setCart((prevCart) => {
+      const existingProductIndex = prevCart.findIndex(
+        (cartItem) => cartItem.productItemId === product.productItemId
+      );
+
+      if (existingProductIndex !== -1) {
+        const updatedCart = [...prevCart];
+        updatedCart[existingProductIndex].quantity += product.quantity;
+        return updatedCart;
+      } else {
+        return [...prevCart, product];
+      }
+    });
+  };
+
+  const onOpenCartWithSessionData = () => {
+    sessionStorage.setItem("accessToken", accessToken);
+    sessionStorage.setItem("vendorId", vendorId);
+    sessionStorage.setItem("eventId", eventId);
+    onOpenCart();
+  };
+
+  const handleGoToOrderedList = () => {
+    navigate("/ordered-list", {
+      state: { accessToken, vendorId, eventId },
+    });
+  };
+
+  const handleOnAdd = (newProduct) => {
+    const updatedProduct = {
+      ...newProduct,
+      details: newProduct.details.map((detail) => {
+        const productDetails = products.find((product) => product.productId === detail.productId);
+        return {
+          ...detail,
+          name: productDetails ? productDetails.productName : "Unknown",
+        };
+      }),
+    };
+
+    // Cập nhật state allProducts với sản phẩm mới và sắp xếp lại theo thứ tự mong muốn
+    setAllProducts((prevProducts) => {
+      const updatedList = [...prevProducts, updatedProduct];
+      // Sắp xếp nếu cần thiết
+      return updatedList.sort((a, b) => a.name.localeCompare(b.name));
+    });
   };
 
   return (
-    <Box
-      p={5}
-      bgGradient="linear(to-r, blue.100, pink.100)"
-      minH="100vh"
-      textAlign="center"
-    >
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={5}
-      >
-        <Text fontSize="3xl" fontWeight="bold">
-          Manage Products
-        </Text>
+    <Box p={5} bgGradient="linear(to-r, blue.100, pink.100)" minH="100vh" textAlign="center">
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={5}>
+        <Text fontSize="3xl" fontWeight="bold">Shop</Text>
 
-        {/* Cart, Add, Create, and Ordered Buttons */}
         <Box display="flex" alignItems="center">
-          <Link to="/ordered-list">
-            <Button mr={4} colorScheme="blue">
-              Ordered List
-            </Button>
-          </Link>
-          <Button mr={4} onClick={onOpenAdd}>
-            Add
-          </Button>
-          <Button mr={4} colorScheme="teal" onClick={onOpenCreate}>
-            Create
-          </Button>
+          <Button mr={4} colorScheme="blue" onClick={handleGoToOrderedList}>Ordered List</Button>
+          <Button mr={4} onClick={onOpenAdd}>Add</Button>
           <IconButton
             icon={<ShoppingCartIcon />}
-            onClick={onOpenCart}
+            onClick={onOpenCartWithSessionData}
             aria-label="View Cart"
           />
         </Box>
       </Box>
 
-      <SimpleGrid columns={[2, null, 5]} spacing="20px" mt={10}>
-        {allProducts.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            addToCart={addToCart}
-          />
-        ))}
-      </SimpleGrid>
+      {allProducts.length > 0 ? (
+   <Box maxHeight="600px" overflowY="auto">
+   <SimpleGrid columns={[2, null, 5]} spacing="20px">
+     {allProducts.map((product) => (
+       <ProductCard key={product.productItemId} product={product} addToCart={addToCart} />
+     ))}
+   </SimpleGrid>
+ </Box>
+ 
+      ) : (
+        <Text>No products available to display</Text>
+      )}
 
-      {/* Cart Drawer */}
       <Drawer isOpen={isCartOpen} placement="right" onClose={onCloseCart}>
         <DrawerOverlay>
-          <DrawerContent maxWidth="600px">
+          <DrawerContent maxWidth="700px">
             <DrawerHeader>Your Cart</DrawerHeader>
             <DrawerBody>
               <Cart
@@ -155,28 +215,21 @@ const Shop = () => {
               />
             </DrawerBody>
             <DrawerFooter>
-              <Button colorScheme="teal" onClick={onCloseCart}>
-                Close
-              </Button>
+              <Button colorScheme="teal" onClick={onCloseCart}>Close</Button>
             </DrawerFooter>
           </DrawerContent>
         </DrawerOverlay>
       </Drawer>
 
-      {/* Add Products Modal */}
       <AddProductModal
         isOpen={isAddOpen}
         onClose={onCloseAdd}
-        products={allProducts}
-        addToCart={addToCart}
+        vendorId={vendorId}
+        eventId={eventId}
+        accessToken={accessToken}
+        onAdd={handleOnAdd}
       />
-
-      {/* Create New Product Modal */}
-      <CreateProductModal
-        isOpen={isCreateOpen}
-        onClose={onCloseCreate}
-        onCreateProduct={handleCreateProduct}
-      />
+      <CreateProductModal isOpen={isCreateOpen} onClose={onCloseCreate} />
     </Box>
   );
 };

@@ -6,12 +6,10 @@ import axios from "axios";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Divider } from "@mui/material";
-import { useLocation } from "react-router-dom";
 
-// Cập nhật API URL và có thể sử dụng accessToken từ props
-const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const URL = "https://668e540abf9912d4c92dcd67.mockapi.io/events";
 
-const EventVendor = ({}) => {
+const EventStaff = () => {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,41 +17,32 @@ const EventVendor = ({}) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("1");
   const navigate = useNavigate();
-  const location = useLocation();
-  const accessToken = location.state?.accessToken || ""; // Kiểm tra nếu accessToken tồn tại
-  const vendorId = location.state?.vendorId || ""; 
 
   const showModal = () => {
     setIsModalVisible(true);
   };
 
-  // Fetch dữ liệu sự kiện từ API với accessToken
   useEffect(() => {
     axios
-      .get(URL, {
-        headers: {
-          Authorization: `${accessToken}`, // Thêm accessToken vào headers
-          "Content-Type": "application/json",
-        },
-      })
+      .get(URL)
       .then((response) => {
         setEvents(response.data);
         setFilteredEvents(
           response.data.filter(
-            (event) => event.status?.toLowerCase() === "on-going"
+            (event) => event.details[0]?.status?.toLowerCase() === "on-going"
           )
-        );
+        ); // Apply filter for 'On-going' when component loads
       })
       .catch((error) => {
         console.error("There was an error fetching the events!", error);
       });
-  }, [accessToken]);
+  }, []);
 
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
     const filtered = events.filter((event) =>
-      event.name.toLowerCase().includes(term)
+      event.eventName.toLowerCase().includes(term)
     );
     setFilteredEvents(filtered);
   };
@@ -65,27 +54,32 @@ const EventVendor = ({}) => {
 
     switch (key) {
       case "1":
+        // Filter for 'On-going' events
         filtered = events.filter(
-          (event) => event.status?.toLowerCase() === "on-going"
+          (event) => event.details[0]?.status?.toLowerCase() === "on-going"
         );
         break;
       case "2":
+        // Filter for 'Running' events
         filtered = events.filter(
-          (event) => event.status?.toLowerCase() === "running"
+          (event) => event.details[0]?.status?.toLowerCase() === "running"
         );
         break;
       case "3":
+        // Filter for 'Cancelled' events
         filtered = events.filter(
-          (event) => event.status?.toLowerCase() === "cancelled"
+          (event) => event.details[0]?.status?.toLowerCase() === "cancelled"
         );
         break;
       case "5":
+        // Filter for 'Trash' events
         filtered = events.filter(
-          (event) => event.status?.toLowerCase() === "trash"
+          (event) => event.details[0]?.status?.toLowerCase() === "trash"
         );
         break;
       case "4":
       default:
+        // Show all events
         filtered = events;
         break;
     }
@@ -130,38 +124,30 @@ const EventVendor = ({}) => {
 
       <Row gutter={[40, 20]} style={{ marginTop: "20px" }}>
         {filteredEvents.map((event) => (
-          <Col key={event.eventId} xs={24} sm={12} md={8} lg={8}>
-           <Card
-  className="event-card"
-  hoverable
-  onClick={() =>
-    navigate(`/events/${event.eventId}`, {
-      state: {
-        accessToken, vendorId  // Truyền accessToken từ component cha
-      },
-    })
-  }
-  cover={
-    <div className="event-card-cover">
-      <img alt={event.name} src={event.logo} />
-    </div>
-  }
->
+          <Col key={event.id} xs={24} sm={12} md={8} lg={8}>
+            <Card
+              className="event-card"
+              hoverable
+              onClick={() => navigate(`/eventStaff/${event.id}`)} // Navigate to the specific event detail page
+              cover={
+                <div className="event-card-cover">
+                  <img alt={event.eventName} src={event.image} />
+                </div>
+              }
+            >
               <div className="event-info-container">
                 <div className="event-date">
                   <div className="event-date-box">
                     <span className="event-date-day">
-                      {new Date(event.startDate).getDate()}
+                      {event.startDate.split(" ")[0]}
                     </span>
                     <span className="event-date-month">
-                      {new Date(event.startDate).toLocaleString("en", {
-                        month: "short",
-                      })}
+                      {event.startDate.split(" ")[1]}
                     </span>
                   </div>
                 </div>
                 <div className="event-details">
-                  <h3 className="event-title">{event.name}</h3>
+                  <h3 className="event-title">{event.eventName}</h3>
                   <p className="event-description">{event.description}</p>
                 </div>
               </div>
@@ -239,4 +225,4 @@ const EventVendor = ({}) => {
   );
 };
 
-export default EventVendor;
+export default EventStaff;
