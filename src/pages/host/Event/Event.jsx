@@ -40,7 +40,7 @@ import {
 import { AiOutlineArrowLeft } from "react-icons/ai";
 import { MdEventNote } from "react-icons/md";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from "../../../firebaseConfig";
+import { storage } from "../../../shared/firebase/firebaseConfig";
 import ServiceSelection from "../../../components/host/services/ServiceSelection";
 
 const URL = "https://668e540abf9912d4c92dcd67.mockapi.io/events";

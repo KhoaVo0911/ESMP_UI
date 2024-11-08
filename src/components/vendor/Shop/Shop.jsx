@@ -128,7 +128,7 @@ const Shop = () => {
         updatedCart[existingProductIndex].quantity += product.quantity;
         return updatedCart;
       } else {
-        return [...prevCart, product];
+        return [...prevCart, { ...product }];
       }
     });
   };
@@ -146,34 +146,44 @@ const Shop = () => {
     });
   };
 
-  const handleOnAdd = (newProduct) => {
-    const updatedProduct = {
-      ...newProduct,
-      details: newProduct.details.map((detail) => {
-        const productDetails = products.find((product) => product.productId === detail.productId);
-        return {
-          ...detail,
-          name: productDetails ? productDetails.productName : "Unknown",
-        };
-      }),
-    };
-
-    // Cập nhật state allProducts với sản phẩm mới và sắp xếp lại theo thứ tự mong muốn
+  const handleOnAdd = (newProducts) => {
+    if (!newProducts || newProducts.length === 0) {
+      console.error("Error: newProducts is undefined or empty.");
+      return;
+    }
+  
+    const updatedProducts = newProducts.map((newProduct) => {
+      return {
+        ...newProduct,
+        details: newProduct.details.map((detail) => {
+          const productDetails = products.find((product) => product.productId === detail.productId);
+          return {
+            ...detail,
+            name: productDetails ? productDetails.productName : "Unknown",
+          };
+        }),
+      };
+    });
+  
     setAllProducts((prevProducts) => {
-      const updatedList = [...prevProducts, updatedProduct];
-      // Sắp xếp nếu cần thiết
+      const updatedList = [...prevProducts, ...updatedProducts];
       return updatedList.sort((a, b) => a.name.localeCompare(b.name));
     });
+  
+    // Gọi lại fetchMenuItems để làm mới UI
+    fetchMenuItems();
   };
+  
+  
 
   return (
     <Box p={5} bgGradient="linear(to-r, blue.100, pink.100)" minH="100vh" textAlign="center">
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={5}>
-        <Text fontSize="3xl" fontWeight="bold">Shop</Text>
+        <Text fontSize="3xl" fontWeight="bold">Danh Sách Sản Phẩm</Text>
 
         <Box display="flex" alignItems="center">
-          <Button mr={4} colorScheme="blue" onClick={handleGoToOrderedList}>Ordered List</Button>
-          <Button mr={4} onClick={onOpenAdd}>Add</Button>
+          <Button mr={4} colorScheme="blue" onClick={handleGoToOrderedList}>Lịch sử đơn hàng</Button>
+          <Button mr={4} onClick={onOpenAdd}>Thêm sản phẩm</Button>
           <IconButton
             icon={<ShoppingCartIcon />}
             onClick={onOpenCartWithSessionData}
@@ -183,22 +193,21 @@ const Shop = () => {
       </Box>
 
       {allProducts.length > 0 ? (
-   <Box maxHeight="600px" overflowY="auto">
-   <SimpleGrid columns={[2, null, 5]} spacing="20px">
-     {allProducts.map((product) => (
-       <ProductCard key={product.productItemId} product={product} addToCart={addToCart} />
-     ))}
-   </SimpleGrid>
- </Box>
- 
+        <Box maxHeight="600px" overflowY="auto">
+          <SimpleGrid columns={[2, null, 5]} spacing="20px">
+            {allProducts.map((product) => (
+              <ProductCard key={product.productItemId} product={product} addToCart={addToCart} />
+            ))}
+          </SimpleGrid>
+        </Box>
       ) : (
-        <Text>No products available to display</Text>
+        <Text>Không có sản phẩm nào để hiển thị</Text>
       )}
 
       <Drawer isOpen={isCartOpen} placement="right" onClose={onCloseCart}>
         <DrawerOverlay>
           <DrawerContent maxWidth="700px">
-            <DrawerHeader>Your Cart</DrawerHeader>
+            <DrawerHeader>Giỏ Hàng</DrawerHeader>
             <DrawerBody>
               <Cart
                 cartItems={cart}
@@ -215,7 +224,7 @@ const Shop = () => {
               />
             </DrawerBody>
             <DrawerFooter>
-              <Button colorScheme="teal" onClick={onCloseCart}>Close</Button>
+              <Button colorScheme="teal" onClick={onCloseCart}>Đóng Giỏ Hàng</Button>
             </DrawerFooter>
           </DrawerContent>
         </DrawerOverlay>
