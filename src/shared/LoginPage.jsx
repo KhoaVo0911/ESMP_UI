@@ -5,30 +5,38 @@ import LoginComponent from "./Login"; // Ensure this points to the correct file
 const LoginPage = () => {
   const [accessToken, setAccessToken] = useState(""); // Store accessToken after login
   const [vendorId, setVendorId] = useState(""); // Store vendorId after login
+  const [hostId, setHostId] = useState(""); // Store vendorId after login 
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Check login status
   const navigate = useNavigate(); // Initialize the navigate function from react-router-dom
 
   const handleLoginSuccess = (token, userInfo) => {
-    setAccessToken(token); // Save accessToken
-    setVendorId(userInfo.vendorInfo.vendorId); // Save vendorId from userInfo
-    setIsLoggedIn(true); // Mark as logged in
+    setAccessToken(token);
+    setVendorId(userInfo.vendorInfo.vendorId);
+    setIsLoggedIn(true);
+    setHostId(userInfo.hostInfo.hostId);
   
-    const userRole = userInfo.role; // Get user role from the response
+    // Lưu accessToken, vendorName và urlQr vào sessionStorage
+    sessionStorage.setItem("accessToken", token);
+    sessionStorage.setItem("vendorId", userInfo.vendorInfo.vendorId);
+    sessionStorage.setItem("vendorName", userInfo.vendorInfo.vendorName);
+    sessionStorage.setItem("urlQr", userInfo.vendorInfo.urlQr);
+    sessionStorage.setItem("hostId", userInfo.hostInfo.hostId);
   
-    // Navigate based on the role returned from the API
+    const userRole = userInfo.role;
+  
+    // Điều hướng dựa trên vai trò của người dùng
     if (userRole === "admin") {
-      navigate("/admin", { state: { accessToken: token, vendorId: userInfo.vendorInfo.vendorId } });
+      navigate("/admin");
     } else if (userRole === "manager") {
-      navigate("/DashboardVendor", { state: { accessToken: token, vendorId: userInfo.vendorInfo.vendorId } });
+      navigate("/DashboardVendor");
     } else if (userRole === "host") {
-      navigate("/dashboard", { state: { accessToken: token, vendorId: userInfo.vendorInfo.vendorId } });
+      navigate("/dashboard");
     } else {
-      // Optional: Handle unknown roles
       console.error("Unknown role:", userRole);
-      navigate("/", { state: { accessToken: token, vendorId: userInfo.vendorInfo.vendorId } }); // Or redirect to a default page
+      navigate("/");
     }
   };
-
+  
   return (
     <div>
       {!isLoggedIn ? (

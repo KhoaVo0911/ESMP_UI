@@ -13,12 +13,14 @@ import {
 } from "@chakra-ui/react";
 import { BellIcon } from "@chakra-ui/icons";
 import { ChevronDownIcon } from "@chakra-ui/icons";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../shared/auth/AuthContext";
 
 const VendorHeader = ({ collapsed }) => {
   const location = useLocation();
+  const navigate = useNavigate(); // Initialize navigate hook
   const { logout } = useAuth();
+  const vendorName = sessionStorage.getItem("vendorName");
 
   const getPageTitle = () => {
     if (location.pathname.startsWith("/dashboard")) {
@@ -38,8 +40,15 @@ const VendorHeader = ({ collapsed }) => {
     } else if (location.pathname.startsWith("/payment")) {
       return "Shop";
     }
+    else if (location.pathname.startsWith("/qrcodecodecode")) {
+      return "Setting QR Code";
+    }
 
-    return "Event Information"; // Tiêu đề dự phòng
+    return "Event Information"; // Default title
+  };
+
+  const handleQRCodePage = () => {
+    navigate("/qrcodecodecode"); // Navigate to QR code page
   };
 
   return (
@@ -94,13 +103,16 @@ const VendorHeader = ({ collapsed }) => {
           </MenuButton>
           <MenuList boxShadow="lg" borderRadius="lg" padding="12px">
             <MenuItem fontSize="md" fontWeight="700" color="gray.700">
-              👋 Hey, Vendor
+              👋 Hey, {vendorName}
+            </MenuItem>
+            <MenuItem fontSize="md" fontWeight="700" color="gray.700" onClick={handleQRCodePage}>
+              Generate QR Code
             </MenuItem>
             <MenuItem
               fontSize="md"
               fontWeight="700"
               color="red.500"
-              onClick={logout} // Gọi hàm logout từ AuthContext
+              onClick={logout} // Calls logout function from AuthContext
             >
               Log out
             </MenuItem>

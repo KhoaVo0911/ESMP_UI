@@ -69,8 +69,10 @@ const Payment = ({ removeItem }) => {
   const handleCashOut = () => {
     const paidPrice = totalPrice;
     const paidContent = "Thanh toán giỏ hàng";
-    const qrCodeUrl = `https://img.vietqr.io/image/ACB-18254271-compact2.png?amount=${paidPrice}&addInfo=Event Tech&accountName=Quang Minh`;
-
+    const urlQr = sessionStorage.getItem("urlQr");
+    console.log("Delete error details:", urlQr);
+    const qrCodeUrl = `https://img.vietqr.io/image/${urlQr}-compact2.png?amount=${paidPrice}&addInfo=Event Tech&accountName=Quang Minh`;
+    console.log("Delete error details:", qrCodeUrl);
     setQrUrl(qrCodeUrl);
     onOpen();
   };

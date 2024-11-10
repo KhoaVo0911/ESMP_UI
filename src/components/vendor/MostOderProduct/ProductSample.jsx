@@ -30,8 +30,8 @@ const ProductSample = ({}) => {
   const [products, setProductItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const location = useLocation();
-  const accessToken = location.state?.accessToken || ""; // Kiểm tra nếu accessToken tồn tại
-  const vendorId = location.state?.vendorId || ""; 
+  const accessToken = sessionStorage.getItem("accessToken") || ""; // Lấy accessToken từ sessionStorage
+const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId từ sessionStorage
   const [error, setError] = useState("");
   const [newProduct, setNewProduct] = useState({
     productId: "",

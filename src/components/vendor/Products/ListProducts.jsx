@@ -26,6 +26,7 @@ const { Option } = Select;
 const ProductList = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [categories, setCategories] = useState([]); // Danh sách Category
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -33,14 +34,15 @@ const ProductList = () => {
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("name");
-  const accessToken = location.state?.accessToken || "";
-  const vendorId = location.state?.vendorId || "";
+  const accessToken = sessionStorage.getItem("accessToken") || "";
+  const vendorId = sessionStorage.getItem("vendorId") || "";
+  const hostId = sessionStorage.getItem("hostId") || "";
 
-  // Fetch data from API with Authorization token
+  // Fetch data từ API Product và Category
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
+      const productResponse = await axios.get(
         "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product",
         {
           headers: {
@@ -49,8 +51,19 @@ const ProductList = () => {
           },
         }
       );
-      setData(response.data);
-      setFilteredData(response.data);
+      setData(productResponse.data);
+      setFilteredData(productResponse.data);
+
+      const categoryResponse = await axios.get(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category/hostId/${hostId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setCategories(categoryResponse.data);
     } catch (error) {
       message.error("Lỗi khi lấy dữ liệu từ API!");
     } finally {
@@ -68,7 +81,7 @@ const ProductList = () => {
     return formattedDate.toLocaleDateString("vi-VN");
   };
 
-  // Show modal to create/edit product
+  // Show modal để tạo hoặc chỉnh sửa sản phẩm
   const showModal = (product = null) => {
     setEditingProduct(product);
     if (product) {
@@ -85,7 +98,7 @@ const ProductList = () => {
     setEditingProduct(null);
   };
 
-  // Save new or updated product
+  // Save sản phẩm mới hoặc cập nhật sản phẩm
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
@@ -94,7 +107,7 @@ const ProductList = () => {
         categoryId: editingProduct ? editingProduct.categoryId : values.categoryId,
         status: true,
       };
-
+  
       if (editingProduct) {
         await axios.put(
           `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}/${editingProduct.productId}`,
@@ -106,25 +119,11 @@ const ProductList = () => {
             },
           }
         );
-
-        setData(
-          data.map((item) =>
-            item.productId === editingProduct.productId
-              ? { ...item, ...payload }
-              : item
-          )
-        );
-        setFilteredData(
-          filteredData.map((item) =>
-            item.productId === editingProduct.productId
-              ? { ...item, ...payload }
-              : item
-          )
-        );
+  
         message.success("Sản phẩm đã được cập nhật!");
       } else {
-        const response = await axios.post(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product`,
+        await axios.post(
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
           payload,
           {
             headers: {
@@ -133,19 +132,19 @@ const ProductList = () => {
             },
           }
         );
-        setData([...data, response.data]);
-        setFilteredData([...filteredData, response.data]);
         message.success("Sản phẩm mới đã được thêm!");
       }
-
+  
+      // Gọi lại fetchData để làm mới danh sách sản phẩm
+      fetchData();
       setIsModalOpen(false);
       form.resetFields();
     } catch (error) {
       message.error("Đã xảy ra lỗi!");
     }
   };
-
-  // Delete product
+  
+  // Delete sản phẩm
   const handleDelete = async (id) => {
     try {
       await axios.delete(
@@ -188,7 +187,7 @@ const ProductList = () => {
     setFilteredData(sorted);
   };
 
-  // Table columns configuration
+  // Cấu hình cột cho bảng
   const columns = [
     {
       title: "Tên sản phẩm",
@@ -222,6 +221,15 @@ const ProductList = () => {
       dataIndex: "updatedAt",
       key: "updatedAt",
       render: (date) => <Text>{formatDate(date)}</Text>,
+    },
+    {
+      title: "Danh mục",
+      dataIndex: "categoryId",
+      key: "categoryId",
+      render: (categoryId) => {
+        const category = categories.find((cat) => cat.categoryId === categoryId);
+        return category ? category.categoryName : "Không xác định";
+      },
     },
     {
       title: "Hành động",
@@ -302,7 +310,7 @@ const ProductList = () => {
         </Box>
       </VStack>
 
-      {/* Modal to create/edit product */}
+      {/* Modal để tạo/chỉnh sửa sản phẩm */}
       <Modal
         title={editingProduct ? "Chỉnh sửa sản phẩm" : "Tạo sản phẩm mới"}
         visible={isModalOpen}
@@ -338,6 +346,19 @@ const ProductList = () => {
             rules={[{ required: true, message: "Vui lòng nhập số đếm!" }]}
           >
             <Input type="number" />
+          </Form.Item>
+          <Form.Item
+            name="categoryId"
+            label="Danh mục"
+            rules={[{ required: true, message: "Vui lòng chọn danh mục!" }]}
+          >
+            <Select placeholder="Chọn danh mục">
+              {categories.map((category) => (
+                <Option key={category.categoryId} value={category.categoryId}>
+                  {category.categoryName}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
         </Form>
       </Modal>

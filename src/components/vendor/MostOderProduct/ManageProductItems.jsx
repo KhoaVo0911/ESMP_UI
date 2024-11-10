@@ -40,8 +40,8 @@ const ManageProducts = () => {
   const { register, handleSubmit, reset, setValue } = useForm();
   const toast = useToast();
   const location = useLocation();
-  const accessToken = location.state?.accessToken || "";
-  const vendorId = location.state?.vendorId || "";
+  const accessToken = sessionStorage.getItem("accessToken") || ""; // Lấy accessToken từ sessionStorage
+const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId từ sessionStorage
   const [imageFile, setImageFile] = useState(null);
 
   // Xử lý chọn ảnh

@@ -12,6 +12,14 @@ import {
   DrawerBody,
   DrawerFooter,
   useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Input,
 } from "@chakra-ui/react";
 import ProductCard from "./ProductCard";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -33,6 +41,8 @@ const Shop = () => {
   const [allProducts, setAllProducts] = useState([]);
   const [productItems, setProductItems] = useState([]);
   const [products, setProducts] = useState([]);
+  const [menuName, setMenuName] = useState("");
+  const [showCreateMenuModal, setShowCreateMenuModal] = useState(false);
   const { isOpen: isCartOpen, onOpen: onOpenCart, onClose: onCloseCart } = useDisclosure();
   const { isOpen: isAddOpen, onOpen: onOpenAdd, onClose: onCloseAdd } = useDisclosure();
   const { isOpen: isCreateOpen, onOpen: onOpenCreate, onClose: onCloseCreate } = useDisclosure();
@@ -50,7 +60,7 @@ const Shop = () => {
       );
       setProductItems(response.data);
     } catch (error) {
-      console.error("Error fetching product items", error);
+      console.error("Lỗi khi lấy dữ liệu sản phẩm", error);
     }
   };
 
@@ -67,7 +77,7 @@ const Shop = () => {
       );
       setProducts(response.data);
     } catch (error) {
-      console.error("Error fetching products", error);
+      console.error("Lỗi khi lấy dữ liệu sản phẩm", error);
     }
   };
 
@@ -100,7 +110,11 @@ const Shop = () => {
         });
       setAllProducts(enrichedProductItems);
     } catch (error) {
-      console.error("Error fetching menu items", error);
+      if (error.response && error.response.status === 500) {
+        setShowCreateMenuModal(true);
+      } else {
+        console.error("Lỗi khi lấy menu sản phẩm", error);
+      }
     }
   };
 
@@ -146,35 +160,24 @@ const Shop = () => {
     });
   };
 
-  const handleOnAdd = (newProducts) => {
-    if (!newProducts || newProducts.length === 0) {
-      console.error("Error: newProducts is undefined or empty.");
-      return;
+  const handleCreateMenu = async () => {
+    try {
+      await axios.post(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/menu/${vendorId}/${eventId}`,
+        { menuName },
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setShowCreateMenuModal(false);
+      fetchMenuItems(); // Refresh menu items after creation
+    } catch (error) {
+      console.error("Lỗi khi tạo menu mới", error);
     }
-  
-    const updatedProducts = newProducts.map((newProduct) => {
-      return {
-        ...newProduct,
-        details: newProduct.details.map((detail) => {
-          const productDetails = products.find((product) => product.productId === detail.productId);
-          return {
-            ...detail,
-            name: productDetails ? productDetails.productName : "Unknown",
-          };
-        }),
-      };
-    });
-  
-    setAllProducts((prevProducts) => {
-      const updatedList = [...prevProducts, ...updatedProducts];
-      return updatedList.sort((a, b) => a.name.localeCompare(b.name));
-    });
-  
-    // Gọi lại fetchMenuItems để làm mới UI
-    fetchMenuItems();
   };
-  
-  
 
   return (
     <Box p={5} bgGradient="linear(to-r, blue.100, pink.100)" minH="100vh" textAlign="center">
@@ -187,7 +190,7 @@ const Shop = () => {
           <IconButton
             icon={<ShoppingCartIcon />}
             onClick={onOpenCartWithSessionData}
-            aria-label="View Cart"
+            aria-label="Xem giỏ hàng"
           />
         </Box>
       </Box>
@@ -236,9 +239,35 @@ const Shop = () => {
         vendorId={vendorId}
         eventId={eventId}
         accessToken={accessToken}
-        onAdd={handleOnAdd}
+        onAdd={fetchMenuItems}
       />
       <CreateProductModal isOpen={isCreateOpen} onClose={onCloseCreate} />
+
+      {/* Modal to create menu */}
+      <Modal isOpen={showCreateMenuModal} onClose={() => setShowCreateMenuModal(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Tạo Menu Mới</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text>Nhập tên cho menu của bạn:</Text>
+            <Input
+              placeholder="Tên menu"
+              value={menuName}
+              onChange={(e) => setMenuName(e.target.value)}
+              mt={3}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={handleCreateMenu}>
+              Tạo Menu
+            </Button>
+            <Button variant="ghost" onClick={() => setShowCreateMenuModal(false)}>
+              Hủy
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
