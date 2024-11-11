@@ -42,6 +42,7 @@ const OrderedList = () => {
   const [loadingDetails, setLoadingDetails] = useState({});
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [transactions, setTransactions] = useState({});
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -83,6 +84,35 @@ const OrderedList = () => {
     fetchOrders();
     fetchProductItems();
   }, [accessToken, vendorId, eventId]);
+
+  // Fetch transactions for all orders
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const transactionData = {};
+        await Promise.all(
+          orders.map(async (order) => {
+            const response = await axios.get(
+              `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/transaction/order/${order.orderId}`,
+              {
+                headers: {
+                  Authorization: `${accessToken}`,
+                },
+              }
+            );
+            transactionData[order.orderId] = response.data[0]; // Lấy giao dịch đầu tiên cho mỗi order
+          })
+        );
+        setTransactions(transactionData);
+      } catch (error) {
+        console.error("Lỗi khi tải danh sách giao dịch:", error);
+      }
+    };
+
+    if (orders.length > 0) {
+      fetchTransactions();
+    }
+  }, [orders, accessToken]);
 
   const handleBack = () => {
     navigate("/shop", { state: { accessToken, vendorId, eventId } });
@@ -171,10 +201,11 @@ const OrderedList = () => {
                 <Th textAlign="center">Ngày tạo</Th>
                 <Th textAlign="center">Số lượng</Th>
                 <Th textAlign="center">Trạng thái</Th>
+                <Th textAlign="center">Thanh toán</Th>
               </Tr>
             </Thead>
             <Tbody>
-              {orders.map((order, index) => (
+              {orders.map((order) => (
                 <Tr key={order.orderId}>
                   <Td textAlign="center">
                     <Tooltip label="Click để xem chi tiết" hasArrow placement="top">
@@ -224,6 +255,11 @@ const OrderedList = () => {
                           : "Thất bại"}
                       </Text>
                     </HStack>
+                  </Td>
+                  <Td textAlign="center">
+                    {transactions[order.orderId]
+                      ? transactions[order.orderId].transactionType
+                      : "Chưa thanh toán"}
                   </Td>
                 </Tr>
               ))}

@@ -99,50 +99,51 @@ const ProductList = () => {
   };
 
   // Save sản phẩm mới hoặc cập nhật sản phẩm
-  const handleSave = async () => {
-    try {
-      const values = await form.validateFields();
-      const payload = {
-        ...values,
-        categoryId: editingProduct ? editingProduct.categoryId : values.categoryId,
-        status: true,
-      };
-  
-      if (editingProduct) {
-        await axios.put(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}/${editingProduct.productId}`,
-          payload,
-          {
-            headers: {
-              Authorization: `${accessToken}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-  
-        message.success("Sản phẩm đã được cập nhật!");
-      } else {
-        await axios.post(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
-          payload,
-          {
-            headers: {
-              Authorization: `${accessToken}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        message.success("Sản phẩm mới đã được thêm!");
-      }
-  
-      // Gọi lại fetchData để làm mới danh sách sản phẩm
-      fetchData();
-      setIsModalOpen(false);
-      form.resetFields();
-    } catch (error) {
-      message.error("Đã xảy ra lỗi!");
+ // Save sản phẩm mới hoặc cập nhật sản phẩm
+const handleSave = async () => {
+  try {
+    const values = await form.validateFields();
+    const payload = {
+      ...values,
+      categoryId: values.categoryId, // Đảm bảo categoryId được lấy từ form
+      status: true,
+    };
+
+    if (editingProduct) {
+      await axios.put(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}/${editingProduct.productId}`,
+        payload,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      message.success("Sản phẩm đã được cập nhật!");
+    } else {
+      await axios.post(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
+        payload,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      message.success("Sản phẩm mới đã được thêm!");
     }
-  };
+
+    // Gọi lại fetchData để làm mới danh sách sản phẩm
+    fetchData();
+    setIsModalOpen(false);
+    form.resetFields();
+  } catch (error) {
+    message.error("Đã xảy ra lỗi!");
+  }
+};
+
   
   // Delete sản phẩm
   const handleDelete = async (id) => {
