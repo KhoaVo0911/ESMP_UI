@@ -1,5 +1,4 @@
 import React from "react";
-import { Rnd } from "react-rnd";
 import { Box } from "@chakra-ui/react";
 
 const Shape = ({ shape, onShapeUpdate, isMainTemplate }) => {
@@ -73,52 +72,18 @@ const Shape = ({ shape, onShapeUpdate, isMainTemplate }) => {
     );
   };
 
-  const handleDragStop = (e, d) => {
-    onShapeUpdate({
-      ...shape,
-      x: d.x,
-      y: d.y,
-    });
-  };
-
-  const handleResizeStop = (e, direction, ref, delta, position) => {
-    onShapeUpdate({
-      ...shape,
-      width: parseInt(ref.style.width, 10),
-      height: parseInt(ref.style.height, 10),
-      x: position.x,
-      y: position.y,
-    });
-  };
-
   return (
-    <Rnd
-      size={{ width: shape.width, height: shape.height }}
-      position={{ x: shape.x, y: shape.y }}
-      onDragStop={handleDragStop}
-      onResizeStop={handleResizeStop}
-      minWidth={50}
-      minHeight={50}
-      bounds="parent"
-      enableResizing={true}
-      disableDragging={isMainTemplate}
-      style={{
-        zIndex: isMainTemplate ? 1 : 10,
-        pointerEvents: "all",
-      }}
+    <Box
+      border={isMainTemplate ? "2px solid black" : "none"}
+      width="100%"
+      height="100%"
+      position="relative"
+      pointerEvents="all"
     >
-      <Box
-        border={isMainTemplate ? "2px solid black" : "none"}
-        width="100%"
-        height="100%"
-        position="relative"
-        pointerEvents="all"
-      >
-        <svg width="100%" height="100%" viewBox="0 0 100 100">
-          {renderShape()}
-        </svg>
-      </Box>
-    </Rnd>
+      <svg width="100%" height="100%" viewBox="0 0 100 100">
+        {renderShape()}
+      </svg>
+    </Box>
   );
 };
 

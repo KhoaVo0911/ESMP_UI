@@ -15,8 +15,13 @@ import {
   Flex,
 } from "@chakra-ui/react";
 
-// BoothDetails (modal showing booth details)
-const BoothDetails = ({ booth, isOpen, onClose, onSave, locationTypes }) => {
+const BoothDetails = ({
+  booth,
+  isOpen,
+  onClose,
+  onSave,
+  locationTypes = [],
+}) => {
   const [boothDetails, setBoothDetails] = useState({
     name: booth?.name || "",
     type:
@@ -27,7 +32,6 @@ const BoothDetails = ({ booth, isOpen, onClose, onSave, locationTypes }) => {
     y: booth?.y || 0,
   });
 
-  // Cập nhật state khi booth thay đổi (sử dụng useEffect)
   useEffect(() => {
     setBoothDetails({
       name: booth?.name || "",
@@ -38,11 +42,13 @@ const BoothDetails = ({ booth, isOpen, onClose, onSave, locationTypes }) => {
       x: booth?.x || 0,
       y: booth?.y || 0,
     });
-  }, [booth, locationTypes]);
+    console.log("Trạng thái isOpen trong BoothDetails:", isOpen);
+  }, [booth, locationTypes, isOpen]);
 
   const handleSave = () => {
+    console.log("Dữ liệu booth trước khi lưu:", boothDetails);
     onSave(boothDetails);
-    onClose(); // Close the modal after saving
+    onClose();
   };
 
   return (
@@ -52,7 +58,6 @@ const BoothDetails = ({ booth, isOpen, onClose, onSave, locationTypes }) => {
         <ModalHeader>Booth Details</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          {/* Booth Name */}
           <FormControl mb={4}>
             <FormLabel>Booth Name</FormLabel>
             <Input
@@ -62,8 +67,6 @@ const BoothDetails = ({ booth, isOpen, onClose, onSave, locationTypes }) => {
               }
             />
           </FormControl>
-
-          {/* Booth Type */}
           <FormControl mb={4}>
             <FormLabel>Booth Type</FormLabel>
             <Select
@@ -72,10 +75,10 @@ const BoothDetails = ({ booth, isOpen, onClose, onSave, locationTypes }) => {
                 setBoothDetails({ ...boothDetails, type: e.target.value })
               }
             >
-              {locationTypes.map((type) => (
+              {locationTypes?.map((type) => (
                 <option key={type.id} value={type.name}>
                   {type.name} (
-                  {type.price.toLocaleString("vi-VN", {
+                  {type.price?.toLocaleString("vi-VN", {
                     style: "currency",
                     currency: "VND",
                   })}
@@ -84,8 +87,6 @@ const BoothDetails = ({ booth, isOpen, onClose, onSave, locationTypes }) => {
               ))}
             </Select>
           </FormControl>
-
-          {/* Booth Dimensions and Position */}
           <Flex mb={4}>
             <FormControl mr={2}>
               <FormLabel>Width (px)</FormLabel>
@@ -114,7 +115,6 @@ const BoothDetails = ({ booth, isOpen, onClose, onSave, locationTypes }) => {
               />
             </FormControl>
           </Flex>
-
           <Flex mb={4}>
             <FormControl mr={2}>
               <FormLabel>X-Axis</FormLabel>
@@ -144,7 +144,6 @@ const BoothDetails = ({ booth, isOpen, onClose, onSave, locationTypes }) => {
             </FormControl>
           </Flex>
         </ModalBody>
-
         <ModalFooter>
           <Button colorScheme="blue" mr={3} onClick={handleSave}>
             Save

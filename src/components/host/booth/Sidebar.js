@@ -1,3 +1,4 @@
+// Sidebar.js
 import React, { useRef, useState } from "react";
 import {
   Box,
@@ -125,7 +126,7 @@ const Sidebar = ({
 
         <Box
           as="button"
-          onClick={openBoothModal}
+          onClick={() => openBoothModal()}
           display="flex"
           flexDirection="column"
           alignItems="center"

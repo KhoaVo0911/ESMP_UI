@@ -99,6 +99,7 @@ const AccountManagement = () => {
         <Table variant="striped" colorScheme="gray" size="lg">
           <Thead bg="gray.200">
             <Tr>
+              <Th>No</Th>
               <Th>Username</Th>
               <Th>Password</Th>
               <Th>Hostname</Th>
@@ -109,7 +110,8 @@ const AccountManagement = () => {
           <Tbody>
             {accountData.map((account, index) => (
               <Tr key={account.id}>
-                <Td fontWeight="medium">{account.username}</Td>
+                <Td fontWeight="medium">{index + 1}</Td>
+                <Td>{account.username}</Td>
                 <Td>{account.password}</Td>
                 <Td>{account.hostname}</Td>
                 <Td>{account.expireTime}</Td>
@@ -130,7 +132,6 @@ const AccountManagement = () => {
         </Table>
       </TableContainer>
 
-      {/* Create Account Modal */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>

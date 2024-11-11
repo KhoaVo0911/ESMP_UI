@@ -1,14 +1,18 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Button, Box, Flex, Text, Tooltip } from "@chakra-ui/react";
-import { useNavigate, useParams } from "react-router-dom";
-import {
-  getLocationMapByEventId,
-  deleteLocationMap,
-  createLocationMap,
-  updateLocationMap,
-} from "../../shared/locationMapApi";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+
+const BASE_URL =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api";
 
 const LocationMap = () => {
+  const location = useLocation();
+  const accessToken =
+    location.state?.accessToken || sessionStorage.getItem("accessToken") || "";
+  const hostId =
+    location.state?.hostId || sessionStorage.getItem("hostId") || "";
+  const eventId = "729e4526-a0e6-43ed-b47a-fb955162803e"; // Replace with dynamic eventId if needed
   const [isMapExists, setIsMapExists] = useState(false);
   const [booths, setBooths] = useState([]);
   const [shapes, setShapes] = useState([]);
@@ -16,7 +20,6 @@ const LocationMap = () => {
   const [imageElements, setImageElements] = useState([]);
   const [locationMapId, setLocationMapId] = useState(null);
   const navigate = useNavigate();
-  const { eventId } = useParams();
   const mapContainerRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
@@ -24,25 +27,56 @@ const LocationMap = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const apiData = await getLocationMapByEventId(eventId);
-        if (apiData && apiData.length > 0) {
+        const response = await axios.get(
+          `${BASE_URL}/map/${hostId}/${eventId}`,
+          {
+            headers: {
+              Authorization: accessToken,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const apiData = response.data;
+        if (apiData) {
           setIsMapExists(true);
-          setBooths(apiData[0].booths || []);
-          setShapes(apiData[0].shapes || []);
-          setTextElements(apiData[0].textElements || []);
-          setImageElements(apiData[0].imageElements || []);
-          setLocationMapId(apiData[0].locationId || null);
+          setBooths(apiData.booths || []);
+          setShapes(apiData.shapes || []);
+          setTextElements(apiData.textElements || []);
+          setImageElements(apiData.imageElements || []);
+          setLocationMapId(apiData.locationId || null);
         }
       } catch (error) {
-        console.error("Error fetching data from API or localStorage:", error);
+        console.error("Error fetching data from API:", error);
       }
     };
 
     fetchData();
-  }, [eventId]);
+  }, [hostId, eventId, accessToken]);
 
-  const handleCreateMap = () => {
-    navigate(`/event/${eventId}/booth-plan/create`);
+  const handleCreateMap = async () => {
+    try {
+      const newMapData = {
+        eventId,
+        booths,
+        shapes,
+        textElements,
+        imageElements,
+      };
+      const response = await axios.post(
+        `${BASE_URL}/map/${hostId}/${eventId}`,
+        newMapData,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setLocationMapId(response.data.locationId);
+      setIsMapExists(true);
+    } catch (error) {
+      console.error("Error creating Location Map:", error);
+    }
   };
 
   const handleEditMap = () => {
@@ -52,27 +86,20 @@ const LocationMap = () => {
   const handleDeleteMap = async () => {
     if (window.confirm("Are you sure you want to delete this map?")) {
       try {
-        if (eventId && locationMapId) {
-          // Xóa dữ liệu từ API
-          await deleteLocationMap(locationMapId);
-          // Xóa dữ liệu từ localStorage
-          localStorage.removeItem(`boothPlanData_${eventId}`);
-
-          // Cập nhật state để hiển thị Create Map và xóa dữ liệu hiện có
-          setIsMapExists(false);
-          setBooths([]);
-          setShapes([]);
-          setTextElements([]);
-          setImageElements([]);
-          setLocationMapId(null);
-
-          alert("Map đã xóa thành công!");
-        } else {
-          console.error("Missing Event ID or Location Map ID.");
-        }
+        await axios.delete(`${BASE_URL}/map/${locationMapId}`, {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+        setIsMapExists(false);
+        setBooths([]);
+        setShapes([]);
+        setTextElements([]);
+        setImageElements([]);
+        setLocationMapId(null);
       } catch (error) {
-        console.error("Error deleting data:", error);
-        alert("Đã xảy ra lỗi khi xóa map. Vui lòng thử lại sau.");
+        console.error("Error deleting Location Map:", error);
       }
     }
   };

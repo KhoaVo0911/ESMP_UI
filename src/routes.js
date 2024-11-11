@@ -37,6 +37,7 @@ import ManageProducts from "./components/vendor/MostOderProduct/ManageProductIte
 import ImageUpload from "./shared/firebase/imageUpload.jsx";
 import LocationMap from "./pages/host/LocationMap.jsx";
 import LocationTypePage from "./pages/host/LocationTypePage.jsx";
+import EventConfigPage from "./pages/host/EventConfigPage.jsx";
 
 const AppRoutes = () => {
   return (
@@ -227,6 +228,14 @@ const AppRoutes = () => {
         element={
           <HostLayout>
             <LocationTypePage />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/eventconfig"
+        element={
+          <HostLayout>
+            <EventConfigPage />
           </HostLayout>
         }
       />
