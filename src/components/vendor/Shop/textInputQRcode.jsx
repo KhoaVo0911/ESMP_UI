@@ -57,7 +57,9 @@ const TestQRCODE = () => {
     const qrImageUrl = `https://img.vietqr.io/image/${newQrUrl}-compact2.png?amount=0&addInfo=Event Tech&accountName=YourName`;
     setQrCodeUrl(qrImageUrl);
     onOpen();
-
+  
+    console.log("Trước khi cập nhật sessionStorage:", sessionStorage.getItem('qrUrl'));
+  
     // Cập nhật urlQr vào API sau khi QR Code được tạo
     try {
       const response = await axios.put(
@@ -70,10 +72,12 @@ const TestQRCODE = () => {
           },
         }
       );
-
+  
       if (response.status === 200) {
         // Cập nhật urlQr mới vào sessionStorage
         sessionStorage.setItem('qrUrl', newQrUrl);
+        console.log("Sau khi cập nhật sessionStorage:", sessionStorage.getItem('qrUrl'));
+  
         toast({
           title: 'Cập nhật URL QR thành công!',
           status: 'success',
@@ -91,7 +95,7 @@ const TestQRCODE = () => {
       });
     }
   };
-
+  
   return (
     <ChakraProvider>
       <Box maxW="md" mx="auto" mt={10} p={5} borderWidth={1} borderRadius="lg" boxShadow="lg">
