@@ -35,6 +35,7 @@ import { SearchIcon, AddIcon, CalendarIcon, InfoIcon } from "@chakra-ui/icons";
 import { AiOutlineArrowLeft } from "react-icons/ai";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
+import ServiceSelection from "../../../components/host/services/ServiceSelection";
 
 const URL =
   "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";

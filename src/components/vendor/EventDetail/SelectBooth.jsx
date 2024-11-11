@@ -20,6 +20,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const vendorInEventURL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent";
+
 const SelectBooth = ({ isPopup, isOpen, onClose, accessToken, eventId, vendorId }) => {
   const [boothData, setBoothData] = useState([]);
   const [selectedBoothId, setSelectedBoothId] = useState(null);
@@ -41,8 +43,8 @@ const SelectBooth = ({ isPopup, isOpen, onClose, accessToken, eventId, vendorId 
         );
         setBoothData(response.data);
       } catch (err) {
-        console.error("Error fetching booth data:", err);
-        setError("Failed to fetch booth data");
+        console.error("Lỗi khi lấy dữ liệu booth:", err);
+        setError("Không thể lấy dữ liệu booth.");
       } finally {
         setLoading(false);
       }
@@ -58,25 +60,36 @@ const SelectBooth = ({ isPopup, isOpen, onClose, accessToken, eventId, vendorId 
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (selectedBoothId) {
-      setBoothData((prevData) =>
-        prevData.map((booth) =>
-          booth.id === selectedBoothId
-            ? { ...booth, status: "unavailable" }
-            : booth
-        )
-      );
-      setSelectedBoothId(null);
-      onClose();
+      try {
+        // Gửi yêu cầu POST để đăng ký booth
+        await axios.post(
+          `${vendorInEventURL}/${vendorId}/${eventId}`,
+          { vendorId, eventId },
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-      navigate("/eventenrolled", {
-        state: {
-          accessToken,
-          eventId,
-          vendorId, // Include vendorId in the navigation state
-        },
-      });
+        // Cập nhật trạng thái booth và chuyển hướng
+        setBoothData((prevData) =>
+          prevData.map((booth) =>
+            booth.id === selectedBoothId ? { ...booth, status: "unavailable" } : booth
+          )
+        );
+        setSelectedBoothId(null);
+        onClose();
+        navigate("/eventenrolled", {
+          state: { accessToken, eventId, vendorId },
+        });
+      } catch (error) {
+        console.error("Lỗi khi đăng ký cửa hàng trong sự kiện:", error);
+        setError("Đã xảy ra lỗi khi đăng ký.");
+      }
     }
   };
 
@@ -135,20 +148,20 @@ const SelectBooth = ({ isPopup, isOpen, onClose, accessToken, eventId, vendorId 
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Select a Booth</ModalHeader>
+        <ModalHeader>Chọn một Booth</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          {/* Legend for booth status */}
+          {/* Hướng dẫn trạng thái booth */}
           <Flex justify="center" mb={4}>
             <Box bg="green.300" w={4} h={4} mr={2} />
-            <Text mr={4}>Available</Text>
+            <Text mr={4}>Còn trống</Text>
             <Box bg="gray.300" w={4} h={4} mr={2} />
-            <Text mr={4}>Unavailable</Text>
+            <Text mr={4}>Không khả dụng</Text>
             <Box bg="green.500" w={4} h={4} mr={2} />
-            <Text>Selected</Text>
+            <Text>Đã chọn</Text>
           </Flex>
 
-          {/* Booth grid layout */}
+          {/* Bố cục booth dưới dạng lưới */}
           <Grid templateColumns="repeat(2, 1fr)" gap={6} justifyItems="center">
             {columns.map((col, index) => (
               <Grid templateColumns="repeat(1, 1fr)" gap={3} key={index}>
@@ -162,12 +175,12 @@ const SelectBooth = ({ isPopup, isOpen, onClose, accessToken, eventId, vendorId 
             colorScheme="blue"
             mr={3}
             onClick={handleConfirm}
-            isDisabled={!selectedBoothId} // Disable confirm if no booth is selected
+            isDisabled={!selectedBoothId} // Vô hiệu hóa nút nếu chưa chọn booth
           >
-            Confirm
+            Xác nhận
           </Button>
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            Hủy bỏ
           </Button>
         </ModalFooter>
       </ModalContent>

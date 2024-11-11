@@ -20,9 +20,9 @@ const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/a
 const EventEnrolled = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const accessToken = location.state?.accessToken || "";
-  const eventId = location.state?.eventId || "";
-  const vendorId = location.state?.vendorId || "";
+  const accessToken = sessionStorage.getItem("accessToken") || ""; // Lấy accessToken từ sessionStorage
+  const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId từ sessionStorage
+  const eventId = sessionStorage.getItem("eventId");
 
   const [eventDetail, setEventDetail] = useState(null);
   const [boothData, setBoothData] = useState([]);

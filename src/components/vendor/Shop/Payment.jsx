@@ -1,19 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  VStack,
+  HStack,
+  Image,
   Text,
   Button,
-  Spinner,
   Input,
-  HStack,
-  VStack,
-  Image,
   IconButton,
   Modal,
   ModalOverlay,
@@ -25,15 +18,18 @@ import {
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
+import { DeleteIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowBackIcon, DeleteIcon } from "@chakra-ui/icons";
 import axios from "axios";
+import { storage } from "./../../../shared/firebase/firebaseConfig";
+import { ref, getDownloadURL } from "firebase/storage";
 
 const Payment = ({ removeItem }) => {
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [qrUrl, setQrUrl] = useState("");
-  const [userName, setUserName] = useState(""); // State to hold the user name
+  const [userName, setUserName] = useState("");
+  const [images, setImages] = useState({});
   const toast = useToast();
 
   // Retrieve cart data from session storage
@@ -46,27 +42,47 @@ const Payment = ({ removeItem }) => {
   const vendorId = location.state?.vendorId || sessionStorage.getItem("vendorId");
   const eventId = location.state?.eventId || sessionStorage.getItem("eventId");
 
-  // Function to calculate total quantity
   const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  // Function to handle cash out and show QR modal
+  // Fetch images from Firebase based on productItemId
+  useEffect(() => {
+    const fetchImages = async () => {
+      const newImages = {};
+      for (const item of cartItems) {
+        if (item.productItemId && !images[item.productItemId]) {
+          try {
+            const imageRef = ref(storage, `${vendorId}/${item.productItemId}`);
+            const url = await getDownloadURL(imageRef);
+            newImages[item.productItemId] = url;
+          } catch (error) {
+            console.error("Error fetching image URL:", error);
+            newImages[item.productItemId] = "https://via.placeholder.com/150";
+          }
+        }
+      }
+      setImages((prevImages) => ({ ...prevImages, ...newImages }));
+    };
+
+    fetchImages();
+  }, [cartItems]);
+
   const handleCashOut = () => {
     const paidPrice = totalPrice;
     const paidContent = "Thanh toán giỏ hàng";
-    const qrCodeUrl = `https://img.vietqr.io/image/ACB-18254271-compact2.png?amount=${paidPrice}&addInfo=${paidContent}&accountName=${userName}`; // Use the userName here
-
+    const urlQr = sessionStorage.getItem("urlQr");
+    console.log("Delete error details:", urlQr);
+    const qrCodeUrl = `https://img.vietqr.io/image/${urlQr}-compact2.png?amount=${paidPrice}&addInfo=Event Tech&accountName=Quang Minh`;
+    console.log("Delete error details:", qrCodeUrl);
     setQrUrl(qrCodeUrl);
-    onOpen(); // Open the QR modal
+    onOpen();
   };
 
-  // Function to handle confirm button and send data to API
   const handleConfirmPayment = async () => {
     try {
-      // Create order data
       const orderData = {
         eventId: eventId,
         vendorId: vendorId,
-        name: userName, // Include the user name in the order data
+        name: userName,
         totalAmount: totalQuantity,
         totalPrice: Number(totalPrice),
         details: cartItems.map((item) => ({
@@ -77,7 +93,6 @@ const Payment = ({ removeItem }) => {
         transactionType: "Online",
       };
 
-      // Send POST request to /api/order
       const response = await axios.post(
         `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order`,
         orderData,
@@ -89,8 +104,6 @@ const Payment = ({ removeItem }) => {
         }
       );
 
-      console.log("Order created successfully:", response.data);
-
       toast({
         title: "Thanh toán thành công",
         description: "Bạn đã thanh toán thành công cho giỏ hàng.",
@@ -99,7 +112,6 @@ const Payment = ({ removeItem }) => {
         isClosable: true,
       });
 
-      // Navigate back to the /shop page with state
       setTimeout(() => {
         navigate("/shop", {
           state: { accessToken, vendorId, eventId },
@@ -119,84 +131,115 @@ const Payment = ({ removeItem }) => {
 
   return (
     <Box p={5} bgGradient="linear(to-r, blue.100, pink.100)" minH="100vh">
-      {/* Back button with icon */}
       <HStack alignItems="center" mb={5} cursor="pointer" onClick={() => navigate(-1)}>
         <IconButton icon={<ArrowBackIcon />} size="lg" variant="ghost" aria-label="Go Back" />
-        <Text fontSize="md" fontWeight="bold">Shopping Continue</Text>
+        <Text fontSize="md" fontWeight="bold">Tiếp tục mua sắm</Text>
       </HStack>
 
-      <Text fontSize="xl" mb={5} fontWeight="bold">
-        There are{" "}
-        <Text as="span" color="red">{totalQuantity}</Text>{" "}
-        products in your cart
+      <Text fontSize="2xl" mb={5} fontWeight="bold" color="blue.700" textAlign="center">
+        Giỏ hàng của bạn
       </Text>
 
-      <HStack align="start" spacing={10}>
-        {/* Cart Section */}
-        <VStack p={5} borderWidth="1px" borderRadius="md" boxShadow="lg" bg="white" width="60%" spacing={5}>
-          {cartItems.map((item, index) => (
-            <HStack key={index} justify="space-between" p={4} borderWidth="1px" borderRadius="md" boxShadow="sm" bg="white" width="100%">
-              <HStack>
-                <Image src={item.image} alt={item.name} boxSize="50px" />
-                <VStack align="start" spacing={0}>
-                  <Text>{item.name}</Text>
-                  <Text fontSize="sm" color="gray.500">Số lượng: {item.quantity}</Text>
-                </VStack>
-              </HStack>
-              <Text>{item.price.toLocaleString()} VND</Text>
-              <IconButton
-                icon={<DeleteIcon />}
-                colorScheme="red"
-                onClick={() => removeItem(index)}
-                aria-label="Remove Item"
-              />
-            </HStack>
-          ))}
+      <HStack align="start" spacing={8} justify="center">
+      <VStack
+  p={5}
+  borderWidth="1px"
+  borderRadius="md"
+  boxShadow="lg"
+  bg="white"
+  width="60%"
+  spacing={5}
+  align="stretch"
+>
+  {cartItems.map((item, index) => (
+    <HStack
+      key={index}
+      justify="space-between"
+      p={4}
+      borderWidth="1px"
+      borderRadius="lg"
+      boxShadow="sm"
+      bg="gray.50"
+      width="100%"
+    >
+      <HStack spacing={4} width="70%">
+        <Image
+          src={images[item.productItemId] || "https://via.placeholder.com/150"}
+          alt={item.name}
+          boxSize="60px"
+          borderRadius="full"
+        />
+        <VStack align="start" spacing={0} width="100%">
+          <Text fontWeight="medium" isTruncated maxWidth="180px">
+            {item.name}
+          </Text>
+          <Text fontSize="sm" color="gray.500">
+            Số lượng: {item.quantity}
+          </Text>
         </VStack>
+      </HStack>
+      <Text fontWeight="bold" color="blue.600" minWidth="80px" textAlign="right">
+        {(item.price * item.quantity).toLocaleString()} VND
+      </Text>
+      <IconButton
+        icon={<DeleteIcon />}
+        colorScheme="red"
+        onClick={() => removeItem(index)}
+        aria-label="Remove Item"
+      />
+    </HStack>
+  ))}
+</VStack>
 
-        {/* Payment Form Section */}
-        <Box p={5} borderWidth="1px" borderRadius="md" boxShadow="lg" bg="white" width="40%">
-          <Text fontSize="2xl" mb={5} fontWeight="bold">Payment</Text>
+
+
+        <Box p={6} borderWidth="1px" borderRadius="md" boxShadow="lg" bg="white" width="30%">
+          <Text fontSize="2xl" fontWeight="bold" mb={4} color="blue.700">
+            Thanh toán
+          </Text>
           <VStack spacing={4} align="stretch">
             <Input 
-              placeholder="Name" 
+              placeholder="Tên người nhận" 
               focusBorderColor="blue.500" 
               borderColor="gray.300" 
               value={userName}
-              onChange={(e) => setUserName(e.target.value)} // Cập nhật tên người dùng
+              onChange={(e) => setUserName(e.target.value)}
             />
-          
           </VStack>
 
-          {/* Items count and total price */}
-          <HStack justify="space-between" mt={8}>
-            <Text color="red.500" fontWeight="bold">{totalQuantity} Items</Text>
-            <Text fontWeight="bold">{Number(totalPrice).toLocaleString()} VND</Text>
+          <HStack justify="space-between" mt={6}>
+            <Text color="red.500" fontWeight="bold">{totalQuantity} sản phẩm</Text>
+            <Text fontSize="lg" fontWeight="bold" color="blue.600">{Number(totalPrice).toLocaleString()} VND</Text>
           </HStack>
 
-          {/* Cash Out Button */}
-          <Button colorScheme="blue" width="100%" mt={4} onClick={handleCashOut}>
-            CASH OUT
+          <Button
+            colorScheme="blue"
+            width="100%"
+            mt={6}
+            size="lg"
+            fontWeight="bold"
+            onClick={handleCashOut}
+          >
+            Thanh toán
           </Button>
         </Box>
       </HStack>
 
-      {/* Modal for QR Code */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader textAlign="center">Mã QR thanh toán</ModalHeader>
+          <ModalHeader textAlign="center">Quét mã QR để thanh toán</ModalHeader>
           <ModalCloseButton />
           <ModalBody textAlign="center">
-            <Image src={qrUrl} alt="QR Code" mx="auto" mb={4} boxShadow="md" width="80%" />
-            <Text fontSize="lg" mb={2} color="yellow.400">Mã QR thanh toán tự động</Text>
-            <Text fontSize="sm" color="gray.500">(Xác nhận tự động - Thường không quá 3')</Text>
+            <Image src={qrUrl} alt="QR Code" mx="auto" mb={4} boxShadow="md" borderRadius="md" width="80%" />
+            <Text fontSize="lg" mb={2} color="green.500">Xác nhận thanh toán tự động</Text>
+            <Text fontSize="sm" color="gray.500">(Hoàn thành trong vòng 3 phút)</Text>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="green" onClick={handleConfirmPayment} mr={3}>
-              Xác nhận
+              Xác nhận thanh toán
             </Button>
-            <Button colorScheme="blue" onClick={onClose}>
+            <Button variant="outline" onClick={onClose}>
               Đóng
             </Button>
           </ModalFooter>

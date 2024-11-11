@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Text,
@@ -10,33 +10,49 @@ import {
   Input,
 } from "@chakra-ui/react";
 import { DeleteIcon } from "@chakra-ui/icons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ref, getDownloadURL } from "firebase/storage";
+import { storage } from "./../../../shared/firebase/firebaseConfig";
 
 const Cart = ({ cartItems, updateQuantity, removeItem }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Calculate total price
+  const accessToken = location.state?.accessToken || sessionStorage.getItem("accessToken") || "";
+  const vendorId = location.state?.vendorId || sessionStorage.getItem("vendorId") || "";
+  const eventId = location.state?.eventId || sessionStorage.getItem("eventId") || "";
+
+  const [itemsWithImages, setItemsWithImages] = useState([]);
+
   const totalPrice = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
 
-  // Save cart data to sessionStorage when confirming
+  const fetchImageUrls = async () => {
+    const updatedCartItems = await Promise.all(
+      cartItems.map(async (item) => {
+        const imageRef = ref(storage, `${vendorId}/${item.productItemId}`);
+        try {
+          const imageUrl = await getDownloadURL(imageRef);
+          return { ...item, image: imageUrl };
+        } catch (error) {
+          console.error("Error fetching image URL:", error);
+          return { ...item, image: "https://via.placeholder.com/150" }; // Placeholder image
+        }
+      })
+    );
+    setItemsWithImages(updatedCartItems);
+  };
+
+  useEffect(() => {
+    fetchImageUrls();
+  }, [cartItems]);
+
   const handleConfirm = () => {
     sessionStorage.setItem("cartItems", JSON.stringify(cartItems));
     sessionStorage.setItem("totalPrice", totalPrice);
 
-    // Lưu thêm accessToken, vendorId, eventId vào sessionStorage
-    const accessToken = sessionStorage.getItem("accessToken");
-    const vendorId = sessionStorage.getItem("vendorId");
-    const eventId = sessionStorage.getItem("eventId");
-
-    // Console log để kiểm tra các giá trị
-    console.log("accessToken:", accessToken);
-    console.log("vendorId:", vendorId);
-    console.log("eventId:", eventId);
-
-    // Điều hướng sang trang thanh toán với các thông tin cần thiết
     navigate("/payment", {
       state: { accessToken, vendorId, eventId },
     });
@@ -45,14 +61,14 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
   return (
     <Box p={5} borderRadius="md" boxShadow="lg" bg="white" width="100%">
       <Text fontSize="2xl" fontWeight="bold" mb={4}>
-        Cart
+        Giỏ Hàng
       </Text>
 
       <VStack spacing={4} align="stretch">
-        {cartItems.length === 0 ? (
-          <Text>No items in the cart</Text>
+        {itemsWithImages.length === 0 ? (
+          <Text>Không có sản phẩm nào trong giỏ hàng</Text>
         ) : (
-          cartItems.map((item, index) => (
+          itemsWithImages.map((item, index) => (
             <HStack
               key={index}
               justify="space-between"
@@ -63,9 +79,11 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
               bg="white"
               width="100%"
             >
-              <HStack>
+              <HStack spacing={3} alignItems="center" width="70%">
                 <Image src={item.image} alt={item.name} boxSize="50px" />
-                <Text>{item.name}</Text>
+                <Box maxWidth="200px" isTruncated>
+                  <Text fontWeight="bold">{item.name}</Text>
+                </Box>
               </HStack>
 
               <HStack>
@@ -86,32 +104,30 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
                 </Button>
               </HStack>
 
-              <Text>{item.price.toLocaleString()} VND</Text>
-              <HStack>
-                <IconButton
-                  icon={<DeleteIcon />}
-                  colorScheme="red"
-                  onClick={() => removeItem(index)}
-                  aria-label="Remove Item"
-                />
-              </HStack>
+              <Text width="100px" textAlign="right">
+                {item.price.toLocaleString()} VND
+              </Text>
+              <IconButton
+                icon={<DeleteIcon />}
+                colorScheme="red"
+                onClick={() => removeItem(index)}
+                aria-label="Xóa sản phẩm"
+              />
             </HStack>
           ))
         )}
       </VStack>
 
-      {/* Total Price */}
       <Box mt={8} textAlign="right" fontWeight="bold" fontSize="lg">
-        Total: {totalPrice.toLocaleString()} VND
+        Tổng: {totalPrice.toLocaleString()} VND
       </Box>
 
-      {/* Confirm Button */}
       <HStack justify="center" mt={8}>
         <Button colorScheme="blue" onClick={handleConfirm}>
-          Confirm
+          Xác nhận
         </Button>
         <Button colorScheme="red" onClick={() => removeItem()}>
-          Delete
+          Xóa tất cả
         </Button>
       </HStack>
     </Box>

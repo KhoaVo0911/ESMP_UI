@@ -8,18 +8,25 @@ import {
   Button as AntdButton,
   Select,
   message,
- 
 } from "antd";
-import { Box, HStack, Text, VStack, IconButton } from "@chakra-ui/react";
+import {
+  Box,
+  HStack,
+  Text,
+  VStack,
+  IconButton,
+  Flex,
+} from "@chakra-ui/react";
 import { Delete, Edit } from "@mui/icons-material";
 import { SearchOutlined } from "@ant-design/icons";
 import { useLocation } from "react-router-dom";
-import { v4 as uuidv4 } from 'uuid'; // Import uuid
-import { Option } from "antd/es/mentions";
 
-const ProductList = ({ }) => {
+const { Option } = Select;
+
+const ProductList = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [categories, setCategories] = useState([]); // Danh sách Category
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -27,24 +34,36 @@ const ProductList = ({ }) => {
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("name");
-  const accessToken = location.state?.accessToken || ""; // Kiểm tra nếu accessToken tồn tại
-  const vendorId = location.state?.vendorId || ""; 
+  const accessToken = sessionStorage.getItem("accessToken") || "";
+  const vendorId = sessionStorage.getItem("vendorId") || "";
+  const hostId = sessionStorage.getItem("hostId") || "";
 
-  // Fetch data from API with Authorization token
+  // Fetch data từ API Product và Category
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product", // API endpoint đã cập nhật
+      const productResponse = await axios.get(
+        "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product",
         {
           headers: {
-            Authorization: `${accessToken}`, // Thêm Authorization header
+            Authorization: `${accessToken}`,
             "Content-Type": "application/json",
           },
         }
       );
-      setData(response.data);
-      setFilteredData(response.data);
+      setData(productResponse.data);
+      setFilteredData(productResponse.data);
+
+      const categoryResponse = await axios.get(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category/hostId/${hostId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setCategories(categoryResponse.data);
     } catch (error) {
       message.error("Lỗi khi lấy dữ liệu từ API!");
     } finally {
@@ -62,7 +81,7 @@ const ProductList = ({ }) => {
     return formattedDate.toLocaleDateString("vi-VN");
   };
 
-  // Show modal to create/edit product
+  // Show modal để tạo hoặc chỉnh sửa sản phẩm
   const showModal = (product = null) => {
     setEditingProduct(product);
     if (product) {
@@ -79,19 +98,17 @@ const ProductList = ({ }) => {
     setEditingProduct(null);
   };
 
-  // Save new or updated product
+  // Save sản phẩm mới hoặc cập nhật sản phẩm
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-  
       const payload = {
         ...values,
-        categoryId: editingProduct ? editingProduct.categoryId : uuidv4(),
+        categoryId: editingProduct ? editingProduct.categoryId : values.categoryId,
         status: true,
       };
   
       if (editingProduct) {
-        // Cập nhật sản phẩm
         await axios.put(
           `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}/${editingProduct.productId}`,
           payload,
@@ -102,8 +119,9 @@ const ProductList = ({ }) => {
             },
           }
         );
+  
+        message.success("Sản phẩm đã được cập nhật!");
       } else {
-        // Tạo sản phẩm mới
         await axios.post(
           `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
           payload,
@@ -114,12 +132,11 @@ const ProductList = ({ }) => {
             },
           }
         );
+        message.success("Sản phẩm mới đã được thêm!");
       }
   
-      // Sau khi lưu thành công, gọi lại API để đồng bộ hóa dữ liệu
-      await fetchData();  // Gọi lại hàm fetchData để tải lại danh sách sản phẩm
-  
-      message.success("Sản phẩm đã được lưu!");
+      // Gọi lại fetchData để làm mới danh sách sản phẩm
+      fetchData();
       setIsModalOpen(false);
       form.resetFields();
     } catch (error) {
@@ -127,11 +144,10 @@ const ProductList = ({ }) => {
     }
   };
   
-  
-  // Delete product
+  // Delete sản phẩm
   const handleDelete = async (id) => {
     try {
-      const response = await axios.delete(
+      await axios.delete(
         `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}/${id}`,
         {
           headers: {
@@ -140,23 +156,14 @@ const ProductList = ({ }) => {
           },
         }
       );
-  
-      console.log('Delete response:', response.data);
-  
-      if (response.status === 200) {
-        // Sau khi xóa thành công, gọi lại API để tải lại danh sách sản phẩm
-        await fetchData();
-        message.success("Sản phẩm đã được xóa!");
-      } else {
-        message.error("Không thể xóa sản phẩm!");
-      }
+      setData(data.filter((item) => item.productId !== id));
+      setFilteredData(filteredData.filter((item) => item.productId !== id));
+      message.success("Sản phẩm đã được xóa!");
     } catch (error) {
-      console.error('Delete error:', error.response?.data || error.message);
       message.error("Đã xảy ra lỗi khi xóa sản phẩm!");
     }
   };
-  
-  
+
   // Search for products
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();
@@ -171,9 +178,7 @@ const ProductList = ({ }) => {
   const handleSort = (value) => {
     setSortOrder(value);
     const sorted = [...filteredData].sort((a, b) => {
-      if (value === "name") {
-        return a.productName.localeCompare(b.productName);
-      } else if (value === "quantity") {
+      if (value === "quantity") {
         return a.quantity - b.quantity;
       } else {
         return a.count - b.count;
@@ -182,59 +187,64 @@ const ProductList = ({ }) => {
     setFilteredData(sorted);
   };
 
-  // Table columns configuration
+  // Cấu hình cột cho bảng
   const columns = [
     {
-      title: "Product Name",
+      title: "Tên sản phẩm",
       dataIndex: "productName",
       key: "productName",
-      render: (text) => (
-        <HStack>
-          <Text>{text}</Text>
-        </HStack>
-      ),
+      render: (text) => <Text>{text}</Text>,
     },
     {
-      title: "Description",
+      title: "Mô tả",
       dataIndex: "description",
       key: "description",
     },
     {
-      title: "Quantity",
+      title: "Số lượng",
       dataIndex: "quantity",
       key: "quantity",
     },
     {
-      title: "Count",
+      title: "Đếm",
       dataIndex: "count",
       key: "count",
     },
     {
-      title: "Create Date",
+      title: "Ngày tạo",
       dataIndex: "createAt",
       key: "createAt",
       render: (date) => <Text>{formatDate(date)}</Text>,
     },
     {
-      title: "Update Date",
+      title: "Ngày cập nhật",
       dataIndex: "updatedAt",
       key: "updatedAt",
       render: (date) => <Text>{formatDate(date)}</Text>,
     },
     {
-      title: "Actions",
+      title: "Danh mục",
+      dataIndex: "categoryId",
+      key: "categoryId",
+      render: (categoryId) => {
+        const category = categories.find((cat) => cat.categoryId === categoryId);
+        return category ? category.categoryName : "Không xác định";
+      },
+    },
+    {
+      title: "Hành động",
       key: "actions",
       render: (record) => (
         <HStack spacing={2}>
           <IconButton
-            aria-label="Edit"
+            aria-label="Sửa"
             icon={<Edit />}
             colorScheme="blue"
             size="sm"
             onClick={() => showModal(record)}
           />
           <IconButton
-            aria-label="Delete"
+            aria-label="Xóa"
             icon={<Delete />}
             colorScheme="red"
             size="sm"
@@ -249,13 +259,13 @@ const ProductList = ({ }) => {
     <Box padding={5} display="flex" flexDirection="column" alignItems="center">
       <VStack width="80%" spacing={5}>
         <Text fontSize="2xl" fontWeight="bold">
-          List of Products
+          Danh Sách Sản Phẩm
         </Text>
 
         <Box display="flex" justifyContent="space-between" width="100%">
           <HStack>
             <Input
-              placeholder="Search a product..."
+              placeholder="Tìm kiếm sản phẩm..."
               value={searchTerm}
               onChange={handleSearch}
               prefix={<SearchOutlined />}
@@ -264,76 +274,91 @@ const ProductList = ({ }) => {
           </HStack>
           <HStack>
             <Select
-              defaultValue="name"
-              style={{ width: 120 }}
+              defaultValue="quantity"
+              style={{ width: 150 }}
               onChange={handleSort}
             >
-              <Option value="name">Sort by Name</Option>
-              <Option value="quantity">Sort by Quantity</Option>
-              <Option value="count">Sort by Count</Option>
+              <Option value="quantity">Sắp xếp theo Số lượng</Option>
+              <Option value="count">Sắp xếp theo Đếm</Option>
             </Select>
             <AntdButton
               type="primary"
               style={{ backgroundColor: "#3f51b5" }}
               onClick={() => showModal()}
             >
-              + Add new product
+              + Thêm sản phẩm mới
             </AntdButton>
           </HStack>
         </Box>
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          pagination={{
-            pageSize: 10, // Show a maximum of 10 products per page
-          }}
-          bordered
-          rowKey="productId"
-          style={{ textAlign: "center", marginTop: "20px", width: "100%" }}
-          loading={loading}
-        />
+
+        {/* Container cho bảng với chiều cao cố định và cuộn */}
+        <Box
+          width="100%"
+          maxHeight="400px"
+          overflowY="auto"
+          border="1px solid #e0e0e0"
+          borderRadius="md"
+        >
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            pagination={false}
+            bordered
+            rowKey="productId"
+            loading={loading}
+          />
+        </Box>
       </VStack>
 
-      {/* Modal to create/edit product */}
+      {/* Modal để tạo/chỉnh sửa sản phẩm */}
       <Modal
-        title={editingProduct ? "Edit Product" : "Create Product"}
+        title={editingProduct ? "Chỉnh sửa sản phẩm" : "Tạo sản phẩm mới"}
         visible={isModalOpen}
         onCancel={handleCancel}
         onOk={handleSave}
-        okText={editingProduct ? "Update" : "Create"}
+        okText={editingProduct ? "Cập nhật" : "Tạo mới"}
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="productName"
-            label="Product Name"
-            rules={[
-              { required: true, message: "Please input the product name!" },
-            ]}
+            label="Tên sản phẩm"
+            rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm!" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="quantity"
-            label="Quantity"
-            rules={[{ required: true, message: "Please input the quantity!" }]}
+            label="Số lượng"
+            rules={[{ required: true, message: "Vui lòng nhập số lượng!" }]}
           >
             <Input type="number" />
           </Form.Item>
           <Form.Item
             name="description"
-            label="Description"
-            rules={[
-              { required: true, message: "Please input the description!" },
-            ]}
+            label="Mô tả"
+            rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="count"
-            label="Count"
-            rules={[{ required: true, message: "Please input the count!" }]}
+            label="Đếm"
+            rules={[{ required: true, message: "Vui lòng nhập số đếm!" }]}
           >
             <Input type="number" />
+          </Form.Item>
+          <Form.Item
+            name="categoryId"
+            label="Danh mục"
+            rules={[{ required: true, message: "Vui lòng chọn danh mục!" }]}
+          >
+            <Select placeholder="Chọn danh mục">
+              {categories.map((category) => (
+                <Option key={category.categoryId} value={category.categoryId}>
+                  {category.categoryName}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
         </Form>
       </Modal>

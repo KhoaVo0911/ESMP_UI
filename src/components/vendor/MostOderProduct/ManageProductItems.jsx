@@ -40,8 +40,8 @@ const ManageProducts = () => {
   const { register, handleSubmit, reset, setValue } = useForm();
   const toast = useToast();
   const location = useLocation();
-  const accessToken = location.state?.accessToken || "";
-  const vendorId = location.state?.vendorId || "";
+  const accessToken = sessionStorage.getItem("accessToken") || ""; // Lấy accessToken từ sessionStorage
+const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId từ sessionStorage
   const [imageFile, setImageFile] = useState(null);
 
   // Xử lý chọn ảnh
@@ -173,17 +173,6 @@ const ManageProducts = () => {
       return;
     }
 
-    if (details.length > 1 && (!data.productName || !data.productPrice)) {
-      toast({
-        title: "Error",
-        description: "You must provide a name and price for the product item.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
     let name = data.productName;
     let price = data.productPrice;
 
@@ -203,6 +192,7 @@ const ManageProducts = () => {
     };
 
     if (editingProductItem) {
+      // Update product item
       axios
         .put(
           `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${editingProductItem.productItemId}`,
@@ -215,14 +205,13 @@ const ManageProducts = () => {
           }
         )
         .then(async () => {
-          const updatedProductItems = await Promise.all(
-            productItems.map(async (item) =>
-              item.productItemId === editingProductItem.productItemId
-                ? { ...productItemData, imageURL: await fetchImageURL(editingProductItem.productItemId) }
-                : item
-            )
+          const imageURL = imageFile ? await uploadImage(editingProductItem.productItemId) : editingProductItem.imageURL;
+          const updatedProductItem = { ...productItemData, productItemId: editingProductItem.productItemId, imageURL };
+
+          setProductItems((prevItems) =>
+            prevItems.map((item) => (item.productItemId === editingProductItem.productItemId ? updatedProductItem : item))
           );
-          setProductItems(updatedProductItems);
+
           toast({
             title: "Success",
             description: "Product item updated successfully!",
@@ -230,10 +219,8 @@ const ManageProducts = () => {
             duration: 3000,
             isClosable: true,
           });
-          setDetails([]);
-          reset();
-          onClose();
-          setEditingProductItem(null);
+
+          resetForm();
         })
         .catch((error) => {
           toast({
@@ -246,6 +233,7 @@ const ManageProducts = () => {
           console.error("Error updating product item:", error);
         });
     } else {
+      // Add new product item
       axios
         .post(
           `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
@@ -261,8 +249,9 @@ const ManageProducts = () => {
           const newProductItemId = response.data.id;
           const imageURL = await uploadImage(newProductItemId);
           const updatedProductItem = { ...productItemData, productItemId: newProductItemId, imageURL };
-          setProductItems([...productItems, updatedProductItem]);
-        
+
+          setProductItems((prevItems) => [...prevItems, updatedProductItem]);
+
           toast({
             title: "Success",
             description: "Product item created successfully!",
@@ -270,9 +259,8 @@ const ManageProducts = () => {
             duration: 3000,
             isClosable: true,
           });
-          setDetails([]);
-          reset();
-          onClose();
+
+          resetForm();
         })
         .catch((error) => {
           toast({
@@ -287,10 +275,28 @@ const ManageProducts = () => {
     }
   };
 
+  // Hàm reset form và đóng modal
+  const resetForm = () => {
+    setDetails([]);
+    reset();
+    setImageFile(null);
+    onClose();
+    setEditingProductItem(null);
+  };
+
+  // Hàm mở modal để chỉnh sửa sản phẩm
+  const handleEdit = (productItem) => {
+    setEditingProductItem(productItem);
+    setValue("productName", productItem.name);
+    setValue("productPrice", productItem.price);
+    setDetails(productItem.details);
+    onOpen();
+  };
+
   return (
     <Box p={5}>
       <Button colorScheme="blue" onClick={onOpen}>
-        Add Product Item
+        Thêm sản phẩm
       </Button>
 
       <Grid templateColumns="repeat(4, 1fr)" gap={6} mt={10}>
@@ -303,14 +309,22 @@ const ManageProducts = () => {
               overflow="hidden"
               boxShadow="md"
               _hover={{ boxShadow: "lg" }}
+              display="flex"
+              flexDirection="column"
             >
-              <Image src={productItem.imageURL || "https://via.placeholder.com/150"} alt={productItem.name} objectFit="cover" width="100%" height="150px" />
-              <Box p={4}>
+              <Image
+                src={productItem.imageURL || "https://via.placeholder.com/150"}
+                alt={productItem.name}
+                objectFit="cover"
+                width="100%"
+                height="150px"
+              />
+              <Box p={4} flexGrow={1}>
                 <Text fontWeight="bold" fontSize="lg">
                   {productItem.name}
                 </Text>
                 <Text>{productItem.price} VND</Text>
-                <Flex direction="column">
+                <Flex direction="column" overflowY="auto" maxHeight="100px" mt={2}>
                   {productItem.details.map((detail, index) => {
                     const foundProduct = products.find((p) => p.productId === detail.productId);
                     return (
@@ -322,44 +336,41 @@ const ManageProducts = () => {
                 </Flex>
               </Box>
               <Flex justifyContent="flex-end" p={4}>
-                {/* <Button leftIcon={<FaEdit />} size="sm" colorScheme="teal" variant="outline" onClick={() => handleEdit(productItem)}>
-                  Edit
+                <Button leftIcon={<FaEdit />} size="sm" colorScheme="teal" variant="outline" onClick={() => handleEdit(productItem)}>
+                  Sửa
                 </Button>
-                <Button leftIcon={<FaTrash />} size="sm" colorScheme="red" variant="outline" onClick={() => handleDelete(productItem.productItemId)}>
-                  Delete
-                </Button> */}
               </Flex>
             </GridItem>
           ))
         ) : (
-          <Text>No products available</Text>
+          <Text>Không có sản phẩm nào</Text>
         )}
       </Grid>
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{editingProductItem ? "Edit Product Item" : "Add Product Item"}</ModalHeader>
+          <ModalHeader>{editingProductItem ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm"}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <form onSubmit={handleSubmit(onSubmit)}>
               <FormControl mt={4}>
-                <FormLabel>Name</FormLabel>
-                <Input {...register("productName")} placeholder="Enter name" isDisabled={details.length === 1} />
+                <FormLabel>Tên sản phẩm</FormLabel>
+                <Input {...register("productName")} placeholder="Nhập tên" isDisabled={details.length === 1} />
               </FormControl>
               <FormControl mt={4}>
-                <FormLabel>Price</FormLabel>
-                <Input {...register("productPrice")} placeholder="Enter price" />
+                <FormLabel>Giá</FormLabel>
+                <Input {...register("productPrice")} placeholder="Nhập giá" />
               </FormControl>
 
               <FormControl mt={4}>
-                <FormLabel>Product Image</FormLabel>
+                <FormLabel>Ảnh sản phẩm</FormLabel>
                 <Input type="file" accept="image/*" onChange={handleImageChange} />
               </FormControl>
 
               <FormControl mt={4}>
-                <FormLabel>Select Product and Quantity</FormLabel>
-                <Select placeholder="Select a product" {...register("productId")}>
+                <FormLabel>Chọn sản phẩm và số lượng</FormLabel>
+                <Select placeholder="Chọn một sản phẩm" {...register("productId")}>
                   {products.map((product) => (
                     <option key={product.productId} value={product.productId}>
                       {product.productName}
@@ -367,8 +378,8 @@ const ManageProducts = () => {
                   ))}
                 </Select>
                 <FormControl mt={2}>
-                  <FormLabel>Quantity</FormLabel>
-                  <Input type="number" defaultValue={1} min={1} {...register("productQuantity")} placeholder="Enter quantity" />
+                  <FormLabel>Số lượng</FormLabel>
+                  <Input type="number" defaultValue={1} min={1} {...register("productQuantity")} placeholder="Nhập số lượng" />
                 </FormControl>
                 <Button
                   mt={2}
@@ -380,13 +391,13 @@ const ManageProducts = () => {
                     )
                   }
                 >
-                  Add Product
+                  Thêm sản phẩm
                 </Button>
               </FormControl>
 
               {details.length > 0 && (
                 <Box mt={4}>
-                  <Text>Selected Products:</Text>
+                  <Text>Sản phẩm đã chọn:</Text>
                   <List>
                     {details.map((detail, index) => (
                       <ListItem key={index}>
@@ -403,9 +414,9 @@ const ManageProducts = () => {
               )}
               <ModalFooter>
                 <Button colorScheme="blue" mr={3} type="submit">
-                  Save
+                  Lưu
                 </Button>
-                <Button onClick={onClose}>Cancel</Button>
+                <Button onClick={onClose}>Hủy</Button>
               </ModalFooter>
             </form>
           </ModalBody>

@@ -9,7 +9,8 @@ import { Divider } from "@mui/material";
 import { useLocation } from "react-router-dom";
 
 // Cập nhật API URL và có thể sử dụng accessToken từ props
-const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const URL =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
 
 const EventVendor = ({}) => {
   const [events, setEvents] = useState([]);
@@ -20,8 +21,8 @@ const EventVendor = ({}) => {
   const [activeTab, setActiveTab] = useState("1");
   const navigate = useNavigate();
   const location = useLocation();
-  const accessToken = location.state?.accessToken || ""; // Kiểm tra nếu accessToken tồn tại
-  const vendorId = location.state?.vendorId || ""; 
+  const accessToken = sessionStorage.getItem("accessToken") || ""; // Lấy accessToken từ sessionStorage
+  const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId từ sessionStorage
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -131,22 +132,25 @@ const EventVendor = ({}) => {
       <Row gutter={[40, 20]} style={{ marginTop: "20px" }}>
         {filteredEvents.map((event) => (
           <Col key={event.eventId} xs={24} sm={12} md={8} lg={8}>
-           <Card
-  className="event-card"
-  hoverable
-  onClick={() =>
-    navigate(`/events/${event.eventId}`, {
-      state: {
-        accessToken, vendorId  // Truyền accessToken từ component cha
-      },
-    })
-  }
-  cover={
-    <div className="event-card-cover">
-      <img alt={event.name} src={event.logo} />
-    </div>
-  }
->
+            <Card
+              className="event-card"
+              hoverable
+              onClick={() => {
+                // Lưu eventId vào sessionStorage khi nhấp vào sự kiện
+                sessionStorage.setItem("eventId", event.eventId);
+                navigate(`/events/${event.eventId}`, {
+                  state: {
+                    accessToken,
+                    vendorId,
+                  },
+                });
+              }}
+              cover={
+                <div className="event-card-cover">
+                  <img alt={event.name} src={event.logo} />
+                </div>
+              }
+            >
               <div className="event-info-container">
                 <div className="event-date">
                   <div className="event-date-box">

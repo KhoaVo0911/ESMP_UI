@@ -19,8 +19,14 @@ import {
   ModalBody,
   ModalFooter,
   ModalCloseButton,
+  Icon,
+  VStack,
+  HStack,
+  Grid,
+  GridItem,
 } from "@chakra-ui/react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { FaCheckCircle, FaTimesCircle, FaShippingFast } from "react-icons/fa";
 import axios from "axios";
 
 const OrderedList = () => {
@@ -49,14 +55,10 @@ const OrderedList = () => {
             },
           }
         );
-        if (Array.isArray(response.data) && response.data.length > 0) {
-          setOrders(response.data);
-        } else {
-          setOrders([]);
-        }
-        setLoading(false);
+        setOrders(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error("Lỗi khi tải danh sách đơn hàng:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -83,14 +85,10 @@ const OrderedList = () => {
   }, [accessToken, vendorId, eventId]);
 
   const handleBack = () => {
-    navigate("/shop", {
-      state: { accessToken, vendorId, eventId },
-    });
+    navigate("/shop", { state: { accessToken, vendorId, eventId } });
   };
 
   const handleViewDetails = async (orderId) => {
-    console.log("Đang xem chi tiết cho ID đơn hàng:", orderId);
-
     if (orderDetails[orderId]) {
       openDetail(orderId);
       return;
@@ -113,15 +111,8 @@ const OrderedList = () => {
         const productItem = productItems.find(
           (item) => item.productItemId === detail.productitemId
         );
-        console.log("Chi tiết Product Item tìm thấy:", productItem);
-
-        return {
-          ...detail,
-          productItemName: productItem ? productItem.name : "Unknown Product Item",
-        };
+        return { ...detail, productItemName: productItem?.name || "Unknown Product Item" };
       });
-
-      console.log("Chi tiết đơn hàng sau khi làm giàu dữ liệu:", enrichedDetails);
 
       setOrderDetails((prevDetails) => ({
         ...prevDetails,
@@ -162,10 +153,10 @@ const OrderedList = () => {
   return (
     <Box minH="100vh" p={5} bgGradient="linear(to-r, blue.100, pink.100)">
       <Button colorScheme="blue" mb={5} onClick={handleBack}>
-        Back
+        Quay lại
       </Button>
-      <Text fontSize="2xl" mb={5} fontWeight="bold">
-        List Ordered
+      <Text fontSize="2xl" mb={5} fontWeight="bold" textAlign="center">
+        Lịch Sử Giao Dịch
       </Text>
 
       {loading ? (
@@ -173,25 +164,20 @@ const OrderedList = () => {
       ) : orders.length > 0 ? (
         <Box bg="white" p={5} borderRadius="lg" boxShadow="lg" overflowX="auto">
           <Table variant="simple" size="md">
-            <Thead>
+            <Thead bg="gray.100">
               <Tr>
-                <Th textAlign="center">No</Th>
-                <Th textAlign="center">Name</Th>
-                <Th textAlign="center">Date</Th>
-                <Th textAlign="center">Total Amount</Th>
-                <Th textAlign="center">Status</Th>
+                <Th textAlign="center">Mã ĐH</Th>
+                <Th textAlign="center">Tên khách hàng</Th>
+                <Th textAlign="center">Ngày tạo</Th>
+                <Th textAlign="center">Số lượng</Th>
+                <Th textAlign="center">Trạng thái</Th>
               </Tr>
             </Thead>
             <Tbody>
               {orders.map((order, index) => (
                 <Tr key={order.orderId}>
                   <Td textAlign="center">
-                    <Tooltip
-                      label="Click to view details"
-                      hasArrow
-                      placement="top"
-                      onMouseEnter={() => handleViewDetails(order.orderId)}
-                    >
+                    <Tooltip label="Click để xem chi tiết" hasArrow placement="top">
                       <Text
                         as="span"
                         color="blue.500"
@@ -199,35 +185,45 @@ const OrderedList = () => {
                         _hover={{ textDecoration: "underline" }}
                         onClick={() => handleViewDetails(order.orderId)}
                       >
-                        {order.orderId.slice(0, 4)}
+                        {order.orderId.slice(0, 6)}
                       </Text>
                     </Tooltip>
                   </Td>
                   <Td textAlign="center">{order.name}</Td>
                   <Td textAlign="center">
-                    {new Date(order.createAt).toLocaleString("vi-VN", {
-                      year: "numeric",
-                      month: "2-digit",
+                    {new Date(order.createAt).toLocaleDateString("vi-VN", {
                       day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                      hour12: false,
+                      month: "2-digit",
+                      year: "numeric",
                     })}
                   </Td>
                   <Td textAlign="center">{order.totalAmount}</Td>
                   <Td textAlign="center">
-                    <Text
-                      color={
-                        order.status === "Prepared"
-                          ? "orange"
+                    <HStack justify="center">
+                      <Icon
+                        as={
+                          order.status === "Prepared"
+                            ? FaShippingFast
+                            : order.status === "Success"
+                            ? FaCheckCircle
+                            : FaTimesCircle
+                        }
+                        color={
+                          order.status === "Prepared"
+                            ? "orange.500"
+                            : order.status === "Success"
+                            ? "green.500"
+                            : "red.500"
+                        }
+                      />
+                      <Text>
+                        {order.status === "Prepared"
+                          ? "Đang chuẩn bị"
                           : order.status === "Success"
-                          ? "green"
-                          : "red"
-                      }
-                    >
-                      {order.status}
-                    </Text>
+                          ? "Thành công"
+                          : "Thất bại"}
+                      </Text>
+                    </HStack>
                   </Td>
                 </Tr>
               ))}
@@ -235,42 +231,44 @@ const OrderedList = () => {
           </Table>
         </Box>
       ) : (
-        <Text>No orders found.</Text>
+        <Text>Không có đơn hàng nào.</Text>
       )}
 
-      <Modal isOpen={isDetailOpen} onClose={closeDetail}>
+      {/* Modal chi tiết đơn hàng */}
+      <Modal isOpen={isDetailOpen} onClose={closeDetail} size="xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
-            Chi tiết đơn hàng:{" "}
-            {selectedOrder && orders.find((order) => order.orderId === selectedOrder)?.name}
-          </ModalHeader>
+          <ModalHeader>Chi tiết đơn hàng</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {selectedOrder && orderDetails[selectedOrder] ? (
-              orderDetails[selectedOrder].map((detail, index) => (
-                <Box key={index} mb={3}>
-                  <Text>
-                    <strong>Product Item Name:</strong> {detail.productItemName}
-                  </Text>
-                  <Text>
-                    <strong>Quantity:</strong> {detail.quantity}
-                  </Text>
-                  <Text>
-                    <strong>Unit Price:</strong> {formatCurrency(detail.unitPrice)}
-                  </Text>
-                  <Text>
-                    <strong>Total Price:</strong> {formatCurrency(detail.totalPrice)}
-                  </Text>
-                </Box>
-              ))
+              <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                {orderDetails[selectedOrder].map((detail, index) => (
+                  <GridItem
+                    key={index}
+                    p={4}
+                    borderWidth="1px"
+                    borderRadius="md"
+                    boxShadow="md"
+                    bg="gray.50"
+                  >
+                    <VStack align="start" spacing={1}>
+                      <Text fontWeight="bold">Sản phẩm:</Text>
+                      <Text>{detail.productItemName}</Text>
+                      <Text>Số lượng: {detail.quantity}</Text>
+                      <Text>Đơn giá: {formatCurrency(detail.unitPrice)}</Text>
+                      <Text>Tổng giá: {formatCurrency(detail.totalPrice)}</Text>
+                    </VStack>
+                  </GridItem>
+                ))}
+              </Grid>
             ) : (
-              <Text>Loading details...</Text>
+              <Text>Đang tải chi tiết...</Text>
             )}
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" onClick={closeDetail}>
-              Close
+              Đóng
             </Button>
           </ModalFooter>
         </ModalContent>
