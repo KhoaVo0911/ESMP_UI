@@ -5,6 +5,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import EventIcon from "@mui/icons-material/Event";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
+import CategoryIcon from "@mui/icons-material/Category";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import InfoIcon from "@mui/icons-material/Info";
 import LocalGroceryStoreIcon from "@mui/icons-material/LocalGroceryStore";
@@ -35,6 +36,8 @@ const HostSideBar = ({ collapsed }) => {
       setSelectedMenuItem("6");
     } else if (location.pathname.startsWith("/event-detail")) {
       setSelectedMenuItem("10");
+    } else if (location.pathname.startsWith("/eventconfig")) {
+      setSelectedMenuItem("eventconfig");
     } else if (
       location.pathname.startsWith(`/event/${eventId}/location-type`)
     ) {
@@ -155,6 +158,18 @@ const HostSideBar = ({ collapsed }) => {
           ),
           onClick: () => navigate("/accounts"),
         },
+        {
+          key: "categories",
+          icon: <CategoryIcon />,
+          label: (
+            <span
+              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
+            >
+              Event Config
+            </span>
+          ),
+          onClick: () => navigate("/eventconfig"),
+        },
       ],
     },
     {
@@ -257,6 +272,9 @@ const HostSideBar = ({ collapsed }) => {
                 break;
               case "11":
                 navigate(`/event/${eventId}/location-type`);
+                break;
+              case "categories":
+                navigate(`/eventconfig`);
                 break;
               default:
                 navigate("/dashboard");

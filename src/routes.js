@@ -38,6 +38,7 @@ import ImageUpload from "./shared/firebase/imageUpload.jsx";
 import LocationMap from "./pages/host/LocationMap.jsx";
 import LocationTypePage from "./pages/host/LocationTypePage.jsx";
 import TestQRCODE from "./components/vendor/Shop/textInputQRcode.jsx";
+import EventConfigPage from "./pages/host/EventConfigPage.jsx";
 
 const AppRoutes = () => {
   return (
@@ -57,9 +58,14 @@ const AppRoutes = () => {
         }
       />
       <Route path="/DashboardVendor" element={<DashboardVendor />} />
-      <Route path="/qrcodecodecode" element={<VendorLayout>
+      <Route
+        path="/qrcodecodecode"
+        element={
+          <VendorLayout>
             <TestQRCODE />
-          </VendorLayout>} />
+          </VendorLayout>
+        }
+      />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="qrcode" element={<CourseList />} />
       <Route path="qrcodehist" element={<TransactionHistory />} />
@@ -231,6 +237,14 @@ const AppRoutes = () => {
         element={
           <HostLayout>
             <LocationTypePage />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/eventconfig"
+        element={
+          <HostLayout>
+            <EventConfigPage />
           </HostLayout>
         }
       />

@@ -1,25 +1,32 @@
 import axios from "axios";
 
-// Base URL của MockAPI
-const BASE_URL = "https://668e540abf9912d4c92dcd67.mockapi.io";
+// Base URL của server
+const BASE_URL =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api";
 
-export const getData = async (endpoint, params = {}) => {
-  try {
-    const query = new URLSearchParams(params).toString();
-    const response = await axios.get(`${BASE_URL}/${endpoint}?${query}`);
-    return response.data;
-  } catch (error) {
-    console.error("Lỗi khi lấy dữ liệu:", error);
-    throw error;
-  }
+// Hàm tiện ích để lấy accessToken từ localStorage hoặc sessionStorage
+const getAccessToken = () => {
+  const token =
+    localStorage.getItem("accessToken") ||
+    sessionStorage.getItem("accessToken") ||
+    "";
+  console.log("Access Token:", token); // In ra token để kiểm tra
+  return token;
 };
 
-export const getLocationMapByEventId = async (eventId) => {
+// Hàm lấy Location Map theo Event ID và Host ID
+export const getLocationMapByEventId = async (hostId, eventId) => {
   try {
-    if (!eventId) throw new Error("Event ID bị thiếu");
-    const response = await axios.get(
-      `${BASE_URL}/events/${eventId}/locationMaps`
-    );
+    if (!hostId || !eventId) throw new Error("Host ID hoặc Event ID bị thiếu");
+    const accessToken = getAccessToken();
+    if (!accessToken) throw new Error("Access Token không tồn tại");
+
+    const response = await axios.get(`${BASE_URL}/map/${hostId}/${eventId}`, {
+      headers: {
+        Authorization: accessToken,
+        "Content-Type": "application/json",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Lỗi khi lấy Location Map theo Event ID:", error);
@@ -27,12 +34,22 @@ export const getLocationMapByEventId = async (eventId) => {
   }
 };
 
-export const createLocationMap = async (data) => {
+// Hàm tạo Location Map mới
+export const createLocationMap = async (hostId, eventId, data) => {
   try {
-    const response = await axios.post(`${BASE_URL}/locationMaps`, data);
-    if (!response.data.locationId) {
-      throw new Error("Phản hồi API không có locationId");
-    }
+    const accessToken = getAccessToken();
+    if (!accessToken) throw new Error("Access Token không tồn tại");
+
+    const response = await axios.post(
+      `${BASE_URL}/map/${hostId}/${eventId}`,
+      data,
+      {
+        headers: {
+          Authorization: accessToken, // Giữ nguyên accessToken nếu không cần "Bearer "
+          "Content-Type": "application/json",
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error("Lỗi khi tạo Location Map:", error);
@@ -40,12 +57,18 @@ export const createLocationMap = async (data) => {
   }
 };
 
-export const updateLocationMap = async (locationId, data) => {
+// Hàm cập nhật Location Map hiện tại
+export const updateLocationMap = async (hostId, eventId, locationId, data) => {
   try {
-    const response = await axios.put(
-      `${BASE_URL}/locationMaps/${locationId}`,
-      data
-    );
+    const accessToken = getAccessToken();
+    if (!accessToken) throw new Error("Access Token không tồn tại");
+
+    const response = await axios.put(`${BASE_URL}/map`, data, {
+      headers: {
+        Authorization: accessToken, // Giữ nguyên accessToken nếu không cần "Bearer "
+        "Content-Type": "application/json",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Lỗi khi cập nhật Location Map:", error);
@@ -53,11 +76,21 @@ export const updateLocationMap = async (locationId, data) => {
   }
 };
 
-export const deleteLocationMap = async (locationId) => {
+// Hàm xóa Location Map
+export const deleteLocationMap = async (hostId, locationId) => {
   try {
     if (!locationId) throw new Error("Thiếu locationId để xóa map.");
+    const accessToken = getAccessToken();
+    if (!accessToken) throw new Error("Access Token không tồn tại");
+
     const response = await axios.delete(
-      `${BASE_URL}/locationMaps/${locationId}`
+      `${BASE_URL}/map/${hostId}/${locationId}`,
+      {
+        headers: {
+          Authorization: accessToken, // Giữ nguyên accessToken nếu không cần "Bearer "
+          "Content-Type": "application/json",
+        },
+      }
     );
     return response.data;
   } catch (error) {

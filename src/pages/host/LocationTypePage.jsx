@@ -14,21 +14,29 @@ import {
   Td,
 } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
-import { getData, postData } from "../../shared/locationType";
+import axios from "axios";
+
+const API_BASE_URL =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/map";
+const FIXED_HOST_ID = "c12042fa-bd4d-4147-92b8-ad904e374f11"; // hostId cố định
 
 const LocationTypePage = () => {
   const { eventId } = useParams();
   const [locationTypes, setLocationTypes] = useState([]);
-  const [name, setName] = useState("");
+  const [typeName, setTypeName] = useState("");
   const [price, setPrice] = useState("");
   const [status, setStatus] = useState("Available");
 
-  // Lấy danh sách location types khi component được mount
   useEffect(() => {
     if (eventId) {
-      getData("locationType", { eventId })
-        .then((data) => {
-          setLocationTypes(data);
+      axios
+        .get(`${API_BASE_URL}/locationTyple/${FIXED_HOST_ID}/${eventId}`, {
+          headers: {
+            Authorization: sessionStorage.getItem("accessToken"),
+          },
+        })
+        .then((response) => {
+          setLocationTypes(response.data);
         })
         .catch((error) => {
           console.error("Error fetching location types:", error);
@@ -36,7 +44,6 @@ const LocationTypePage = () => {
     }
   }, [eventId]);
 
-  // Hàm thêm mới loại vị trí
   const handleAddLocationType = () => {
     if (!eventId) {
       alert("Event ID is required");
@@ -45,15 +52,25 @@ const LocationTypePage = () => {
 
     const newLocationType = {
       eventId,
-      name,
-      price: parseFloat(price) || 0, // Giá mặc định là 0 nếu không nhập
+      typeName,
+      price: parseFloat(price) || 0,
       status,
     };
 
-    postData("locationType", newLocationType)
-      .then((data) => {
-        setLocationTypes([...locationTypes, data]);
-        setName("");
+    axios
+      .post(
+        `${API_BASE_URL}/locationTyple/${FIXED_HOST_ID}/${eventId}`,
+        newLocationType,
+        {
+          headers: {
+            Authorization: sessionStorage.getItem("accessToken"),
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then((response) => {
+        setLocationTypes([...locationTypes, response.data]);
+        setTypeName("");
         setPrice("");
         setStatus("Available");
       })
@@ -65,24 +82,24 @@ const LocationTypePage = () => {
   return (
     <Box p={4}>
       <FormControl id="name" mb={4}>
-        <FormLabel>Tên loại vị trí</FormLabel>
+        <FormLabel>Booth Type Name</FormLabel>
         <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Nhập tên loại vị trí"
+          value={typeName}
+          onChange={(e) => setTypeName(e.target.value)}
+          placeholder="Enter booth type name"
         />
       </FormControl>
       <FormControl id="price" mb={4}>
-        <FormLabel>Giá (VNĐ)</FormLabel>
+        <FormLabel>Price (VND)</FormLabel>
         <Input
           value={price}
           type="number"
           onChange={(e) => setPrice(e.target.value)}
-          placeholder="Nhập giá (hoặc để trống nếu miễn phí)"
+          placeholder="Enter price (or leave blank for free)"
         />
       </FormControl>
       <FormControl id="status" mb={4}>
-        <FormLabel>Trạng thái</FormLabel>
+        <FormLabel>Status</FormLabel>
         <Select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="Available">Available</option>
           <option value="Booked">Booked</option>
@@ -90,29 +107,29 @@ const LocationTypePage = () => {
         </Select>
       </FormControl>
       <Button colorScheme="teal" onClick={handleAddLocationType}>
-        Thêm loại vị trí
+        Add Booth Type
       </Button>
 
-      {/* Bảng hiển thị danh sách loại vị trí */}
       <Table mt={6}>
         <Thead>
           <Tr>
-            <Th>Tên</Th>
-            <Th>Giá (VNĐ)</Th>
-            <Th>Trạng thái</Th>
+            <Th>Name</Th>
+            <Th>Price (VND)</Th>
+            <Th>Status</Th>
           </Tr>
         </Thead>
         <Tbody>
           {locationTypes.map((type) => (
-            <Tr key={type.id}>
-              <Td>{type.name}</Td>
+            <Tr key={type.typeId}>
+              <Td>{type.typeName}</Td>
               <Td>
-                {type.price.toLocaleString("vi-VN", {
-                  style: "currency",
-                  currency: "VND",
-                })}
-              </Td>{" "}
-              {/* Định dạng giá tiền */}
+                {type.price
+                  ? type.price.toLocaleString("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    })
+                  : "N/A"}
+              </Td>
               <Td>{type.status}</Td>
             </Tr>
           ))}

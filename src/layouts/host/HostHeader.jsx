@@ -27,6 +27,14 @@ const HostHeader = ({ collapsed }) => {
       return "Event Management";
     } else if (location.pathname.startsWith("/accounts")) {
       return "Account Managers";
+    } else if (location.pathname.startsWith("/eventconfig")) {
+      return "Event Config";
+    } else if (location.pathname.includes("/transactions")) {
+      return "Transaction";
+    } else if (location.pathname.includes("/booth-plan")) {
+      return "Booth Plan";
+    } else if (location.pathname.includes("/location-type")) {
+      return "Location Type";
     } else if (location.pathname.startsWith("/settings")) {
       return "Settings";
     } else if (location.pathname.startsWith("/packages")) {

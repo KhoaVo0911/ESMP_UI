@@ -30,20 +30,17 @@ import {
   Image,
 } from "@chakra-ui/react";
 import axios from "axios";
-import {
-  SearchIcon,
-  AddIcon,
-  CalendarIcon,
-  TimeIcon,
-  InfoIcon,
-} from "@chakra-ui/icons";
+import { format } from "date-fns";
+import { SearchIcon, AddIcon, CalendarIcon, InfoIcon } from "@chakra-ui/icons";
 import { AiOutlineArrowLeft } from "react-icons/ai";
-import { MdEventNote } from "react-icons/md";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
 import ServiceSelection from "../../../components/host/services/ServiceSelection";
 
-const URL = "https://668e540abf9912d4c92dcd67.mockapi.io/events";
+const URL =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+
+const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const Event = () => {
   const [events, setEvents] = useState([]);
@@ -52,13 +49,10 @@ const Event = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [thumbnail, setThumbnail] = useState(null);
-  const [fileName, setFileName] = useState("");
   const [activeTab, setActiveTab] = useState(0);
   const [eventName, setEventName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
   const [description, setDescription] = useState("");
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [services, setServices] = useState([]);
@@ -67,7 +61,12 @@ const Event = () => {
 
   useEffect(() => {
     axios
-      .get(URL)
+      .get(URL, {
+        headers: {
+          Authorization: `${getAccessToken()}`,
+          "Content-Type": "application/json",
+        },
+      })
       .then((response) => {
         setEvents(response.data);
         setFilteredEvents(
@@ -85,7 +84,7 @@ const Event = () => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
     const filtered = events.filter((event) =>
-      event.eventName.toLowerCase().includes(term)
+      event.name.toLowerCase().includes(term)
     );
     setFilteredEvents(filtered);
   };
@@ -179,18 +178,34 @@ const Event = () => {
     }
 
     const newEvent = {
-      eventName: eventName,
-      image: thumbnail,
+      eventId: Date.now().toString(),
+      hostId: "c12042fa-bd4d-4147-92b8-ad904e374f11",
+      themeId: "c12042fa-bd4d-4147-92b8-ad904e374f11",
+      name: eventName,
+      description: description,
+      thumbnail: thumbnail,
+      stageValue: "Main Stage",
       startDate: startDate,
       endDate: endDate,
-      startTime: startTime,
-      endTime: endTime,
-      description: description,
+      venue: "Event Venue",
+      createAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      height: 500,
+      width: 800,
+      x: 100,
+      y: 200,
+      onWeb: true,
+      profit: "5000",
       status: "on-going",
     };
 
     axios
-      .post(URL, newEvent)
+      .post(URL, newEvent, {
+        headers: {
+          Authorization: `${getAccessToken()}`, // No Bearer prefix
+          "Content-Type": "application/json",
+        },
+      })
       .then((response) => {
         const updatedEvents = [...events, response.data];
         setEvents(updatedEvents);
@@ -286,35 +301,25 @@ const Event = () => {
                   <Box className="event-card-content">
                     <Box className="event-card-cover">
                       <Image
-                        src={event.image || thumbnail}
-                        alt={event.eventName}
+                        src={event.thumbnail || thumbnail}
+                        alt={event.name}
                         className="event-image"
                       />
                     </Box>
                     <Box className="event-info-container">
-                      <Box className="event-title">{event.eventName}</Box>
+                      <Box className="event-title">{event.name}</Box>
                       <Box className="event-dates">
                         <Box>
                           <CalendarIcon /> <strong>Start Date:</strong>{" "}
-                          {event.startDate}
+                          {format(new Date(event.startDate), "yyyy-MM-dd")}
                         </Box>
                         <Box>
                           <CalendarIcon /> <strong>End Date:</strong>{" "}
-                          {event.endDate}
-                        </Box>
-                      </Box>
-                      <Box className="event-times">
-                        <Box>
-                          <TimeIcon /> <strong>Start Time:</strong>{" "}
-                          {event.startTime || "N/A"}
-                        </Box>
-                        <Box>
-                          <TimeIcon /> <strong>End Time:</strong>{" "}
-                          {event.endTime || "N/A"}
+                          {format(new Date(event.endDate), "yyyy-MM-dd")}
                         </Box>
                       </Box>
                       <Box className="event-description">
-                        <InfoIcon /> <strong>Event Description:</strong>{" "}
+                        <InfoIcon /> <strong>Description:</strong>{" "}
                         {event.description}
                       </Box>
                     </Box>
@@ -358,24 +363,6 @@ const Event = () => {
                 />
               </FormControl>
             </Flex>
-            <Flex justify="space-between" mb={4}>
-              <FormControl>
-                <FormLabel>Start Time</FormLabel>
-                <Input
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>End Time</FormLabel>
-                <Input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                />
-              </FormControl>
-            </Flex>
             <FormControl mb={4}>
               <FormLabel>Event Description</FormLabel>
               <Textarea
@@ -404,13 +391,6 @@ const Event = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-
-      {showServiceModal && (
-        <ServiceSelection
-          onSave={handleSaveServices}
-          onSkip={() => setShowServiceModal(false)}
-        />
-      )}
     </>
   );
 };

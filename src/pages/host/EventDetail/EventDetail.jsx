@@ -16,6 +16,7 @@ import {
   Th,
   Td,
 } from "@chakra-ui/react";
+import { format } from "date-fns";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 
 const EventDetails = () => {
@@ -59,15 +60,19 @@ const EventDetails = () => {
           <Text fontWeight="bold" color="purple.900">
             Start Date:
           </Text>
-          <Text>{event?.startDate || "N/A"}</Text>
+          {event?.startDate
+            ? format(new Date(event.startDate), "yyyy-MM-dd")
+            : "N/A"}
         </GridItem>
         <GridItem>
           <Text fontWeight="bold" color="purple.900">
             End Date:
           </Text>
-          <Text>{event?.endDate || "N/A"}</Text>
+          {event?.endDate
+            ? format(new Date(event.endDate), "yyyy-MM-dd")
+            : "N/A"}
         </GridItem>
-        <GridItem>
+        {/* <GridItem>
           <Text fontWeight="bold" color="purple.900">
             Start Time:
           </Text>
@@ -78,7 +83,7 @@ const EventDetails = () => {
             End Time:
           </Text>
           <Text>{event?.endTime || "N/A"}</Text>
-        </GridItem>
+        </GridItem> */}
       </Grid>
 
       <Box mb={6}>
