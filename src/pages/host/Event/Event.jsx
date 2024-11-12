@@ -157,6 +157,15 @@ const Event = () => {
     return await getDownloadURL(imageRef);
   };
 
+  const resetForm = () => {
+    setEventName("");
+    setStartDate("");
+    setEndDate("");
+    setDescription("");
+    setImageFile(null);
+    setThumbnailPreview(null);
+  };
+
   const handleCreate = async () => {
     if (!imageFile) {
       toast({
@@ -203,7 +212,10 @@ const Event = () => {
         duration: 3000,
         isClosable: true,
       });
+
+      // Đóng modal và reset form
       onClose();
+      resetForm();
     } catch (error) {
       console.error("Error creating event:", error);
       toast({
