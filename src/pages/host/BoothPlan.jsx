@@ -281,141 +281,130 @@ const BoothPlan = () => {
   const openBoothModal = () => setIsBoothModalOpen(true);
   const closeBoothModal = () => setIsBoothModalOpen(false);
 
-  const memoizedElements = useMemo(() => {
-    return [
+  const memoizedElements = [
+    <Rnd
+      key={mainTemplate.id}
+      size={{ width: mainTemplate.width, height: mainTemplate.height }}
+      position={{ x: mainTemplate.x, y: mainTemplate.y }}
+      onDragStop={(e, d) =>
+        handleMainTemplateUpdate({ ...mainTemplate, x: d.x, y: d.y })
+      }
+      onResizeStop={(e, direction, ref, delta, position) => {
+        handleMainTemplateUpdate({
+          ...mainTemplate,
+          width: ref.offsetWidth,
+          height: ref.offsetHeight,
+          ...position,
+        });
+      }}
+      style={{
+        transform: `rotate(${mainTemplate.rotation || 0}deg)`,
+        zIndex: 1,
+      }}
+    >
+      <Shape shape={mainTemplate} isMainTemplate={true} />
+    </Rnd>,
+    ...shapes.map((shape) => (
       <Rnd
-        key={mainTemplate.id}
-        size={{ width: mainTemplate.width, height: mainTemplate.height }}
-        position={{ x: mainTemplate.x, y: mainTemplate.y }}
-        onDragStop={(e, d) =>
-          handleMainTemplateUpdate({ ...mainTemplate, x: d.x, y: d.y })
-        }
+        key={shape.locationId}
+        size={{ width: shape.width, height: shape.height }}
+        position={{ x: shape.x || 0, y: shape.y || 0 }}
+        onDragStop={(e, d) => {
+          const updatedShape = { ...shape, x: d.x, y: d.y };
+          handleShapeUpdate(updatedShape);
+        }}
         onResizeStop={(e, direction, ref, delta, position) => {
-          handleMainTemplateUpdate({
-            ...mainTemplate,
+          const updatedShape = {
+            ...shape,
+            width: ref.offsetWidth,
+            height: ref.offsetHeight,
+            x: position.x,
+            y: position.y,
+          };
+          handleShapeUpdate(updatedShape);
+        }}
+        style={{
+          transform: `rotate(${shape.rotation || 0}deg)`,
+        }}
+        onClick={() => handleShapeClick(shape)}
+      >
+        <Shape shape={shape} />
+      </Rnd>
+    )),
+    ...booths.map((booth) => (
+      <Rnd
+        key={booth.locationId} // Đảm bảo key duy nhất cho mỗi booth
+        size={{ width: booth.width, height: booth.height }}
+        position={{ x: booth.x || 0, y: booth.y || 0 }}
+        onDragStop={(e, d) => {
+          const updatedBooth = { ...booth, x: d.x, y: d.y };
+          handleBoothUpdate(updatedBooth);
+        }}
+        onResizeStop={(e, direction, ref, delta, position) => {
+          const updatedBooth = {
+            ...booth,
+            width: ref.offsetWidth,
+            height: ref.offsetHeight,
+            x: position.x,
+            y: position.y,
+          };
+          handleBoothUpdate(updatedBooth);
+        }}
+        style={{
+          zIndex: selectedBoothId === booth.locationId ? 10 : 1,
+          transform: `rotate(${booth.rotation || 0}deg)`,
+        }}
+        onClick={() => handleBoothClick(booth)}
+      >
+        <Booth booth={booth} />
+      </Rnd>
+    )),
+    ...imageElements.map((image) => (
+      <Rnd
+        key={image.locationId}
+        size={{ width: image.width, height: image.height }}
+        position={{ x: image.x, y: image.y }}
+        onDragStop={(e, d) => handleImageUpdate({ ...image, x: d.x, y: d.y })}
+        onResizeStop={(e, direction, ref, delta, position) => {
+          handleImageUpdate({
+            ...image,
             width: ref.offsetWidth,
             height: ref.offsetHeight,
             ...position,
           });
         }}
         style={{
-          transform: `rotate(${mainTemplate.rotation || 0}deg)`,
+          transform: `rotate(${image.rotation || 0}deg)`,
         }}
+        onClick={() => handleImageClick(image)}
       >
-        <Shape shape={mainTemplate} isMainTemplate={true} />
-      </Rnd>,
-      ...shapes.map((shape) => (
-        <Rnd
-          key={shape.locationId}
-          size={{ width: shape.width, height: shape.height }}
-          position={{ x: shape.x || 0, y: shape.y || 0 }}
-          onDragStop={(e, d) => {
-            const updatedShape = { ...shape, x: d.x, y: d.y };
-            handleShapeUpdate(updatedShape);
-          }}
-          onResizeStop={(e, direction, ref, delta, position) => {
-            const updatedShape = {
-              ...shape,
-              width: ref.offsetWidth,
-              height: ref.offsetHeight,
-              x: position.x,
-              y: position.y,
-            };
-            handleShapeUpdate(updatedShape);
-          }}
-          style={{
-            transform: `rotate(${shape.rotation || 0}deg)`,
-          }}
-          onClick={() => handleShapeClick(shape)}
-        >
-          <Shape shape={shape} />
-        </Rnd>
-      )),
-      ...booths.map((booth) => (
-        <Rnd
-          key={booth.locationId}
-          size={{ width: booth.width, height: booth.height }}
-          position={{ x: booth.x || 0, y: booth.y || 0 }}
-          onDragStop={(e, d) => {
-            if (booth.locationId === selectedBoothId) {
-              const updatedBooth = { ...booth, x: d.x, y: d.y };
-              handleBoothUpdate(updatedBooth);
-            }
-          }}
-          onResizeStop={(e, direction, ref, delta, position) => {
-            if (booth.locationId === selectedBoothId) {
-              const updatedBooth = {
-                ...booth,
-                width: ref.offsetWidth,
-                height: ref.offsetHeight,
-                x: position.x,
-                y: position.y,
-              };
-              handleBoothUpdate(updatedBooth);
-            }
-          }}
-          style={{
-            transform: `rotate(${booth.rotation || 0}deg)`,
-          }}
-          onClick={() => handleBoothClick(booth)}
-        >
-          <Booth booth={booth} />
-        </Rnd>
-      )),
-      ...imageElements.map((image) => (
-        <Rnd
-          key={image.locationId}
-          size={{ width: image.width, height: image.height }}
-          position={{ x: image.x, y: image.y }}
-          onDragStop={(e, d) => handleImageUpdate({ ...image, x: d.x, y: d.y })}
-          onResizeStop={(e, direction, ref, delta, position) => {
-            handleImageUpdate({
-              ...image,
-              width: ref.offsetWidth,
-              height: ref.offsetHeight,
-              ...position,
-            });
-          }}
-          style={{
-            transform: `rotate(${image.rotation || 0}deg)`,
-          }}
-          onClick={() => handleImageClick(image)}
-        >
-          <ImageElement image={image} />
-        </Rnd>
-      )),
-      ...textElements.map((text) => (
-        <Rnd
-          key={text.locationId}
-          size={{ width: text.width, height: text.height }}
-          position={{ x: text.x, y: text.y }}
-          onDragStop={(e, d) => handleTextUpdate({ ...text, x: d.x, y: d.y })}
-          onResizeStop={(e, direction, ref, delta, position) => {
-            handleTextUpdate({
-              ...text,
-              width: ref.offsetWidth,
-              height: ref.offsetHeight,
-              x: position.x,
-              y: position.y,
-            });
-          }}
-          style={{
-            transform: `rotate(${text.rotation || 0}deg)`,
-          }}
-          onClick={() => handleTextClick(text)}
-        >
-          <TextElement text={text} onTextChange={handleTextContentChange} />
-        </Rnd>
-      )),
-    ];
-  }, [
-    mainTemplate,
-    shapes,
-    booths,
-    imageElements,
-    textElements,
-    selectedBoothId,
-  ]);
+        <ImageElement image={image} />
+      </Rnd>
+    )),
+    ...textElements.map((text) => (
+      <Rnd
+        key={text.locationId}
+        size={{ width: text.width, height: text.height }}
+        position={{ x: text.x, y: text.y }}
+        onDragStop={(e, d) => handleTextUpdate({ ...text, x: d.x, y: d.y })}
+        onResizeStop={(e, direction, ref, delta, position) => {
+          handleTextUpdate({
+            ...text,
+            width: ref.offsetWidth,
+            height: ref.offsetHeight,
+            x: position.x,
+            y: position.y,
+          });
+        }}
+        style={{
+          transform: `rotate(${text.rotation || 0}deg)`,
+        }}
+        onClick={() => handleTextClick(text)}
+      >
+        <TextElement text={text} onTextChange={handleTextContentChange} />
+      </Rnd>
+    )),
+  ];
 
   return (
     <Flex direction="column" height="100vh">

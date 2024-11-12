@@ -32,7 +32,7 @@ const Toolbar = ({
   const { eventId } = useParams(); // Get eventId from URL
 
   const handleCancel = () => {
-    navigate(`/event-detail/${eventId}`); // Navigate back to Event Details with eventId
+    navigate(`/event/${eventId}/booth-plan`); // Navigate back to Event Details with eventId
   };
 
   const handleSaveWithNotification = () => {

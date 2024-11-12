@@ -12,7 +12,7 @@ const LocationMap = () => {
     location.state?.accessToken || sessionStorage.getItem("accessToken") || "";
   const hostId =
     location.state?.hostId || sessionStorage.getItem("hostId") || "";
-  const eventId = "729e4526-a0e6-43ed-b47a-fb955162803e"; // Replace with dynamic eventId if needed
+  const { eventId } = useParams();
   const [isMapExists, setIsMapExists] = useState(false);
   const [booths, setBooths] = useState([]);
   const [shapes, setShapes] = useState([]);
