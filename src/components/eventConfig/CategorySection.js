@@ -1,5 +1,6 @@
 // src/components/CategorySection.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -23,17 +24,48 @@ import {
   useDisclosure,
   Flex,
   Heading,
+  useToast,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 
 const CategorySection = () => {
-  const [categories, setCategories] = useState([
-    { id: 1, name: "Food", status: "ACTIVE" },
-    { id: 2, name: "Drink", status: "INACTIVE" },
-  ]);
+  const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
+  
+  // Retrieve hostId and accessToken from session storage
+  const hostId = sessionStorage.getItem("hostId") || "";
+  const accessToken = sessionStorage.getItem("accessToken") || "";
+
+  // Fetch categories from API
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category/hostId/${hostId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setCategories(response.data);
+    } catch (error) {
+      toast({
+        title: "Error fetching categories",
+        description: "Could not load categories.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const handleOpenCreateCategory = () => {
     setSelectedCategory(null);
@@ -43,28 +75,94 @@ const CategorySection = () => {
 
   const handleOpenEditCategory = (category) => {
     setSelectedCategory(category);
-    setNewCategory(category.name);
+    setNewCategory(category.categoryName);
     onOpen();
   };
 
-  const handleSaveCategory = () => {
-    if (selectedCategory) {
-      setCategories(
-        categories.map((cat) =>
-          cat.id === selectedCategory.id ? { ...cat, name: newCategory } : cat
-        )
-      );
-    } else {
-      setCategories([
-        ...categories,
-        { id: categories.length + 1, name: newCategory, status: "ACTIVE" },
-      ]);
+  const handleSaveCategory = async () => {
+    try {
+      if (selectedCategory) {
+        // Update existing category
+        console.log("Updating category with hostId:", hostId);
+        await axios.put(
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category/${selectedCategory.categoryId}`,
+          { categoryName: newCategory, status: selectedCategory.status },
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        toast({
+          title: "Category updated",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        // Create new category
+        console.log("Creating category with hostId:", hostId);
+        await axios.post(
+          "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category",
+          { categoryName: newCategory, hostid: hostId, status: true }, // Ensure hostId is included here
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        toast({
+          title: "New category created",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+
+      fetchCategories(); // Refresh categories list after creating/updating
+      onClose();
+    } catch (error) {
+      console.error("Error saving category:", error);
+      toast({
+        title: "Error saving category",
+        description: "Could not save the category.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
-    onClose();
   };
 
-  const handleDeleteCategory = (id) => {
-    setCategories(categories.filter((cat) => cat.id !== id));
+  const handleDeleteCategory = async (categoryId) => {
+    try {
+      await axios.delete(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category/${categoryId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setCategories(categories.filter((cat) => cat.categoryId !== categoryId));
+      toast({
+        title: "Category deleted",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast({
+        title: "Error deleting category",
+        description: "Could not delete the category.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -81,14 +179,7 @@ const CategorySection = () => {
           Create New Category
         </Button>
       </Flex>
-      <Table
-        variant="simple"
-        colorScheme="gray"
-        size="lg"
-        bg="white"
-        borderRadius="md"
-        shadow="md"
-      >
+      <Table variant="simple" colorScheme="gray" size="lg" bg="white" borderRadius="md" shadow="md">
         <Thead bg="gray.200">
           <Tr>
             <Th>No</Th>
@@ -99,14 +190,12 @@ const CategorySection = () => {
         </Thead>
         <Tbody>
           {categories.map((category, index) => (
-            <Tr key={category.id}>
+            <Tr key={category.categoryId}>
               <Td>{index + 1}</Td>
-              <Td>{category.name}</Td>
+              <Td>{category.categoryName}</Td>
               <Td>
-                <Badge
-                  colorScheme={category.status === "ACTIVE" ? "green" : "red"}
-                >
-                  {category.status}
+                <Badge colorScheme={category.status ? "green" : "red"}>
+                  {category.status ? "ACTIVE" : "INACTIVE"}
                 </Badge>
               </Td>
               <Td textAlign="center">
@@ -121,7 +210,7 @@ const CategorySection = () => {
                 <Button
                   size="sm"
                   colorScheme="red"
-                  onClick={() => handleDeleteCategory(category.id)}
+                  onClick={() => handleDeleteCategory(category.categoryId)}
                 >
                   Delete
                 </Button>
