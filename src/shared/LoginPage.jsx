@@ -5,36 +5,46 @@ import LoginComponent from "./Login";
 const LoginPage = () => {
   const [accessToken, setAccessToken] = useState("");
   const [vendorId, setVendorId] = useState("");
+  const [hostId, setHostId] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
   const handleLoginSuccess = (token, userInfo) => {
+    // Cập nhật các trạng thái và lưu vào sessionStorage
     setAccessToken(token);
-    sessionStorage.setItem("accessToken", token);
-
-    const hostCode = userInfo.hostInfo ? userInfo.hostInfo.hostCode : "";
-    setVendorId(hostCode);
-
     setIsLoggedIn(true);
-
+    
+    const hostCode = userInfo.hostInfo ? userInfo.hostInfo.hostCode : "";
+    const vendorCode = userInfo.vendorInfo ? userInfo.vendorInfo.vendorId : "";
+    const vendorName = userInfo.vendorInfo ? userInfo.vendorInfo.vendorName : "";
+    const urlQr = userInfo.vendorInfo ? userInfo.vendorInfo.urlQr : "";
+    const hostIdValue = userInfo.hostInfo ? userInfo.hostInfo.hostId : "";
     const userRole = userInfo.role || "host";
 
+    setVendorId(vendorCode);
+    setHostId(hostIdValue);
+
+    // Lưu thông tin vào sessionStorage
+    sessionStorage.setItem("accessToken", token);
+    sessionStorage.setItem("vendorId", vendorCode);
+    sessionStorage.setItem("vendorName", vendorName);
+    sessionStorage.setItem("urlQr", urlQr);
+    sessionStorage.setItem("hostId", hostIdValue);
+
+    // Điều hướng dựa trên vai trò của người dùng
     if (userRole === "admin") {
-      navigate("/admin", { state: { accessToken: token, vendorId: hostCode } });
+      navigate("/admin", { state: { accessToken: token, vendorId: vendorCode } });
     } else if (userRole === "manager") {
       navigate("/DashboardVendor", {
-        state: { accessToken: token, vendorId: hostCode },
+        state: { accessToken: token, vendorId: vendorCode },
       });
     } else if (userRole === "host") {
-      const hostId = userInfo.hostInfo ? userInfo.hostInfo.hostId : "";
-      sessionStorage.setItem("hostId", hostId);
-
       navigate("/dashboard", {
-        state: { accessToken: token, vendorId: hostCode, hostId: hostId },
+        state: { accessToken: token, vendorId: vendorCode, hostId: hostIdValue },
       });
     } else {
       console.error("Unknown role:", userRole);
-      navigate("/", { state: { accessToken: token, vendorId: hostCode } });
+      navigate("/", { state: { accessToken: token, vendorId: vendorCode } });
     }
   };
 
