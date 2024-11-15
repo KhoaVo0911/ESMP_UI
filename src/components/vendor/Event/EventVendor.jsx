@@ -4,105 +4,87 @@ import "./Event.css";
 import { Tabs, Input, Button, Card, Row, Col, Modal } from "antd";
 import axios from "axios";
 import SearchIcon from "@mui/icons-material/Search";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { ref, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../shared/firebase/firebaseConfig";
 import { Divider } from "@mui/material";
-import { useLocation } from "react-router-dom";
 
-// Cập nhật API URL và có thể sử dụng accessToken từ props
-const URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
 
-const EventVendor = ({}) => {
+const EventVendor = () => {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("1");
   const navigate = useNavigate();
-  const location = useLocation();
   const accessToken = sessionStorage.getItem("accessToken") || ""; // Lấy accessToken từ sessionStorage
-  const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId từ sessionStorage
+  const hostId = sessionStorage.getItem("hostId") || ""; // Lấy hostId từ sessionStorage
 
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
-
-  // Fetch dữ liệu sự kiện từ API với accessToken
-  useEffect(() => {
-    axios
-      .get(URL, {
+  const fetchEvents = async () => {
+    try {
+      const response = await axios.get(URL, {
         headers: {
-          Authorization: `${accessToken}`, // Thêm accessToken vào headers
+          Authorization: `${accessToken}`,
           "Content-Type": "application/json",
         },
-      })
-      .then((response) => {
-        setEvents(response.data);
-        setFilteredEvents(
-          response.data.filter(
-            (event) => event.status?.toLowerCase() === "on-going"
-          )
-        );
-      })
-      .catch((error) => {
-        console.error("There was an error fetching the events!", error);
       });
+
+      const eventsWithImages = await Promise.all(
+        response.data.map(async (event) => {
+          const imageRef = ref(storage, `${hostId}/${event.eventId}/thumbnail`);
+          try {
+            event.logo = await getDownloadURL(imageRef);
+          } catch (error) {
+            console.error("Error fetching event image:", error);
+            event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu không có ảnh
+          }
+          return event;
+        })
+      );
+
+      setEvents(eventsWithImages);
+      setFilteredEvents(eventsWithImages.filter((event) => event.status?.toLowerCase() === "on-going"));
+    } catch (error) {
+      console.error("There was an error fetching the events!", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
   }, [accessToken]);
 
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
-    const filtered = events.filter((event) =>
-      event.name.toLowerCase().includes(term)
-    );
+    const filtered = events.filter((event) => event.name.toLowerCase().includes(term));
     setFilteredEvents(filtered);
   };
 
   const handleTabChange = (key) => {
     setActiveTab(key);
-
     let filtered;
-
     switch (key) {
       case "1":
-        filtered = events.filter(
-          (event) => event.status?.toLowerCase() === "on-going"
-        );
+        filtered = events.filter((event) => event.status?.toLowerCase() === "on-going");
         break;
       case "2":
-        filtered = events.filter(
-          (event) => event.status?.toLowerCase() === "running"
-        );
+        filtered = events.filter((event) => event.status?.toLowerCase() === "running");
         break;
       case "3":
-        filtered = events.filter(
-          (event) => event.status?.toLowerCase() === "cancelled"
-        );
+        filtered = events.filter((event) => event.status?.toLowerCase() === "cancelled");
         break;
       case "5":
-        filtered = events.filter(
-          (event) => event.status?.toLowerCase() === "trash"
-        );
+        filtered = events.filter((event) => event.status?.toLowerCase() === "trash");
         break;
       case "4":
       default:
         filtered = events;
         break;
     }
-
     setFilteredEvents(filtered);
   };
 
-  const handleBackClick = () => {
-    navigate("/eventpage");
-  };
-
   const handleCancel = () => {
-    setIsModalVisible(false);
-  };
-
-  const handleCreate = () => {
     setIsModalVisible(false);
   };
 
@@ -116,18 +98,14 @@ const EventVendor = ({}) => {
 
   return (
     <>
-      {!selectedEvent && (
-        <>
-          <Tabs defaultActiveKey="1" items={items} onChange={handleTabChange} />
-          <Input
-            placeholder="Search..."
-            className="inputsearch"
-            suffix={<SearchIcon />}
-            value={searchTerm}
-            onChange={handleSearch}
-          />
-        </>
-      )}
+      <Tabs defaultActiveKey="1" items={items} onChange={handleTabChange} />
+      <Input
+        placeholder="Search..."
+        className="inputsearch"
+        suffix={<SearchIcon />}
+        value={searchTerm}
+        onChange={handleSearch}
+      />
 
       <Row gutter={[40, 20]} style={{ marginTop: "20px" }}>
         {filteredEvents.map((event) => (
@@ -136,13 +114,9 @@ const EventVendor = ({}) => {
               className="event-card"
               hoverable
               onClick={() => {
-                // Lưu eventId vào sessionStorage khi nhấp vào sự kiện
                 sessionStorage.setItem("eventId", event.eventId);
                 navigate(`/events/${event.eventId}`, {
-                  state: {
-                    accessToken,
-                    vendorId,
-                  },
+                  state: { accessToken, hostId },
                 });
               }}
               cover={
@@ -154,13 +128,9 @@ const EventVendor = ({}) => {
               <div className="event-info-container">
                 <div className="event-date">
                   <div className="event-date-box">
-                    <span className="event-date-day">
-                      {new Date(event.startDate).getDate()}
-                    </span>
+                    <span className="event-date-day">{new Date(event.startDate).getDate()}</span>
                     <span className="event-date-month">
-                      {new Date(event.startDate).toLocaleString("en", {
-                        month: "short",
-                      })}
+                      {new Date(event.startDate).toLocaleString("en", { month: "short" })}
                     </span>
                   </div>
                 </div>
@@ -179,7 +149,7 @@ const EventVendor = ({}) => {
         visible={isModalVisible}
         onCancel={handleCancel}
         footer={[
-          <Button key="create" type="primary" onClick={handleCreate}>
+          <Button key="create" type="primary" onClick={() => setIsModalVisible(false)}>
             Create
           </Button>,
           <Button key="cancel" onClick={handleCancel}>
@@ -189,19 +159,10 @@ const EventVendor = ({}) => {
       >
         <Divider />
         <div>
-          <div>
-            <p>Event Name </p>
-            <Input required />
-          </div>
+          <p>Event Name </p>
+          <Input required />
 
-          <div
-            className="date"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
+          <div className="date" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <p>Start date</p>
               <Input type="date" required style={{ width: "150%" }} />
@@ -212,14 +173,7 @@ const EventVendor = ({}) => {
             </div>
           </div>
 
-          <div
-            className="time"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
+          <div className="time" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <p>Start time</p>
               <Input type="time" required style={{ width: "186%" }} />
