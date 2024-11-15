@@ -1,102 +1,124 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Event.css";
 import { Tabs, Input, Button, Card, Row, Col, Modal } from "antd";
 import axios from "axios";
 import SearchIcon from "@mui/icons-material/Search";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { ref, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../shared/firebase/firebaseConfig";
 import { Divider } from "@mui/material";
 
-const URL = "https://668e540abf9912d4c92dcd67.mockapi.io/events";
+const API_EVENTS = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const API_VENDOR_IN_EVENT = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent";
 
 const EventStaff = () => {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("1");
   const navigate = useNavigate();
+  const accessToken = sessionStorage.getItem("accessToken") || ""; // Lấy accessToken từ sessionStorage
+  const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId từ sessionStorage
+  const hostId = sessionStorage.getItem("hostId") || ""; // Lấy hostId từ sessionStorage
 
-  const showModal = () => {
-    setIsModalVisible(true);
+  // Hàm fetch dữ liệu sự kiện và lọc theo vendorId và eventId
+  const fetchEvents = async () => {
+    try {
+      console.log("Fetching all events from API...");
+      const response = await axios.get(API_EVENTS, {
+        headers: {
+          Authorization: `${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const allEvents = response.data;
+      console.log("All events fetched:", allEvents);
+
+      // Kiểm tra từng sự kiện qua API /api/vendorinevent/:vendorId/:eventId
+      const eventsWithVendor = await Promise.all(
+        allEvents.map(async (event) => {
+          const checkUrl = `${API_VENDOR_IN_EVENT}/${vendorId}/${event.eventId}`;
+          console.log("Calling API to check vendor in event:", checkUrl);
+
+          try {
+            const checkResponse = await axios.get(checkUrl, {
+              headers: { Authorization: `${accessToken}` },
+            });
+
+            // Kiểm tra phản hồi từ API
+            if (checkResponse.data.status === "accept") {
+              console.log(`Vendor ${vendorId} accepted in event:`, event.eventId);
+
+              // Tải hình ảnh từ Firebase cho sự kiện
+              const imageRef = ref(storage, `${hostId}/${event.eventId}/thumbnail`);
+              try {
+                event.logo = await getDownloadURL(imageRef);
+                console.log("Fetched image for event:", event.eventId, event.logo);
+              } catch (error) {
+                console.error("Error fetching image for event:", event.eventId, error);
+                event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu không có ảnh
+              }
+
+              return event; // Trả về sự kiện nếu vendor được chấp nhận
+            } else {
+              console.log(`Vendor ${vendorId} not accepted in event:`, event.eventId);
+              return null;
+            }
+          } catch (error) {
+            console.error(`Error checking vendor in event ${event.eventId}:`, error);
+            return null;
+          }
+        })
+      );
+
+      // Lọc ra các sự kiện hợp lệ
+      const validEvents = eventsWithVendor.filter((event) => event !== null);
+      console.log("Valid events after filtering by vendor:", validEvents);
+
+      setEvents(validEvents);
+      setFilteredEvents(validEvents.filter((event) => event.status?.toLowerCase() === "on-going"));
+      console.log("Filtered events (on-going):", filteredEvents);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    }
   };
 
   useEffect(() => {
-    axios
-      .get(URL)
-      .then((response) => {
-        setEvents(response.data);
-        setFilteredEvents(
-          response.data.filter(
-            (event) => event.details[0]?.status?.toLowerCase() === "on-going"
-          )
-        ); // Apply filter for 'On-going' when component loads
-      })
-      .catch((error) => {
-        console.error("There was an error fetching the events!", error);
-      });
-  }, []);
+    fetchEvents();
+  }, [accessToken]);
 
+  // Tìm kiếm sự kiện
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
-    const filtered = events.filter((event) =>
-      event.eventName.toLowerCase().includes(term)
-    );
+    const filtered = events.filter((event) => event.name.toLowerCase().includes(term));
     setFilteredEvents(filtered);
   };
 
+  // Lọc sự kiện theo trạng thái
   const handleTabChange = (key) => {
     setActiveTab(key);
-
     let filtered;
-
     switch (key) {
       case "1":
-        // Filter for 'On-going' events
-        filtered = events.filter(
-          (event) => event.details[0]?.status?.toLowerCase() === "on-going"
-        );
+        filtered = events.filter((event) => event.status?.toLowerCase() === "on-going");
         break;
       case "2":
-        // Filter for 'Running' events
-        filtered = events.filter(
-          (event) => event.details[0]?.status?.toLowerCase() === "running"
-        );
+        filtered = events.filter((event) => event.status?.toLowerCase() === "running");
         break;
       case "3":
-        // Filter for 'Cancelled' events
-        filtered = events.filter(
-          (event) => event.details[0]?.status?.toLowerCase() === "cancelled"
-        );
+        filtered = events.filter((event) => event.status?.toLowerCase() === "cancelled");
         break;
       case "5":
-        // Filter for 'Trash' events
-        filtered = events.filter(
-          (event) => event.details[0]?.status?.toLowerCase() === "trash"
-        );
+        filtered = events.filter((event) => event.status?.toLowerCase() === "trash");
         break;
       case "4":
       default:
-        // Show all events
         filtered = events;
         break;
     }
-
     setFilteredEvents(filtered);
-  };
-
-  const handleBackClick = () => {
-    navigate("/eventpage");
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
-
-  const handleCreate = () => {
-    setIsModalVisible(false);
   };
 
   const items = [
@@ -109,45 +131,44 @@ const EventStaff = () => {
 
   return (
     <>
-      {!selectedEvent && (
-        <>
-          <Tabs defaultActiveKey="1" items={items} onChange={handleTabChange} />
-          <Input
-            placeholder="Search..."
-            className="inputsearch"
-            suffix={<SearchIcon />}
-            value={searchTerm}
-            onChange={handleSearch}
-          />
-        </>
-      )}
+      <Tabs defaultActiveKey="1" items={items} onChange={handleTabChange} />
+      <Input
+        placeholder="Search..."
+        className="inputsearch"
+        suffix={<SearchIcon />}
+        value={searchTerm}
+        onChange={handleSearch}
+      />
 
       <Row gutter={[40, 20]} style={{ marginTop: "20px" }}>
         {filteredEvents.map((event) => (
-          <Col key={event.id} xs={24} sm={12} md={8} lg={8}>
+          <Col key={event.eventId} xs={24} sm={12} md={8} lg={8}>
             <Card
               className="event-card"
               hoverable
-              onClick={() => navigate(`/eventStaff/${event.id}`)} // Navigate to the specific event detail page
+              onClick={() => {
+                sessionStorage.setItem("eventId", event.eventId);
+                navigate(`/eventStaff/${event.eventId}`, {
+                  state: { accessToken, hostId },
+                });
+              }}
               cover={
                 <div className="event-card-cover">
-                  <img alt={event.eventName} src={event.image} />
+                  <img alt={event.name} src={event.logo} />
                 </div>
               }
             >
               <div className="event-info-container">
                 <div className="event-date">
                   <div className="event-date-box">
-                    <span className="event-date-day">
-                      {event.startDate.split(" ")[0]}
-                    </span>
+                    <span className="event-date-day">{new Date(event.startDate).getDate()}</span>
                     <span className="event-date-month">
-                      {event.startDate.split(" ")[1]}
+                      {new Date(event.startDate).toLocaleString("en", { month: "short" })}
                     </span>
                   </div>
                 </div>
                 <div className="event-details">
-                  <h3 className="event-title">{event.eventName}</h3>
+                  <h3 className="event-title">{event.name}</h3>
                   <p className="event-description">{event.description}</p>
                 </div>
               </div>
@@ -159,31 +180,22 @@ const EventStaff = () => {
       <Modal
         title="Create Event"
         visible={isModalVisible}
-        onCancel={handleCancel}
+        onCancel={() => setIsModalVisible(false)}
         footer={[
-          <Button key="create" type="primary" onClick={handleCreate}>
+          <Button key="create" type="primary" onClick={() => setIsModalVisible(false)}>
             Create
           </Button>,
-          <Button key="cancel" onClick={handleCancel}>
+          <Button key="cancel" onClick={() => setIsModalVisible(false)}>
             Cancel
           </Button>,
         ]}
       >
         <Divider />
         <div>
-          <div>
-            <p>Event Name </p>
-            <Input required />
-          </div>
+          <p>Event Name </p>
+          <Input required />
 
-          <div
-            className="date"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
+          <div className="date" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <p>Start date</p>
               <Input type="date" required style={{ width: "150%" }} />
@@ -194,14 +206,7 @@ const EventStaff = () => {
             </div>
           </div>
 
-          <div
-            className="time"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
+          <div className="time" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <p>Start time</p>
               <Input type="time" required style={{ width: "186%" }} />

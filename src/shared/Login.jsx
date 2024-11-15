@@ -12,7 +12,7 @@ import {
   useToast,
   Icon,
 } from "@chakra-ui/react";
-import { FaUserShield, FaStore, FaUserTie } from "react-icons/fa";
+import { FaUserShield, FaStore, FaUserTie, FaUser } from "react-icons/fa";
 import axios from "axios";
 
 const LoginComponent = ({ onLoginSuccess }) => {
@@ -40,7 +40,6 @@ const LoginComponent = ({ onLoginSuccess }) => {
       const response = await axios.post(apiUrl, {
         username,
         password,
-        hostCode, // Pass hostCode as part of the request body
       });
 
       const { accessToken, userInfo } = response.data;
@@ -114,7 +113,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
           boxShadow="lg"
           p={8}
           spacing={6}
-          w="sm"
+          w="lg"
         >
           <Text fontSize="2xl" fontWeight="bold" textAlign="center">
             Choose Account Type
@@ -129,7 +128,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
                 p={4}
                 cursor="pointer"
               >
-                <Icon as={FaUserShield} boxSize={10} />
+                <Icon as={FaUserShield} boxSize={12} />
                 <Text>Admin</Text>
                 <Radio value="admin" />
               </VStack>
@@ -141,7 +140,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
                 p={4}
                 cursor="pointer"
               >
-                <Icon as={FaStore} boxSize={10} />
+                <Icon as={FaStore} boxSize={12} />
                 <Text>Vendor</Text>
                 <Radio value="vendor" />
               </VStack>
@@ -153,9 +152,21 @@ const LoginComponent = ({ onLoginSuccess }) => {
                 p={4}
                 cursor="pointer"
               >
-                <Icon as={FaUserTie} boxSize={10} />
+                <Icon as={FaUserTie} boxSize={12} />
                 <Text>Host</Text>
                 <Radio value="host" />
+              </VStack>
+              <VStack
+                as="label"
+                border="2px"
+                borderColor={role === "staff" ? "blue.500" : "gray.300"}
+                borderRadius="md"
+                p={4}
+                cursor="pointer"
+              >
+                <Icon as={FaUser} boxSize={12} />
+                <Text>Staff</Text>
+                <Radio value="staff" />
               </VStack>
             </HStack>
           </RadioGroup>
@@ -169,17 +180,20 @@ const LoginComponent = ({ onLoginSuccess }) => {
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            size="lg"
           />
           <Input
             placeholder="Password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            size="lg"
           />
 
           <Button
             colorScheme="blue"
             w="full"
+            size="lg"
             isLoading={loading}
             onClick={handleLogin}
           >

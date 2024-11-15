@@ -1,88 +1,123 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
   Text,
   Image,
   VStack,
-  HStack,
-  Divider,
   Button,
+  Spinner,
+  Flex,
+  Divider,
 } from "@chakra-ui/react";
-import SelectBooth from "./SelectBooth"; // Assuming you already have this component
-import { useNavigate } from "react-router-dom"; // For navigation
+import SelectBooth from "./SelectBooth";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { ref, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../shared/firebase/firebaseConfig";
+
+const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
 
 const EventEnrolled = () => {
   const navigate = useNavigate();
-  const [boothData, setBoothData] = useState([
-    { id: 1, status: "available" },
-    { id: 2, status: "available" },
-    { id: 3, status: "unavailable" },
-    { id: 4, status: "available" },
-  ]); // Example booth data
+  const accessToken = sessionStorage.getItem("accessToken") || "";
+  const vendorId = sessionStorage.getItem("vendorId") || "";
+  const eventId = sessionStorage.getItem("eventId");
+  const hostId = sessionStorage.getItem("hostId") || ""; // Lấy hostId từ sessionStorage
+
+  const [eventDetail, setEventDetail] = useState(null);
+  const [boothData, setBoothData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchEventDetail = async () => {
+      try {
+        const response = await axios.get(`${URL}/${eventId}`, {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const event = response.data;
+
+        // Lấy URL ảnh từ Firebase
+        const imageRef = ref(storage, `${hostId}/${eventId}/thumbnail`);
+        try {
+          event.logo = await getDownloadURL(imageRef);
+        } catch (error) {
+          console.error("Error fetching event image:", error);
+          event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu không có ảnh
+        }
+
+        setEventDetail(event);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching event detail:", error);
+        setError("Failed to fetch event details");
+        setLoading(false);
+      }
+    };
+
+    fetchEventDetail();
+  }, [eventId, accessToken, hostId]);
 
   const handleShopClick = () => {
-    navigate("/shop");
+    navigate("/shop", {
+      state: {
+        accessToken,
+        vendorId,
+        eventId,
+      },
+    });
   };
 
-  const groups = [
-    {
-      id: 1,
-      name: "FPTU Event Club – The Way We Went",
-      floor: "2",
-      image:
-        "https://scontent.fsgn5-5.fna.fbcdn.net/v/t39.30808-6/457027829_1044539684338182_921737304847956243_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=sv_9k7XmVPwQ7kNvgG-ryEY&_nc_ht=scontent.fsgn5-5.fna&_nc_gid=AEsYgbQcq6e9704two0pWhy&oh=00_AYD5Lkef9YwUpybIjgf5Fmd8L3jfObqW2Xj6LFywdleQ7g&oe=66E87960",
-    },
-    {
-      id: 2,
-      name: "Câu Lạc Bộ Truyền Thống Cóc Sài Gòn",
-      floor: "2",
-      image:
-        "https://scontent.fsgn5-10.fna.fbcdn.net/v/t39.30808-6/432447864_743677024565608_7538420170834029906_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=NWKqqhr3J2AQ7kNvgGI-WRW&_nc_ht=scontent.fsgn5-10.fna&oh=00_AYBMJEex-S8qsZaF6bf8jU4Z3nIooVfj2k7mLzIGwYVGbQ&oe=66E84CFE",
-    },
-    {
-      id: 3,
-      name: "Cộng Đồng Sinh Viên Tỉnh Nguyễn SITIGROUP",
-      floor: "2",
-      image:
-        "https://scontent.fsgn5-14.fna.fbcdn.net/v/t39.30808-6/345904341_693634572567727_3208368438343116722_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=gEdBz4uMlj4Q7kNvgE6srcI&_nc_ht=scontent.fsgn5-14.fna&_nc_gid=AAeJWbkMECE93cxKsIe_ZoT&oh=00_AYAUMQLPh2XvNqnw8x5mLhlSW1Ymxmi21SijJ3hmEZ83aQ&oe=66E86AA5",
-    },
-  ];
+  if (loading) {
+    return (
+      <Flex justifyContent="center" alignItems="center" height="100vh">
+        <Spinner size="xl" color="teal.500" />
+      </Flex>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box p={10} textAlign="center">
+        <Text fontSize="xl" color="red.500">{error}</Text>
+      </Box>
+    );
+  }
+
+  if (!eventDetail) {
+    return (
+      <Box p={10} textAlign="center">
+        <Text fontSize="xl" color="gray.500">No event details available</Text>
+      </Box>
+    );
+  }
 
   return (
-    <Box
-      padding="20px"
-      bgGradient="linear(to-r, #d4f1f4, #f0e5d8)"
-      minH="100vh"
-    >
-      {/* Event Introduction */}
+    <Box padding="20px" bgGradient="linear(to-r, #d4f1f4, #f0e5d8)" minH="100vh">
       <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={10} mb={10}>
         <VStack align="flex-start" spacing={10}>
           <Text fontSize="4xl" fontWeight="bold" color="black">
-            Mid Autumn Event
+            {eventDetail.name}
           </Text>
-          <div
-            style={{
-              width: "45%",
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
+          <div style={{ width: "45%", display: "flex", justifyContent: "space-between" }}>
             <Text fontSize="lg" fontWeight="bold" color="gray.600">
-              Sep 20 - 24, 2024
+              {new Date(eventDetail.startDate).toLocaleDateString()} - {new Date(eventDetail.endDate).toLocaleDateString()}
             </Text>
             <Text fontSize="lg" fontWeight="bold" color="gray.600">
-              08:00 AM
+              {eventDetail.time}
             </Text>
           </div>
-
           <Button colorScheme="teal" size="lg" onClick={handleShopClick}>
             Shop
           </Button>
         </VStack>
         <Image
-          src="https://th.bing.com/th/id/OIP.r4JVdCs4t-lvJ5FQt53giAHaEu?rs=1&pid=ImgDetMain"
-          alt="Mid Autumn Event"
+          src={eventDetail.logo} // Sử dụng URL đã tải từ Firebase
+          alt={eventDetail.name}
           borderRadius="lg"
           boxShadow="lg"
         />
@@ -90,74 +125,24 @@ const EventEnrolled = () => {
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
-      {/* Introduction Text */}
       <Text fontSize="md" color="gray.600" mb={10}>
-        Welcome to the Mid-Autumn Festival 2024, where we come together to
-        celebrate the full moon and immerse ourselves in the warm, vibrant
-        atmosphere of autumn. With the theme "Harmony Under the Moonlight," this
-        year's event promises to bring you and your family a culturally rich and
-        meaningful experience.
+        Welcome to the <strong>{eventDetail.name}</strong>, where we come together to celebrate the full moon and immerse ourselves in the warm, vibrant atmosphere of autumn. This year's event promises to bring you and your family a culturally rich and meaningful experience.
       </Text>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
-      {/* Existing Shops */}
-      <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
-        Existing Shop
-      </Text>
-      <Grid
-        templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
-        gap={6}
-        mb={10}
-      >
-        {groups.map((group) => (
-          <Box
-            key={group.id}
-            bg="white"
-            borderRadius="lg"
-            boxShadow="md"
-            overflow="hidden"
-            _hover={{
-              boxShadow: "lg",
-              transform: "scale(1.02)",
-              transition: "all 0.2s ease-in-out",
-            }}
-          >
-            <Image
-              src={group.image}
-              alt={group.name}
-              height="200px"
-              width="100%"
-              objectFit="cover"
-            />
-            <Box p={4}>
-              <Text fontWeight="bold" mb={2} fontSize="xl">
-                {group.name}
-              </Text>
-              <HStack spacing={2}>
-                <Text color="gray.500" fontSize="sm" fontWeight="bold">
-                  FLOOR {group.floor}
-                </Text>
-              </HStack>
-            </Box>
-          </Box>
-        ))}
-      </Grid>
-
-      <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
-
-      {/* Select Booth Section */}
       <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
         Select Booth
       </Text>
-      {/* Render the SelectBooth component directly in the page */}
       <Box>
-        <SelectBooth boothData={boothData} setBoothData={setBoothData} />
+        <SelectBooth
+          boothData={boothData}
+          setBoothData={setBoothData}
+        />
       </Box>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
-      {/* Location Section */}
       <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
         Location
       </Text>

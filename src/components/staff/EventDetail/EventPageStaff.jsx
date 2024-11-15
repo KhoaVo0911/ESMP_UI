@@ -3,179 +3,178 @@ import {
   Box,
   Grid,
   Text,
-  Button,
   Image,
   VStack,
-  HStack,
-  useDisclosure,
+  Button,
+  Spinner,
+  Flex,
   Divider,
 } from "@chakra-ui/react";
 import { ArrowBack } from "@mui/icons-material";
-import { useParams, useNavigate } from "react-router-dom"; // Use useParams for route params
-import axios from "axios"; // Import axios for API calls
-import SelectBooth from "./SelectBooth"; // Import component SelectBooth
+import SelectBooth from "./SelectBooth";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { ref, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../shared/firebase/firebaseConfig";
+
+const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
 
 const EventPageStaff = () => {
-  const { eventId } = useParams(); // Get eventId from route parameters
+  const { eventId } = useParams();
   const navigate = useNavigate();
-  const [event, setEvent] = useState(null); // State to store event data
-  const [shops, setShops] = useState([]); // State to store shops data
-  const [loading, setLoading] = useState(true); // State for loading
-  const { isOpen, onOpen, onClose } = useDisclosure(); // Modal control
+  const accessToken = sessionStorage.getItem("accessToken") || "";
+  const vendorId = sessionStorage.getItem("vendorId") || "";
+  const hostId = sessionStorage.getItem("hostId") || ""; 
+
+  const [eventDetail, setEventDetail] = useState(null);
+  const [boothData, setBoothData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch event details and shops from the correct mock API endpoint
-    const fetchEventDetails = async () => {
+    const fetchEventDetail = async () => {
       try {
-        const eventResponse = await axios.get(
-          `https://668e540abf9912d4c92dcd67.mockapi.io/events/${eventId}/eventDetails`
-        );
-        const eventData = eventResponse.data;
+        const response = await axios.get(`${URL}/${eventId}`, {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const event = response.data;
 
-        if (Array.isArray(eventData) && eventData.length > 0) {
-          setEvent(eventData[0]);
-        } else {
-          setEvent(eventData);
+        const imageRef = ref(storage, `${hostId}/${eventId}/thumbnail`);
+        try {
+          event.logo = await getDownloadURL(imageRef);
+        } catch (error) {
+          console.error("Error fetching event image:", error);
+          event.logo = "https://via.placeholder.com/150";
         }
 
-        const shopResponse = await axios.get(
-          `https://668e540abf9912d4c92dcd67.mockapi.io/events/${eventId}/shops`
-        );
-        setShops(shopResponse.data);
+        setEventDetail(event);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching event or shop details:", error);
-        setLoading(false); // Handle error and stop loading
+        console.error("Error fetching event detail:", error);
+        setError("Failed to fetch event details");
+        setLoading(false);
       }
     };
 
-    fetchEventDetails();
-  }, [eventId]);
+    fetchEventDetail();
+  }, [eventId, accessToken, hostId]);
 
   const handleBackClick = () => {
     navigate("/eventStaff");
   };
 
-  const handleConfirmBoothSelection = () => {
-    onClose(); // Close the modal after confirming booth selection
-    navigate("/eventenrolled"); // Navigate to the event enrolled page
-  };
-
   const handleShopClick = () => {
-    navigate("/StaffShop"); // Open the modal when the shop button is clicked
+    navigate("/StaffShop", {
+      state: {
+        accessToken,
+        vendorId,
+        eventId,
+      },
+    });
   };
 
   if (loading) {
-    return <Text>Loading event details...</Text>;
+    return (
+      <Flex justifyContent="center" alignItems="center" height="100vh">
+        <Spinner size="xl" color="teal.500" />
+      </Flex>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box p={10} textAlign="center">
+        <Text fontSize="xl" color="red.500">{error}</Text>
+      </Box>
+    );
+  }
+
+  if (!eventDetail) {
+    return (
+      <Box p={10} textAlign="center">
+        <Text fontSize="xl" color="gray.500">No event details available</Text>
+      </Box>
+    );
   }
 
   return (
-    <Box
-      padding="20px"
-      bgGradient="linear(to-r, #d4f1f4, #d4f1f4, #f0e5d8)"
-      minH="100vh"
-    >
+    <Box padding="20px" bgGradient="linear(to-r, #d4f1f4, #f0e5d8)" minH="100vh">
       {/* Back Button */}
-      <ArrowBack
-        onClick={handleBackClick}
-        style={{
-          cursor: "pointer",
-          fontSize: "24px",
-          marginRight: "10px",
-          marginBottom: "20px",
-        }}
-      />
+      <Flex mb={5} alignItems="center">
+        <ArrowBack
+          onClick={handleBackClick}
+          style={{
+            cursor: "pointer",
+            fontSize: "24px",
+            marginRight: "10px",
+          }}
+        />
+        <Text fontSize="2xl" fontWeight="bold" color="black">Event Details</Text>
+      </Flex>
 
-      {/* Event Title Section */}
       <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={10} mb={10}>
-        <VStack align="flex-start" spacing={10}>
+        <VStack align="flex-start" spacing={5}>
           <Text fontSize="4xl" fontWeight="bold" color="black">
-            {event?.title}
+            {eventDetail.name}
           </Text>
-          <div
-            style={{
-              width: "45%",
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
+          <div style={{ width: "45%", display: "flex", justifyContent: "space-between" }}>
             <Text fontSize="lg" fontWeight="bold" color="gray.600">
-              {event?.startDate}
+              {new Date(eventDetail.startDate).toLocaleDateString()} - {new Date(eventDetail.endDate).toLocaleDateString()}
             </Text>
             <Text fontSize="lg" fontWeight="bold" color="gray.600">
-              {event?.endDate}
-            </Text>
-            <Text fontSize="lg" fontWeight="bold" color="gray.600">
-              {event?.time}
+              {eventDetail.time}
             </Text>
           </div>
-
           <Button colorScheme="teal" size="lg" onClick={handleShopClick}>
-            SHOP
+            Shop
           </Button>
         </VStack>
         <Image
-          src={event?.imageURL}
-          alt={event?.title}
+          src={eventDetail.logo}
+          alt={eventDetail.name}
           borderRadius="lg"
           boxShadow="lg"
         />
       </Grid>
 
-      {/* Divider between Event Title and Shops */}
-      <Divider mb={10} />
+      <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
-      {/* Existing Shops Section */}
-      <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
-        Existing Shops
+      <Text fontSize="md" color="gray.600" mb={10}>
+        Welcome to the <strong>{eventDetail.name}</strong>, where we come together to celebrate the full moon and immerse ourselves in the warm, vibrant atmosphere of autumn. This year's event promises to bring you and your family a culturally rich and meaningful experience.
       </Text>
-      <Grid
-        templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
-        gap={6}
-        mb={10}
-      >
-        {shops.map((shop) => (
-          <Box
-            key={shop.id}
-            bg="white"
-            borderRadius="lg"
-            boxShadow="md"
-            overflow="hidden"
-            _hover={{
-              boxShadow: "lg",
-              transform: "scale(1.02)",
-              transition: "all 0.2s ease-in-out",
-            }}
-          >
-            <Image
-              src={shop.imageURL}
-              alt={shop.name}
-              height="200px"
-              width={"100%"}
-              objectFit="cover"
-            />
-            <Box p={4}>
-              <Text fontWeight="bold" mb={2} fontSize="xl">
-                {shop.name}
-              </Text>
-              <HStack spacing={2}>
-                <Text color="gray.500" fontSize="sm" fontWeight="bold">
-                  FLOOR {shop.floor}
-                </Text>
-              </HStack>
-            </Box>
-          </Box>
-        ))}
-      </Grid>
 
-      {/* Divider between Shops and Select Booth */}
-      <Divider mb={10} />
+      <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
-      {/* Popup Select Booth */}
-      <SelectBooth isPopup={true} isOpen={isOpen} onClose={onClose} />
+      <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
+        Select Booth
+      </Text>
+      <Box>
+        <SelectBooth
+          boothData={boothData}
+          setBoothData={setBoothData}
+        />
+      </Box>
 
-      {/* Divider between Select Booth and any other future content */}
-      <Divider mb={10} />
+      <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
+
+      <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
+        Location
+      </Text>
+      <div style={{ width: "100%", height: "300px", marginBottom: "20px" }}>
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.6100105370224!2d106.8073080746704!3d10.84112758931162!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752731176b07b1%3A0xb752b24b379bae5e!2sFPT%20University%20HCMC!5e0!3m2!1sen!2s!4v1726308048313!5m2!1sen!2s"
+          width="100%"
+          height="100%"
+          style={{ border: 0 }}
+          allowFullScreen=""
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          title="Event Location Map"
+        ></iframe>
+      </div>
     </Box>
   );
 };

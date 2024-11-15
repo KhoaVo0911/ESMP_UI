@@ -26,7 +26,7 @@ import BoothPlan from "./pages/host/BoothPlan";
 import EventStaff from "./components/staff/Event/StaffEvent";
 import StaffLayout from "./components/staff/Layout/StaffLayout";
 import EventPageStaff from "./components/staff/EventDetail/EventPageStaff";
-import StaffShop from "./components/staff/Shop/Shop";
+
 import LandingPage from "./pages/host/LandingPage/LandingPage";
 import CourseList from "./pages/host/QR/QRCode.jsx";
 import TransactionHistory from "./pages/host/QR/TransHistory";
@@ -39,6 +39,7 @@ import LocationMap from "./pages/host/LocationMap.jsx";
 import LocationTypePage from "./pages/host/LocationTypePage.jsx";
 import TestQRCODE from "./components/vendor/Shop/textInputQRcode.jsx";
 import EventConfigPage from "./pages/host/EventConfigPage.jsx";
+import StaffShop from "./components/staff/Event/Shop/Shop.jsx";
 
 const AppRoutes = () => {
   return (
@@ -180,7 +181,7 @@ const AppRoutes = () => {
         path="/StaffShop"
         element={
           <StaffLayout>
-            <StaffShop />
+            <StaffShop/>
           </StaffLayout>
         }
       />
