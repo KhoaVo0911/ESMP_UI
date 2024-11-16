@@ -25,28 +25,36 @@ const BoothDetails = ({
   const [boothDetails, setBoothDetails] = useState({
     name: booth?.name || "",
     type:
-      booth?.type || (locationTypes.length > 0 ? locationTypes[0].name : ""),
+      booth?.type ||
+      (locationTypes.length > 0 ? locationTypes[0].typeName : ""),
     width: booth?.width || 100,
     height: booth?.height || 100,
-    x: booth?.x || 0,
-    y: booth?.y || 0,
+    x: booth?.x || 100,
+    y: booth?.y || 100,
   });
 
   useEffect(() => {
     setBoothDetails({
       name: booth?.name || "",
       type:
-        booth?.type || (locationTypes.length > 0 ? locationTypes[0].name : ""),
+        booth?.type ||
+        (locationTypes.length > 0 ? locationTypes[0].typeName : ""),
       width: booth?.width || 100,
       height: booth?.height || 100,
-      x: booth?.x || 0,
-      y: booth?.y || 0,
+      x: booth?.x || 100,
+      y: booth?.y || 100,
     });
-    console.log("Trạng thái isOpen trong BoothDetails:", isOpen);
   }, [booth, locationTypes, isOpen]);
 
+  const handleTypeChange = (e) => {
+    const selectedType = e.target.value;
+    setBoothDetails({
+      ...boothDetails,
+      type: selectedType,
+    });
+  };
+
   const handleSave = () => {
-    console.log("Dữ liệu booth trước khi lưu:", boothDetails);
     onSave(boothDetails);
     onClose();
   };
@@ -69,15 +77,10 @@ const BoothDetails = ({
           </FormControl>
           <FormControl mb={4}>
             <FormLabel>Booth Type</FormLabel>
-            <Select
-              value={boothDetails.type}
-              onChange={(e) =>
-                setBoothDetails({ ...boothDetails, type: e.target.value })
-              }
-            >
+            <Select value={boothDetails.type} onChange={handleTypeChange}>
               {locationTypes?.map((type) => (
-                <option key={type.id} value={type.name}>
-                  {type.name} (
+                <option key={type.id} value={type.typeName}>
+                  {type.typeName} (
                   {type.price?.toLocaleString("vi-VN", {
                     style: "currency",
                     currency: "VND",

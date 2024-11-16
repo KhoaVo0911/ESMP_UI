@@ -1,5 +1,4 @@
-// Sidebar.js
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   VStack,
@@ -12,7 +11,6 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Image,
   Center,
   Input,
   Menu,
@@ -43,52 +41,8 @@ const Sidebar = ({
   addElement,
   addText,
   selectedMode,
-  addImage,
+  openImageModal,
 }) => {
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null);
-  const imageInputRef = useRef(null);
-
-  const handleImageButtonClick = () => {
-    setIsImageModalOpen(true);
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImagePreview(event.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleUploadImage = () => {
-    if (imagePreview) {
-      const img = new window.Image();
-      img.src = imagePreview;
-      img.onload = () => {
-        const newImage = {
-          type: "image",
-          src: img.src,
-          x: 100,
-          y: 100,
-          width: img.width,
-          height: img.height,
-        };
-        addImage(newImage);
-        setIsImageModalOpen(false);
-        setImagePreview(null);
-      };
-    }
-  };
-
-  const closeModal = () => {
-    setIsImageModalOpen(false);
-    setImagePreview(null);
-  };
-
   return (
     <Box
       p={2}
@@ -106,7 +60,6 @@ const Sidebar = ({
           display="flex"
           flexDirection="column"
           alignItems="center"
-          className={selectedMode === "select" ? "selected-tool" : ""}
         >
           <Icon as={FaMousePointer} boxSize={6} />
           <Text>Select</Text>
@@ -118,7 +71,6 @@ const Sidebar = ({
           display="flex"
           flexDirection="column"
           alignItems="center"
-          className={selectedMode === "hand" ? "selected-tool" : ""}
         >
           <Icon as={MdPanTool} boxSize={6} />
           <Text>Hand</Text>
@@ -126,7 +78,7 @@ const Sidebar = ({
 
         <Box
           as="button"
-          onClick={() => openBoothModal()}
+          onClick={openBoothModal}
           display="flex"
           flexDirection="column"
           alignItems="center"
@@ -137,7 +89,7 @@ const Sidebar = ({
 
         <Box
           as="button"
-          onClick={() => addText()}
+          onClick={addText}
           display="flex"
           flexDirection="column"
           alignItems="center"
@@ -148,7 +100,7 @@ const Sidebar = ({
 
         <Box
           as="button"
-          onClick={handleImageButtonClick}
+          onClick={openImageModal}
           display="flex"
           flexDirection="column"
           alignItems="center"
@@ -221,43 +173,6 @@ const Sidebar = ({
           </MenuList>
         </Menu>
       </VStack>
-
-      <Modal isOpen={isImageModalOpen} onClose={closeModal} size="lg">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Choose Image</ModalHeader>
-          <ModalBody>
-            <Center>
-              <Input
-                type="file"
-                accept="image/*"
-                ref={imageInputRef}
-                onChange={handleImageChange}
-                border="none"
-                p={2}
-                cursor="pointer"
-              />
-            </Center>
-            {imagePreview && (
-              <Box mt={4} textAlign="center">
-                <Image src={imagePreview} alt="Preview" maxWidth="100%" />
-              </Box>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <Button onClick={closeModal} variant="outline" mr={3}>
-              Cancel
-            </Button>
-            <Button
-              colorScheme="blue"
-              onClick={handleUploadImage}
-              isDisabled={!imagePreview}
-            >
-              Upload
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </Box>
   );
 };

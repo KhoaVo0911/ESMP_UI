@@ -39,6 +39,8 @@ const HostHeader = ({ collapsed }) => {
       return "Settings";
     } else if (location.pathname.startsWith("/packages")) {
       return "Packages";
+    } else if (location.pathname.includes("/extensionEvent")) {
+      return "Extension Event";
     }
     return "Event Information";
   };

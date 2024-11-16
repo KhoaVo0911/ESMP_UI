@@ -8,8 +8,9 @@ import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import CategoryIcon from "@mui/icons-material/Category";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import InfoIcon from "@mui/icons-material/Info";
-import LocalGroceryStoreIcon from "@mui/icons-material/LocalGroceryStore";
 import StorefrontIcon from "@mui/icons-material/Storefront";
+import ExtensionIcon from "@mui/icons-material/Extension";
+import LocalGroceryStoreIcon from "@mui/icons-material/LocalGroceryStore";
 import logo from "../../assets/images/logo_EIPS.png";
 
 const { Sider } = Layout;
@@ -26,8 +27,6 @@ const HostSideBar = ({ collapsed }) => {
       setSelectedMenuItem("1");
     } else if (location.pathname.startsWith("/events")) {
       setSelectedMenuItem("2");
-    } else if (location.pathname.startsWith("/manage-product")) {
-      setSelectedMenuItem("3");
     } else if (location.pathname.startsWith("/accounts")) {
       setSelectedMenuItem("4");
     } else if (location.pathname.startsWith("/settings")) {
@@ -38,6 +37,10 @@ const HostSideBar = ({ collapsed }) => {
       setSelectedMenuItem("10");
     } else if (location.pathname.startsWith("/eventconfig")) {
       setSelectedMenuItem("eventconfig");
+    } else if (
+      location.pathname.startsWith(`/event/${eventId}/extensionEvent`)
+    ) {
+      setSelectedMenuItem("9");
     } else if (
       location.pathname.startsWith(`/event/${eventId}/location-type`)
     ) {
@@ -85,29 +88,29 @@ const HostSideBar = ({ collapsed }) => {
           ),
           onClick: () => navigate(`/event/${eventId}/booth-plan`),
         },
-        {
-          key: "11",
-          icon: <StorefrontIcon />,
-          label: (
-            <span
-              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
-            >
-              Location Type
-            </span>
-          ),
-          onClick: () => navigate(`/event/${eventId}/location-type`),
-        },
+        // {
+        //   key: "11",
+        //   icon: <StorefrontIcon />,
+        //   label: (
+        //     <span
+        //       style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
+        //     >
+        //       Location Type
+        //     </span>
+        //   ),
+        //   onClick: () => navigate(`/event/${eventId}/location-type`),
+        // },
         {
           key: "9",
-          icon: <LocalGroceryStoreIcon />,
+          icon: <ExtensionIcon />,
           label: (
             <span
               style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
             >
-              Manage Product
+              Extension Event
             </span>
           ),
-          onClick: () => navigate(`/manage-product`),
+          onClick: () => navigate(`/event/${eventId}/extensionEvent`),
         },
       ],
     },
@@ -246,9 +249,6 @@ const HostSideBar = ({ collapsed }) => {
               case "2":
                 navigate("/events");
                 break;
-              case "3":
-                navigate("/manage-product");
-                break;
               case "4":
                 navigate("/accounts");
                 break;
@@ -265,7 +265,7 @@ const HostSideBar = ({ collapsed }) => {
                 navigate(`/event/${eventId}/booth-plan`);
                 break;
               case "9":
-                navigate(`/manage-product`);
+                navigate(`/event/${eventId}/extensionEvent`);
                 break;
               case "10":
                 navigate(`/event-detail/${eventId}`);
@@ -285,7 +285,7 @@ const HostSideBar = ({ collapsed }) => {
             location.pathname.startsWith("/event/transactions") ||
             location.pathname.startsWith(`/event/${eventId}/booth-plan`) ||
             location.pathname.startsWith(`/event/${eventId}/location-type`) ||
-            location.pathname.startsWith("/manage-product")
+            location.pathname.startsWith(`/event/${eventId}/extensionEvent`)
               ? eventDetailItems
               : defaultItems
           }

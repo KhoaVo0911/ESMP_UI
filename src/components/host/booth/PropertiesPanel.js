@@ -25,6 +25,91 @@ const PropertiesPanel = ({
     updateFn(updatedElement);
   };
 
+  const renderMainTemplateProperties = () => (
+    <>
+      <Text fontWeight="bold">Main Template Properties</Text>
+      <Grid templateColumns="repeat(2, 1fr)" gap={2} mb={4}>
+        <FormControl>
+          <FormLabel>Width (px)</FormLabel>
+          <Input
+            type="number"
+            value={mainTemplate.width}
+            onChange={(e) =>
+              handleChange(
+                "width",
+                parseFloat(e.target.value),
+                onMainTemplateUpdate,
+                mainTemplate
+              )
+            }
+          />
+        </FormControl>
+        <FormControl>
+          <FormLabel>Height (px)</FormLabel>
+          <Input
+            type="number"
+            value={mainTemplate.height}
+            onChange={(e) =>
+              handleChange(
+                "height",
+                parseFloat(e.target.value),
+                onMainTemplateUpdate,
+                mainTemplate
+              )
+            }
+          />
+        </FormControl>
+      </Grid>
+      <Grid templateColumns="repeat(2, 1fr)" gap={2} mb={4}>
+        <FormControl>
+          <FormLabel>X-Axis</FormLabel>
+          <Input
+            type="number"
+            value={mainTemplate.x}
+            onChange={(e) =>
+              handleChange(
+                "x",
+                parseFloat(e.target.value),
+                onMainTemplateUpdate,
+                mainTemplate
+              )
+            }
+          />
+        </FormControl>
+        <FormControl>
+          <FormLabel>Y-Axis</FormLabel>
+          <Input
+            type="number"
+            value={mainTemplate.y}
+            onChange={(e) =>
+              handleChange(
+                "y",
+                parseFloat(e.target.value),
+                onMainTemplateUpdate,
+                mainTemplate
+              )
+            }
+          />
+        </FormControl>
+      </Grid>
+      <FormControl mb={2}>
+        <FormLabel>Rotation (°)</FormLabel>
+        <Input
+          type="number"
+          value={mainTemplate.rotation || 0}
+          onChange={(e) =>
+            handleChange(
+              "rotation",
+              parseFloat(e.target.value),
+              onMainTemplateUpdate,
+              mainTemplate
+            )
+          }
+        />
+      </FormControl>
+    </>
+  );
+
   const renderImageProperties = () => (
     <>
       <Text fontWeight="bold">Image Properties</Text>
@@ -105,13 +190,13 @@ const PropertiesPanel = ({
         <FormLabel>Rotation (°)</FormLabel>
         <Input
           type="number"
-          value={selectedBooth?.rotation || 0}
+          value={selectedImage.rotation || 0}
           onChange={(e) =>
             handleChange(
               "rotation",
               parseFloat(e.target.value),
-              onBoothUpdate,
-              selectedBooth
+              onImageUpdate,
+              selectedImage
             )
           }
         />
@@ -125,7 +210,7 @@ const PropertiesPanel = ({
       <FormControl mb={2}>
         <FormLabel>Shape Name</FormLabel>
         <Input
-          value={selectedShape.name || `Shape ${selectedShape.id}`}
+          value={selectedShape.name || `Shape ${selectedShape.locationId}`}
           onChange={(e) =>
             handleChange("name", e.target.value, onShapeUpdate, selectedShape)
           }
@@ -199,13 +284,13 @@ const PropertiesPanel = ({
         <FormLabel>Rotation (°)</FormLabel>
         <Input
           type="number"
-          value={selectedBooth?.rotation ?? 0} // Nếu rotation chưa có giá trị, đặt mặc định là 0
+          value={selectedShape.rotation || 0}
           onChange={(e) =>
             handleChange(
               "rotation",
               parseFloat(e.target.value),
-              onBoothUpdate,
-              selectedBooth
+              onShapeUpdate,
+              selectedShape
             )
           }
         />
@@ -219,7 +304,7 @@ const PropertiesPanel = ({
       <FormControl mb={2}>
         <FormLabel>Booth Name</FormLabel>
         <Input
-          value={selectedBooth.name}
+          value={selectedBooth.name || `Booth ${selectedBooth.locationId}`}
           onChange={(e) =>
             handleChange("name", e.target.value, onBoothUpdate, selectedBooth)
           }
@@ -307,6 +392,85 @@ const PropertiesPanel = ({
     </>
   );
 
+  const renderTextProperties = () => (
+    <>
+      <Text fontWeight="bold">Text Properties</Text>
+      <FormControl mb={2}>
+        <FormLabel>Text Content</FormLabel>
+        <Input
+          value={selectedText.name || ""}
+          onChange={(e) =>
+            handleChange("content", e.target.value, onTextUpdate, selectedText)
+          }
+        />
+      </FormControl>
+      <Grid templateColumns="repeat(2, 1fr)" gap={2} mb={4}>
+        <FormControl>
+          <FormLabel>Font Size</FormLabel>
+          <Input
+            type="number"
+            value={selectedText.fontSize || 16}
+            onChange={(e) =>
+              handleChange(
+                "fontSize",
+                parseFloat(e.target.value),
+                onTextUpdate,
+                selectedText
+              )
+            }
+          />
+        </FormControl>
+        <FormControl>
+          <FormLabel>Rotation (°)</FormLabel>
+          <Input
+            type="number"
+            value={selectedText.rotation || 0}
+            onChange={(e) =>
+              handleChange(
+                "rotation",
+                parseFloat(e.target.value),
+                onTextUpdate,
+                selectedText
+              )
+            }
+          />
+        </FormControl>
+      </Grid>
+      <Grid templateColumns="repeat(2, 1fr)" gap={2} mb={4}>
+        <FormControl>
+          <FormLabel>X-Axis</FormLabel>
+          <Input
+            type="number"
+            value={selectedText.x || 0}
+            onChange={(e) =>
+              handleChange(
+                "x",
+                parseFloat(e.target.value),
+                onTextUpdate,
+                selectedText
+              )
+            }
+          />
+        </FormControl>
+        <FormControl>
+          <FormLabel>Y-Axis</FormLabel>
+          <Input
+            type="number"
+            value={selectedText.y || 0}
+            onChange={(e) =>
+              handleChange(
+                "y",
+                parseFloat(e.target.value),
+                onTextUpdate,
+                selectedText
+              )
+            }
+          />
+        </FormControl>
+      </Grid>
+    </>
+  );
+
   return (
     <Box
       p={4}
@@ -317,92 +481,11 @@ const PropertiesPanel = ({
       height="100vh"
       overflowY="auto"
     >
+      {mainTemplate && renderMainTemplateProperties()}
       {selectedImage && renderImageProperties()}
       {selectedShape && renderShapeProperties()}
       {selectedBooth && renderBoothProperties()}
-      {selectedText && (
-        <>
-          <Text fontWeight="bold">Text Properties</Text>
-          <FormControl mb={2}>
-            <FormLabel>Text Content</FormLabel>
-            <Input
-              value={selectedText.content}
-              onChange={(e) =>
-                handleChange(
-                  "content",
-                  e.target.value,
-                  onTextUpdate,
-                  selectedText
-                )
-              }
-            />
-          </FormControl>
-          <Grid templateColumns="repeat(2, 1fr)" gap={2} mb={4}>
-            <FormControl>
-              <FormLabel>Font Size</FormLabel>
-              <Input
-                type="number"
-                value={selectedText.fontSize}
-                onChange={(e) =>
-                  handleChange(
-                    "fontSize",
-                    parseFloat(e.target.value),
-                    onTextUpdate,
-                    selectedText
-                  )
-                }
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Rotation (°)</FormLabel>
-              <Input
-                type="number"
-                value={selectedText.rotation || 0}
-                onChange={(e) =>
-                  handleChange(
-                    "rotation",
-                    parseFloat(e.target.value),
-                    onTextUpdate,
-                    selectedText
-                  )
-                }
-              />
-            </FormControl>
-          </Grid>
-          <Grid templateColumns="repeat(2, 1fr)" gap={2} mb={4}>
-            <FormControl>
-              <FormLabel>X-Axis</FormLabel>
-              <Input
-                type="number"
-                value={selectedText.x}
-                onChange={(e) =>
-                  handleChange(
-                    "x",
-                    parseFloat(e.target.value),
-                    onTextUpdate,
-                    selectedText
-                  )
-                }
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Y-Axis</FormLabel>
-              <Input
-                type="number"
-                value={selectedText.y}
-                onChange={(e) =>
-                  handleChange(
-                    "y",
-                    parseFloat(e.target.value),
-                    onTextUpdate,
-                    selectedText
-                  )
-                }
-              />
-            </FormControl>
-          </Grid>
-        </>
-      )}
+      {selectedText && renderTextProperties()}
     </Box>
   );
 };

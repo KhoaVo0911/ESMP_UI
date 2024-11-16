@@ -40,7 +40,6 @@ const LoginComponent = ({ onLoginSuccess }) => {
       const response = await axios.post(apiUrl, {
         username,
         password,
-        hostCode, // Pass hostCode as part of the request body
       });
 
       const { accessToken, userInfo } = response.data;

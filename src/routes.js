@@ -36,9 +36,10 @@ import AdminTransactionHistory from "./components/admin/TransHistory.jsx";
 import ManageProducts from "./components/vendor/MostOderProduct/ManageProductItems.jsx";
 import ImageUpload from "./shared/firebase/imageUpload.jsx";
 import LocationMap from "./pages/host/LocationMap.jsx";
-import LocationTypePage from "./pages/host/LocationTypePage.jsx";
+import LocationTypePage from "./components/extensionEvent/LocationTypePage.jsx";
 import TestQRCODE from "./components/vendor/Shop/textInputQRcode.jsx";
 import EventConfigPage from "./pages/host/EventConfigPage.jsx";
+import ExtensionEvent from "./pages/host/ExtensionEvent.jsx";
 
 const AppRoutes = () => {
   return (
@@ -245,6 +246,14 @@ const AppRoutes = () => {
         element={
           <HostLayout>
             <EventConfigPage />
+          </HostLayout>
+        }
+      />
+      <Route
+        path="/event/:eventId/extensionEvent"
+        element={
+          <HostLayout>
+            <ExtensionEvent />
           </HostLayout>
         }
       />
