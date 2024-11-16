@@ -115,7 +115,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/events"
+        path="/events/host/:hostId"
         element={
           <HostLayout>
             <Event />

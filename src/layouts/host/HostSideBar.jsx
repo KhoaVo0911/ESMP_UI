@@ -20,6 +20,8 @@ const HostSideBar = ({ collapsed }) => {
   const location = useLocation();
   const eventId = useParams().eventId || sessionStorage.getItem("eventId");
   const [selectedMenuItem, setSelectedMenuItem] = useState("1");
+  const hostId =
+    location.state?.hostId || sessionStorage.getItem("hostId") || "";
 
   useEffect(() => {
     console.log("Current eventId:", eventId);
@@ -247,7 +249,7 @@ const HostSideBar = ({ collapsed }) => {
                 navigate("/dashboard");
                 break;
               case "2":
-                navigate("/events");
+                navigate(`/events/host/${hostId}`);
                 break;
               case "4":
                 navigate("/accounts");

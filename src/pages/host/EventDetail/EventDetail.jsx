@@ -38,7 +38,11 @@ const EventDetails = () => {
   }, [event]);
 
   const handleBackClick = () => {
-    navigate("/events");
+    const hostId =
+      location.state?.hostId ||
+      sessionStorage.getItem("hostId") ||
+      "defaultHostId";
+    navigate(`/events/host/${hostId}`);
   };
 
   return (

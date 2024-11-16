@@ -161,7 +161,7 @@ const ImageEventManagement = ({ eventId, hostId }) => {
 
       {/* Danh sách ảnh */}
       <HStack wrap="wrap" spacing={4} align="start">
-        {uploadedImages.map(({ url, ref }, index) => (
+        {uploadedImages.slice(1).map(({ url, ref }, index) => (
           <Box
             key={index}
             borderWidth="1px"
@@ -175,7 +175,7 @@ const ImageEventManagement = ({ eventId, hostId }) => {
           >
             <Image
               src={url}
-              alt={`Uploaded ${index}`}
+              alt={`Uploaded ${index + 1}`}
               objectFit="cover"
               width="100%"
               height="100%"
