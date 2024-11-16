@@ -93,7 +93,7 @@ const Event = () => {
       switch (activeTab) {
         case 0:
           filtered = events.filter(
-            (event) => event.status?.toLowerCase() === "on-going"
+            (event) => event.status?.toLowerCase() === "upcoming"
           );
           break;
         case 1:
@@ -185,7 +185,7 @@ const Event = () => {
       startDate: new Date(startDate).toISOString(),
       endDate: new Date(endDate).toISOString(),
       profit: 10.0,
-      status: "on-going", // Giả định mặc định là "on-going"
+      status: "upcoming",
     };
 
     try {
@@ -269,7 +269,7 @@ const Event = () => {
 
       <Tabs index={activeTab} onChange={handleTabChange}>
         <TabList>
-          <Tab>On-going</Tab>
+          <Tab>Up Coming</Tab>
           <Tab>Running</Tab>
           <Tab>Cancelled</Tab>
           <Tab>All</Tab>
