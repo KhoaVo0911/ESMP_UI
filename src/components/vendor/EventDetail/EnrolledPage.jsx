@@ -5,24 +5,25 @@ import {
   Text,
   Image,
   VStack,
-  HStack,
-  Divider,
   Button,
   Spinner,
   Flex,
+  Divider,
 } from "@chakra-ui/react";
 import SelectBooth from "./SelectBooth";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { ref, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../shared/firebase/firebaseConfig";
 
 const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
 
 const EventEnrolled = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const accessToken = sessionStorage.getItem("accessToken") || ""; // Lấy accessToken từ sessionStorage
-  const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId từ sessionStorage
+  const accessToken = sessionStorage.getItem("accessToken") || "";
+  const vendorId = sessionStorage.getItem("vendorId") || "";
   const eventId = sessionStorage.getItem("eventId");
+  const hostId = sessionStorage.getItem("hostId") || ""; // Lấy hostId từ sessionStorage
 
   const [eventDetail, setEventDetail] = useState(null);
   const [boothData, setBoothData] = useState([]);
@@ -30,7 +31,6 @@ const EventEnrolled = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch event details from the API
     const fetchEventDetail = async () => {
       try {
         const response = await axios.get(`${URL}/${eventId}`, {
@@ -39,7 +39,18 @@ const EventEnrolled = () => {
             "Content-Type": "application/json",
           },
         });
-        setEventDetail(response.data);
+        const event = response.data;
+
+        // Lấy URL ảnh từ Firebase
+        const imageRef = ref(storage, `${hostId}/${eventId}/thumbnail`);
+        try {
+          event.logo = await getDownloadURL(imageRef);
+        } catch (error) {
+          console.error("Error fetching event image:", error);
+          event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu không có ảnh
+        }
+
+        setEventDetail(event);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching event detail:", error);
@@ -49,13 +60,13 @@ const EventEnrolled = () => {
     };
 
     fetchEventDetail();
-  }, [eventId, accessToken]);
+  }, [eventId, accessToken, hostId]);
 
   const handleShopClick = () => {
     navigate("/shop", {
       state: {
         accessToken,
-        vendorId, // Use the vendorId state
+        vendorId,
         eventId,
       },
     });
@@ -87,19 +98,12 @@ const EventEnrolled = () => {
 
   return (
     <Box padding="20px" bgGradient="linear(to-r, #d4f1f4, #f0e5d8)" minH="100vh">
-      {/* Event Introduction */}
       <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={10} mb={10}>
         <VStack align="flex-start" spacing={10}>
           <Text fontSize="4xl" fontWeight="bold" color="black">
             {eventDetail.name}
           </Text>
-          <div
-            style={{
-              width: "45%",
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
+          <div style={{ width: "45%", display: "flex", justifyContent: "space-between" }}>
             <Text fontSize="lg" fontWeight="bold" color="gray.600">
               {new Date(eventDetail.startDate).toLocaleDateString()} - {new Date(eventDetail.endDate).toLocaleDateString()}
             </Text>
@@ -107,13 +111,12 @@ const EventEnrolled = () => {
               {eventDetail.time}
             </Text>
           </div>
-
           <Button colorScheme="teal" size="lg" onClick={handleShopClick}>
             Shop
           </Button>
         </VStack>
         <Image
-          src={eventDetail.logo}
+          src={eventDetail.logo} // Sử dụng URL đã tải từ Firebase
           alt={eventDetail.name}
           borderRadius="lg"
           boxShadow="lg"
@@ -122,14 +125,12 @@ const EventEnrolled = () => {
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
-      {/* Introduction Text */}
       <Text fontSize="md" color="gray.600" mb={10}>
         Welcome to the <strong>{eventDetail.name}</strong>, where we come together to celebrate the full moon and immerse ourselves in the warm, vibrant atmosphere of autumn. This year's event promises to bring you and your family a culturally rich and meaningful experience.
       </Text>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
-      {/* Select Booth Section */}
       <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
         Select Booth
       </Text>
@@ -137,13 +138,11 @@ const EventEnrolled = () => {
         <SelectBooth
           boothData={boothData}
           setBoothData={setBoothData}
-      
         />
       </Box>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
-      {/* Location Section */}
       <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
         Location
       </Text>

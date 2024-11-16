@@ -14,6 +14,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import SelectBooth from "./SelectBooth";
+import { ref, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../shared/firebase/firebaseConfig";
 
 const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
 const vendorInEventURL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent";
@@ -22,12 +24,13 @@ const EventDetail = () => {
   const eventId = sessionStorage.getItem("eventId");
   const accessToken = sessionStorage.getItem("accessToken");
   const vendorId = sessionStorage.getItem("vendorId");
+  const hostId = sessionStorage.getItem("hostId") || ""; // Get hostId from sessionStorage
   const [eventDetail, setEventDetail] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Kiểm tra nếu vendor đã đăng ký trong sự kiện và điều hướng nếu có
+    // Check if vendor is registered in the event and navigate if true
     const checkVendorInEvent = async () => {
       try {
         const response = await axios.get(`${vendorInEventURL}/${vendorId}/${eventId}`, {
@@ -37,32 +40,45 @@ const EventDetail = () => {
           },
         });
 
-        // Nếu vendorId và eventId trùng khớp, điều hướng đến trang /eventenrolled
+        // If vendorId and eventId match, navigate to /eventenrolled
         if (response.data.eventId === eventId && response.data.vendorId === vendorId) {
           navigate("/eventenrolled", { state: { accessToken, eventId, vendorId } });
         }
       } catch (error) {
-        console.error("Lỗi khi kiểm tra trạng thái cửa hàng trong sự kiện:", error);
+        console.error("Error checking vendor status in event:", error);
       }
     };
 
     checkVendorInEvent();
 
-    // Lấy chi tiết sự kiện từ API nếu chưa điều hướng
-    axios
-      .get(`${URL}/${eventId}`, {
-        headers: {
-          Authorization: `${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      })
-      .then((response) => {
-        setEventDetail(response.data);
-      })
-      .catch((error) => {
-        console.error("Lỗi khi lấy chi tiết sự kiện:", error);
-      });
-  }, [eventId, accessToken, vendorId, navigate]);
+    // Fetch event details from API
+    const fetchEventDetail = async () => {
+      try {
+        const response = await axios.get(`${URL}/${eventId}`, {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const event = response.data;
+
+        // Get image URL from Firebase
+        const imageRef = ref(storage, `${hostId}/${eventId}/thumbnail`);
+        try {
+          event.logo = await getDownloadURL(imageRef);
+        } catch (error) {
+          console.error("Error fetching event image:", error);
+          event.logo = "https://via.placeholder.com/150"; // Default URL if image is not available
+        }
+
+        setEventDetail(event);
+      } catch (error) {
+        console.error("Error fetching event details:", error);
+      }
+    };
+
+    fetchEventDetail();
+  }, [eventId, accessToken, vendorId, hostId, navigate]);
 
   if (!eventDetail) {
     return (
@@ -99,7 +115,7 @@ const EventDetail = () => {
             </Text>
           </HStack>
           <Button colorScheme="teal" size="md" onClick={onOpen}>
-            Đăng ký ngay
+            Register Now
           </Button>
         </VStack>
 
@@ -120,9 +136,7 @@ const EventDetail = () => {
 
       {/* Event Description */}
       <Text fontSize="lg" color="gray.700" mb={8} maxW="900px" mx="auto" textAlign="center">
-        Chào mừng đến với <strong>{eventDetail.name}</strong>, nơi chúng ta cùng nhau kỷ niệm và 
-        đắm mình trong một trải nghiệm độc đáo. Sự kiện này hứa hẹn sẽ mang đến cho bạn và gia đình 
-        những trải nghiệm văn hóa phong phú và đầy ý nghĩa, tràn đầy sự phấn khích và ấm áp.
+        Welcome to <strong>{eventDetail.name}</strong>, where we come together to celebrate and immerse ourselves in a unique experience. This event promises to bring you and your family a culturally rich and meaningful experience, filled with excitement and warmth.
       </Text>
 
       {/* Render SelectBooth component as a modal */}
