@@ -8,7 +8,8 @@ import { ref, getDownloadURL } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
 import { Divider } from "@mui/material";
 
-const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const URL =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
 
 const EventVendor = () => {
   const [events, setEvents] = useState([]);
@@ -43,7 +44,11 @@ const EventVendor = () => {
       );
 
       setEvents(eventsWithImages);
-      setFilteredEvents(eventsWithImages.filter((event) => event.status?.toLowerCase() === "on-going"));
+      setFilteredEvents(
+        eventsWithImages.filter(
+          (event) => event.status?.toLowerCase() === "upcoming"
+        )
+      );
     } catch (error) {
       console.error("There was an error fetching the events!", error);
     }
@@ -56,7 +61,9 @@ const EventVendor = () => {
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
-    const filtered = events.filter((event) => event.name.toLowerCase().includes(term));
+    const filtered = events.filter((event) =>
+      event.name.toLowerCase().includes(term)
+    );
     setFilteredEvents(filtered);
   };
 
@@ -65,16 +72,24 @@ const EventVendor = () => {
     let filtered;
     switch (key) {
       case "1":
-        filtered = events.filter((event) => event.status?.toLowerCase() === "on-going");
+        filtered = events.filter(
+          (event) => event.status?.toLowerCase() === "upcoming"
+        );
         break;
       case "2":
-        filtered = events.filter((event) => event.status?.toLowerCase() === "running");
+        filtered = events.filter(
+          (event) => event.status?.toLowerCase() === "running"
+        );
         break;
       case "3":
-        filtered = events.filter((event) => event.status?.toLowerCase() === "cancelled");
+        filtered = events.filter(
+          (event) => event.status?.toLowerCase() === "cancelled"
+        );
         break;
       case "5":
-        filtered = events.filter((event) => event.status?.toLowerCase() === "trash");
+        filtered = events.filter(
+          (event) => event.status?.toLowerCase() === "trash"
+        );
         break;
       case "4":
       default:
@@ -89,7 +104,7 @@ const EventVendor = () => {
   };
 
   const items = [
-    { key: "1", label: "On-going" },
+    { key: "1", label: "Up Coming" },
     { key: "2", label: "Running" },
     { key: "3", label: "Cancelled" },
     { key: "4", label: "All" },
@@ -128,9 +143,13 @@ const EventVendor = () => {
               <div className="event-info-container">
                 <div className="event-date">
                   <div className="event-date-box">
-                    <span className="event-date-day">{new Date(event.startDate).getDate()}</span>
+                    <span className="event-date-day">
+                      {new Date(event.startDate).getDate()}
+                    </span>
                     <span className="event-date-month">
-                      {new Date(event.startDate).toLocaleString("en", { month: "short" })}
+                      {new Date(event.startDate).toLocaleString("en", {
+                        month: "short",
+                      })}
                     </span>
                   </div>
                 </div>
@@ -149,7 +168,11 @@ const EventVendor = () => {
         visible={isModalVisible}
         onCancel={handleCancel}
         footer={[
-          <Button key="create" type="primary" onClick={() => setIsModalVisible(false)}>
+          <Button
+            key="create"
+            type="primary"
+            onClick={() => setIsModalVisible(false)}
+          >
             Create
           </Button>,
           <Button key="cancel" onClick={handleCancel}>
@@ -162,7 +185,14 @@ const EventVendor = () => {
           <p>Event Name </p>
           <Input required />
 
-          <div className="date" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div
+            className="date"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <div>
               <p>Start date</p>
               <Input type="date" required style={{ width: "150%" }} />
@@ -173,7 +203,14 @@ const EventVendor = () => {
             </div>
           </div>
 
-          <div className="time" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div
+            className="time"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <div>
               <p>Start time</p>
               <Input type="time" required style={{ width: "186%" }} />

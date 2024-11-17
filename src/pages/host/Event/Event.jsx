@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import "./Event.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Tabs,
   TabList,
@@ -33,20 +33,24 @@ import axios from "axios";
 import { format } from "date-fns";
 import { SearchIcon, AddIcon, CalendarIcon, InfoIcon } from "@chakra-ui/icons";
 import { AiOutlineArrowLeft } from "react-icons/ai";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
 
-const URL =
+const BASE_URL =
   "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
-const hostId = "c12042fa-bd4d-4147-92b8-ad904e374f11"; // Đặt cố định hostId theo yêu cầu
 
 const Event = () => {
+  const loc = useLocation();
+  const navigate = useNavigate();
+  const toast = useToast();
+
+  const hostId = loc.state?.hostId || sessionStorage.getItem("hostId") || "";
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [imageFile, setImageFile] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
@@ -54,46 +58,71 @@ const Event = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [description, setDescription] = useState("");
-  const navigate = useNavigate();
-  const toast = useToast();
 
   const fetchEvents = useCallback(async () => {
+    if (!hostId) {
+      console.error("Host ID is missing!");
+      return;
+    }
+
     try {
-      const response = await axios.get(URL, {
+      const response = await axios.get(`${BASE_URL}/host/${hostId}`, {
         headers: { Authorization: getAccessToken() },
       });
       const fetchedEvents = response.data;
+      console.log("Fetched events from API:", fetchedEvents);
+
       const eventsWithImages = await Promise.all(
         fetchedEvents.map(async (event) => {
-          const imageRef = ref(storage, `${hostId}/${event.eventId}/thumbnail`);
+          const imagesRef = ref(storage, `${hostId}/${event.eventId}`);
+
           try {
-            event.imageURL = await getDownloadURL(imageRef);
+            const imagesList = await listAll(imagesRef);
+            if (imagesList.items.length > 0) {
+              const mainImageRef = imagesList.items[0]; // Lấy ảnh đầu tiên làm ảnh chính
+              event.imageURL = await getDownloadURL(mainImageRef);
+            } else {
+              event.imageURL = "https://via.placeholder.com/150";
+            }
           } catch (error) {
-            event.imageURL = "https://via.placeholder.com/150"; // URL mặc định nếu không có hình ảnh
+            console.warn(
+              `Error fetching images for event ID: ${event.eventId}:`,
+              error
+            );
+            event.imageURL = "https://via.placeholder.com/150";
           }
           return event;
         })
       );
+
       setEvents(eventsWithImages);
     } catch (error) {
-      console.error("There was an error fetching the events!", error);
+      console.error("Error fetching events:", error);
+      toast({
+        title: "Error fetching events.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
-  }, []);
+  }, [hostId, toast]);
+
+  const handleEventClick = (event) => {
+    navigate(`/event-detail/${event.eventId}`);
+  };
 
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
 
   useEffect(() => {
-    // Cập nhật filteredEvents dựa trên tab và search term hiện tại
     const filterEvents = () => {
       let filtered = events;
 
-      // Lọc sự kiện dựa trên tab
       switch (activeTab) {
         case 0:
           filtered = events.filter(
-            (event) => event.status?.toLowerCase() === "on-going"
+            (event) => event.status?.toLowerCase() === "upcoming"
           );
           break;
         case 1:
@@ -110,7 +139,6 @@ const Event = () => {
           filtered = events;
       }
 
-      // Áp dụng bộ lọc tìm kiếm
       if (searchTerm) {
         filtered = filtered.filter((event) =>
           event.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -123,38 +151,127 @@ const Event = () => {
     filterEvents();
   }, [events, activeTab, searchTerm]);
 
-  const handleEventClick = (event) => {
-    sessionStorage.setItem("selectedEvent", JSON.stringify(event));
-    sessionStorage.setItem("eventId", event.eventId);
-    navigate(`/event-detail/${event.eventId}`);
-  };
+  const handleCreate = async () => {
+    if (!eventName || !startDate || !endDate || !description || !imageFile) {
+      toast({
+        title: "Please fill in all fields.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
 
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value.toLowerCase());
-  };
-
-  const handleTabChange = (index) => {
-    setActiveTab(index);
-  };
-
-  const handleImageChange = (e) => {
-    if (e.target.files[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setThumbnailPreview(reader.result);
+    try {
+      const newEvent = {
+        name: eventName,
+        hostId,
+        themeId: hostId,
+        description,
+        startDate: new Date(startDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
+        profit: 10.0,
+        status: "upcoming",
       };
-      reader.readAsDataURL(file);
+
+      // Gửi request tạo sự kiện
+      const response = await axios.post(BASE_URL, newEvent, {
+        headers: { Authorization: getAccessToken() },
+      });
+      const eventId = response.data.id;
+      console.log("Created Event ID:", eventId);
+
+      if (!eventId) {
+        throw new Error("Event ID is missing in the response");
+      }
+
+      // Tải ảnh lên Firebase
+      const imageRef = ref(storage, `${hostId}/${eventId}/${imageFile.name}`);
+      await uploadBytes(imageRef, imageFile);
+      const imageURL = await getDownloadURL(imageRef);
+
+      fetchEvents();
+      // Cập nhật thông tin sự kiện với URL ảnh
+      const updatedEvent = {
+        ...newEvent,
+        eventId, // Thêm eventId vào sự kiện
+        imageURL,
+      };
+      setEvents((prevEvents) => [updatedEvent, ...prevEvents]);
+
+      toast({
+        title: "Event created successfully!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      resetForm();
+      onClose();
+    } catch (error) {
+      console.error("Error creating event:", error);
+      toast({
+        title: "Error creating event.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
-  const uploadImage = async (eventId) => {
-    if (!imageFile) return null;
-    const imageRef = ref(storage, `${hostId}/${eventId}/thumbnail`);
-    await uploadBytes(imageRef, imageFile);
-    return await getDownloadURL(imageRef);
+  const handleUpdate = async (eventId, updatedData) => {
+    try {
+      await axios.put(`${BASE_URL}/${eventId}`, updatedData, {
+        headers: { Authorization: getAccessToken() },
+      });
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event.eventId === eventId ? { ...event, ...updatedData } : event
+        )
+      );
+
+      toast({
+        title: "Event updated successfully!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error updating event:", error);
+      toast({
+        title: "Error updating event.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleDelete = async (eventId) => {
+    try {
+      await axios.delete(`${BASE_URL}/${eventId}`, {
+        headers: { Authorization: getAccessToken() },
+      });
+
+      setEvents((prevEvents) =>
+        prevEvents.filter((event) => event.eventId !== eventId)
+      );
+
+      toast({
+        title: "Event deleted successfully!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      toast({
+        title: "Error deleting event.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   const resetForm = () => {
@@ -166,92 +283,30 @@ const Event = () => {
     setThumbnailPreview(null);
   };
 
-  const handleCreate = async () => {
-    if (!imageFile) {
-      toast({
-        title: "Please upload an image.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+  const handleSearch = (e) => setSearchTerm(e.target.value.toLowerCase());
 
-    const newEvent = {
-      name: eventName,
-      hostId: hostId,
-      themeId: hostId,
-      description: description,
-      startDate: new Date(startDate).toISOString(),
-      endDate: new Date(endDate).toISOString(),
-      profit: 10.0,
-      status: "on-going", // Giả định mặc định là "on-going"
-    };
+  const handleTabChange = (index) => setActiveTab(index);
 
-    try {
-      // Tạo sự kiện mới trên server trước
-      const response = await axios.post(URL, newEvent, {
-        headers: { Authorization: getAccessToken() },
-      });
-      const createdEvent = response.data;
-      const eventId = createdEvent.id;
+  const handleImageChange = (e) => {
+    if (e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
 
-      // Tải ảnh lên Firebase và lấy URL ảnh
-      const imageURL = await uploadImage(eventId);
-      createdEvent.imageURL = imageURL;
-
-      // Đợi một chút trước khi fetch lại sự kiện để đảm bảo ảnh đã được lưu trữ đầy đủ trên Firebase
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Gọi lại fetchEvents để lấy danh sách sự kiện mới nhất
-      await fetchEvents();
-
-      toast({
-        title: "Event created successfully!",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-
-      // Đóng modal và reset form
-      onClose();
-      resetForm();
-    } catch (error) {
-      console.error("Error creating event:", error);
-      toast({
-        title: "Unable to create event.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      const reader = new FileReader();
+      reader.onloadend = () => setThumbnailPreview(reader.result);
+      reader.readAsDataURL(file);
     }
   };
 
   return (
     <>
       <Flex justify="space-between" align="center" mb="16px">
-        <Flex align="center">
-          {selectedEvent && (
-            <AiOutlineArrowLeft
-              boxSize={6}
-              onClick={() => setSelectedEvent(null)}
-              cursor="pointer"
-            />
-          )}
-          <Box as="h1" fontSize="2xl" fontWeight="bold" ml="4">
-            Events
-          </Box>
-        </Flex>
-        {!selectedEvent && (
-          <Button
-            leftIcon={<AddIcon />}
-            colorScheme="blue"
-            onClick={onOpen}
-            rounded="md"
-          >
-            Create Event
-          </Button>
-        )}
+        <Box as="h1" fontSize="2xl" fontWeight="bold">
+          Events
+        </Box>
+        <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={onOpen}>
+          Create Event
+        </Button>
       </Flex>
 
       <InputGroup>
@@ -269,7 +324,7 @@ const Event = () => {
 
       <Tabs index={activeTab} onChange={handleTabChange}>
         <TabList>
-          <Tab>On-going</Tab>
+          <Tab>Up Coming</Tab>
           <Tab>Running</Tab>
           <Tab>Cancelled</Tab>
           <Tab>All</Tab>
@@ -356,7 +411,7 @@ const Event = () => {
               </FormControl>
             </Flex>
             <FormControl mb={4}>
-              <FormLabel>Event Description</FormLabel>
+              <FormLabel>Description</FormLabel>
               <Textarea
                 placeholder="Enter event description"
                 value={description}
@@ -366,24 +421,14 @@ const Event = () => {
             <FormControl mb={4}>
               <FormLabel>Event Thumbnail</FormLabel>
               <Input type="file" onChange={handleImageChange} />
-              {thumbnailPreview && (
-                <Box mt={2}>
-                  <Image
-                    src={thumbnailPreview}
-                    alt="Thumbnail Preview"
-                    width="100%"
-                  />
-                </Box>
-              )}
+              {thumbnailPreview && <Image src={thumbnailPreview} />}
             </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" onClick={handleCreate}>
               Create
             </Button>
-            <Button ml={3} onClick={onClose}>
-              Cancel
-            </Button>
+            <Button onClick={onClose}>Cancel</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

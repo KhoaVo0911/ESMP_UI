@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Box, Flex, Text, Tooltip } from "@chakra-ui/react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -18,11 +18,7 @@ const LocationMap = () => {
   const [shapes, setShapes] = useState([]);
   const [textElements, setTextElements] = useState([]);
   const [imageElements, setImageElements] = useState([]);
-  const [locationMapId, setLocationMapId] = useState(null);
   const navigate = useNavigate();
-  const mapContainerRef = useRef(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,7 +39,6 @@ const LocationMap = () => {
           setShapes(apiData.shapes || []);
           setTextElements(apiData.textElements || []);
           setImageElements(apiData.imageElements || []);
-          setLocationMapId(apiData.locationId || null);
         }
       } catch (error) {
         console.error("Error fetching data from API:", error);
@@ -53,81 +48,12 @@ const LocationMap = () => {
     fetchData();
   }, [hostId, eventId, accessToken]);
 
-  const handleCreateMap = async () => {
-    try {
-      const newMapData = {
-        eventId,
-        booths,
-        shapes,
-        textElements,
-        imageElements,
-      };
-      const response = await axios.post(
-        `${BASE_URL}/map/${hostId}/${eventId}`,
-        newMapData,
-        {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      setLocationMapId(response.data.locationId);
-      setIsMapExists(true);
-    } catch (error) {
-      console.error("Error creating Location Map:", error);
-    }
+  const handleCreateMap = () => {
+    navigate(`/event/${eventId}/booth-plan/create`);
   };
 
   const handleEditMap = () => {
     navigate(`/event/${eventId}/booth-plan/edit`);
-  };
-
-  const handleDeleteMap = async () => {
-    if (window.confirm("Are you sure you want to delete this map?")) {
-      try {
-        await axios.delete(`${BASE_URL}/map/${locationMapId}`, {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        });
-        setIsMapExists(false);
-        setBooths([]);
-        setShapes([]);
-        setTextElements([]);
-        setImageElements([]);
-        setLocationMapId(null);
-      } catch (error) {
-        console.error("Error deleting Location Map:", error);
-      }
-    }
-  };
-
-  const handleMouseDown = (e) => {
-    setIsDragging(true);
-    setStartPosition({ x: e.clientX, y: e.clientY });
-    if (mapContainerRef.current) {
-      mapContainerRef.current.style.cursor = "grabbing";
-    }
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    const dx = e.clientX - startPosition.x;
-    const dy = e.clientY - startPosition.y;
-    if (mapContainerRef.current) {
-      mapContainerRef.current.scrollLeft -= dx;
-      mapContainerRef.current.scrollTop -= dy;
-    }
-    setStartPosition({ x: e.clientX, y: e.clientY });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    if (mapContainerRef.current) {
-      mapContainerRef.current.style.cursor = "grab";
-    }
   };
 
   const renderShape = (shape) => {
@@ -243,7 +169,11 @@ const LocationMap = () => {
             <Button onClick={handleEditMap} colorScheme="teal" size="sm">
               Edit
             </Button>
-            <Button onClick={handleDeleteMap} colorScheme="red" size="sm">
+            <Button
+              onClick={() => setIsMapExists(false)}
+              colorScheme="red"
+              size="sm"
+            >
               Delete
             </Button>
           </Flex>
@@ -253,45 +183,43 @@ const LocationMap = () => {
           </Button>
         )}
       </Flex>
-      <Box
-        border="1px solid #ddd"
-        width="1200px"
-        height="800px"
-        position="relative"
-        bg="#e7f3ff"
-        borderRadius="md"
-        overflow="hidden"
-        boxShadow="inner"
-        ref={mapContainerRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-      >
-        {booths.map((booth) => (
-          <Tooltip label={`Booth: ${booth.name}`} key={booth.id}>
-            <Box
-              position="absolute"
-              left={`${booth.x}px`}
-              top={`${booth.y}px`}
-              width={`${booth.width}px`}
-              height={`${booth.height}px`}
-              bg="blue.300"
-              border="1px solid #333"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              borderRadius="md"
-              boxShadow="md"
-              fontSize="xs"
-              color="white"
-              fontWeight="bold"
-            >
-              {booth.name}
-            </Box>
-          </Tooltip>
-        ))}
-        {shapes.map((shape) => renderShape(shape))}
-      </Box>
+      {isMapExists && (
+        <Box
+          border="1px solid #ddd"
+          width="1200px"
+          height="800px"
+          position="relative"
+          bg="#e7f3ff"
+          borderRadius="md"
+          overflow="hidden"
+          boxShadow="inner"
+        >
+          {booths.map((booth) => (
+            <Tooltip label={`Booth: ${booth.name}`} key={booth.id}>
+              <Box
+                position="absolute"
+                left={`${booth.x}px`}
+                top={`${booth.y}px`}
+                width={`${booth.width}px`}
+                height={`${booth.height}px`}
+                bg="blue.300"
+                border="1px solid #333"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                borderRadius="md"
+                boxShadow="md"
+                fontSize="xs"
+                color="white"
+                fontWeight="bold"
+              >
+                {booth.name}
+              </Box>
+            </Tooltip>
+          ))}
+          {shapes.map((shape) => renderShape(shape))}
+        </Box>
+      )}
     </Flex>
   );
 };

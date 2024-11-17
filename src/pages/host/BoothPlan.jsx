@@ -1,6 +1,19 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { Flex, Box } from "@chakra-ui/react";
+import {
+  Flex,
+  Box,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  Image,
+  Center,
+  Input,
+} from "@chakra-ui/react";
 import Toolbar from "../../components/host/booth/Toolbar";
 import Sidebar from "../../components/host/booth/Sidebar";
 import PropertiesPanel from "../../components/host/booth/PropertiesPanel";
@@ -12,6 +25,12 @@ import TextElement from "../../components/host/booth/TextElement";
 import { Rnd } from "react-rnd";
 import { useLocation, useParams } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
+import {
+  updateLocationMap,
+  createLocationMap,
+} from "../../shared/locationMapApi";
+import { storage } from "../../shared/firebase/firebaseConfig";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const BASE_URL =
   "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api";
@@ -43,9 +62,17 @@ const BoothPlan = () => {
   const [locationTypes, setLocationTypes] = useState([]);
   const [selectedElement, setSelectedElement] = useState(null);
   const [selectedBoothId, setSelectedBoothId] = useState(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedShape, setSelectedShape] = useState(null);
   const [isBoothModalOpen, setIsBoothModalOpen] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const imageInputRef = useRef(null);
   const [modifiedElements, setModifiedElements] = useState([]);
+  const [undoStack, setUndoStack] = useState([]);
+  const [locationMapId, setLocationMapId] = useState(null);
+
+  const openImageModal = () => setIsImageModalOpen(true);
+  const closeImageModal = () => setIsImageModalOpen(false);
 
   useEffect(() => {
     const fetchLocationMap = async () => {
@@ -69,12 +96,12 @@ const BoothPlan = () => {
 
           const shapesWithLocation = data.shapes.map((shape) => ({
             ...shape,
+            name: shape.name,
             x: shape.location?.x ?? 0,
             y: shape.location?.y ?? 0,
             width: shape.location?.width || 100,
             height: shape.location?.height || 100,
             rotation: shape.location?.rotation ?? 0,
-            type: shape.location.shape,
           }));
 
           setBooths(boothsWithLocation);
@@ -113,7 +140,6 @@ const BoothPlan = () => {
   };
 
   const handleBoothUpdate = (updatedBooth) => {
-    console.log(updatedBooth, "abc");
     setBooths((prevBooths) =>
       prevBooths.map((booth) =>
         booth.locationId === updatedBooth.locationId ? updatedBooth : booth
@@ -123,7 +149,6 @@ const BoothPlan = () => {
   };
 
   const handleShapeUpdate = (updatedShape) => {
-    console.log(updatedShape, "xyz");
     setShapes((prevShapes) =>
       prevShapes.map((shape) =>
         shape.locationId === updatedShape.locationId ? updatedShape : shape
@@ -138,6 +163,7 @@ const BoothPlan = () => {
         img.locationId === updatedImage.locationId ? updatedImage : img
       )
     );
+    setSelectedElement(updatedImage);
     addModifiedElement(updatedImage);
   };
 
@@ -147,20 +173,82 @@ const BoothPlan = () => {
   };
 
   const handleSave = async () => {
-    if (modifiedElements.length > 0) {
-      try {
-        await axios.put(`${BASE_URL}/map`, modifiedElements, {
-          headers: { Authorization: getAccessToken() },
-        });
-        alert("Saved successfully!");
-        setModifiedElements([]);
-      } catch (error) {
-        console.error("Error saving data:", error);
-        alert("Failed to save data.");
-      }
-    } else {
-      alert("No changes to save.");
+    try {
+      const mainTemplateData = {
+        eventId: eventId,
+        name: mainTemplate.name || "Main Template",
+        x: mainTemplate.x || 0,
+        y: mainTemplate.y || 0,
+        width: mainTemplate.width || 600,
+        height: mainTemplate.height || 400,
+        rotation: mainTemplate.rotation || 0,
+      };
+
+      await createLocationMap(hostId, eventId, mainTemplateData);
+      alert("Map created successfully with mainTemplate only!");
+    } catch (error) {
+      console.error("Error creating map:", error);
+      alert("Failed to create map.");
     }
+  };
+
+  const uploadImageToFirebase = async (file) => {
+    try {
+      const fileName = `image_${uuidv4()}`;
+      const imageRef = ref(storage, `images/${fileName}`);
+      await uploadBytes(imageRef, file);
+      return await getDownloadURL(imageRef);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return null;
+    }
+  };
+
+  const handleImageButtonClick = () => {
+    setIsImageModalOpen(true);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImagePreview(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadImage = async () => {
+    if (imageInputRef.current.files[0]) {
+      const file = imageInputRef.current.files[0];
+      try {
+        const url = await uploadImageToFirebase(file);
+        if (url) {
+          const newImage = {
+            locationId: uuidv4(),
+            src: url,
+            x: 100,
+            y: 100,
+            width: 150,
+            height: 150,
+            rotation: 0,
+            type: "image",
+          };
+          setImageElements((prev) => [...prev, newImage]);
+          addModifiedElement(newImage);
+          setSelectedElement(newImage);
+          closeModal();
+        }
+      } catch (error) {
+        console.error("Error adding image:", error);
+      }
+    }
+  };
+
+  const closeModal = () => {
+    setIsImageModalOpen(false);
+    setImagePreview(null);
   };
 
   const handleDelete = () => {
@@ -231,15 +319,8 @@ const BoothPlan = () => {
       y: 100,
       width: 150,
       height: 50,
-      content: "New Text",
-      fontSize: 16,
-      color: "#000",
-      backgroundColor: "transparent",
-      bold: false,
-      italic: false,
-      underline: false,
-      textAlign: "center",
-      rotation: 0,
+      name: "New Text",
+      type: "text",
     };
     setTextElements([...textElements, newText]);
   };
@@ -248,38 +329,24 @@ const BoothPlan = () => {
     const newBooth = {
       ...newBoothDetails,
       locationId: uuidv4(),
+      type: "booth",
     };
     setBooths([...booths, newBooth]);
     setIsBoothModalOpen(false);
   };
 
-  const handleUndo = () => {
-    console.log("Undo action triggered");
-    // Implement undo logic here
+  const handleAddShape = (shapeName) => {
+    const newShape = {
+      locationId: uuidv4(),
+      name: shapeName,
+      x: 100,
+      y: 100,
+      width: 100,
+      height: 100,
+      type: "shape",
+    };
+    setShapes([...shapes, newShape]);
   };
-
-  const handleRedo = () => {
-    console.log("Redo action triggered");
-    // Implement redo logic here
-  };
-
-  const handleGridToggle = () => {
-    console.log("Grid toggle action triggered");
-    // Implement grid toggle logic here
-  };
-
-  const handleZoomIn = () => {
-    console.log("Zoom in action triggered");
-    // Implement zoom-in logic here
-  };
-
-  const handleZoomOut = () => {
-    console.log("Zoom out action triggered");
-    // Implement zoom-out logic here
-  };
-
-  const openBoothModal = () => setIsBoothModalOpen(true);
-  const closeBoothModal = () => setIsBoothModalOpen(false);
 
   const memoizedElements = [
     <Rnd
@@ -294,7 +361,8 @@ const BoothPlan = () => {
           ...mainTemplate,
           width: ref.offsetWidth,
           height: ref.offsetHeight,
-          ...position,
+          x: position.x,
+          y: position.y,
         });
       }}
       style={{
@@ -325,6 +393,7 @@ const BoothPlan = () => {
         }}
         style={{
           transform: `rotate(${shape.rotation || 0}deg)`,
+          zIndex: selectedShape?.locationId === shape.locationId ? 10 : 1,
         }}
         onClick={() => handleShapeClick(shape)}
       >
@@ -333,7 +402,7 @@ const BoothPlan = () => {
     )),
     ...booths.map((booth) => (
       <Rnd
-        key={booth.locationId} // Đảm bảo key duy nhất cho mỗi booth
+        key={booth.locationId}
         size={{ width: booth.width, height: booth.height }}
         position={{ x: booth.x || 0, y: booth.y || 0 }}
         onDragStop={(e, d) => {
@@ -363,84 +432,138 @@ const BoothPlan = () => {
       <Rnd
         key={image.locationId}
         size={{ width: image.width, height: image.height }}
-        position={{ x: image.x, y: image.y }}
-        onDragStop={(e, d) => handleImageUpdate({ ...image, x: d.x, y: d.y })}
+        position={{ x: image.x, y: image.y }} // Luôn sử dụng position thay vì default
+        onDragStop={(e, d) => {
+          const updatedImage = { ...image, x: d.x, y: d.y };
+          handleImageUpdate(updatedImage);
+        }}
         onResizeStop={(e, direction, ref, delta, position) => {
-          handleImageUpdate({
+          const updatedImage = {
             ...image,
-            width: ref.offsetWidth,
-            height: ref.offsetHeight,
-            ...position,
-          });
+            width: parseInt(ref.style.width, 10),
+            height: parseInt(ref.style.height, 10),
+            x: position.x,
+            y: position.y,
+          };
+          handleImageUpdate(updatedImage);
         }}
         style={{
+          zIndex: selectedElement?.locationId === image.locationId ? 10 : 1,
           transform: `rotate(${image.rotation || 0}deg)`,
         }}
         onClick={() => handleImageClick(image)}
+        enableResizing={{
+          top: true,
+          right: true,
+          bottom: true,
+          left: true,
+          topRight: true,
+          bottomRight: true,
+          bottomLeft: true,
+          topLeft: true,
+        }}
       >
         <ImageElement image={image} />
       </Rnd>
     )),
     ...textElements.map((text) => (
-      <Rnd
+      <TextElement
         key={text.locationId}
-        size={{ width: text.width, height: text.height }}
-        position={{ x: text.x, y: text.y }}
-        onDragStop={(e, d) => handleTextUpdate({ ...text, x: d.x, y: d.y })}
-        onResizeStop={(e, direction, ref, delta, position) => {
-          handleTextUpdate({
-            ...text,
-            width: ref.offsetWidth,
-            height: ref.offsetHeight,
-            x: position.x,
-            y: position.y,
-          });
-        }}
-        style={{
-          transform: `rotate(${text.rotation || 0}deg)`,
-        }}
+        text={text}
+        isSelected={selectedElement?.locationId === text.locationId}
         onClick={() => handleTextClick(text)}
-      >
-        <TextElement text={text} onTextChange={handleTextContentChange} />
-      </Rnd>
+        onTextChange={(updatedText) => handleTextContentChange(updatedText)}
+        onDragEnd={(updatedText) => handleTextUpdate(updatedText)}
+        onResizeEnd={(updatedText) => handleTextUpdate(updatedText)}
+      />
     )),
   ];
 
   return (
     <Flex direction="column" height="100vh">
       <Toolbar
-        handleUndo={handleUndo}
-        handleRedo={handleRedo}
+        handleUndo={() => {}}
+        handleRedo={() => {}}
         handleSave={handleSave}
-        handleGridToggle={handleGridToggle}
-        handleZoomIn={handleZoomIn}
-        handleZoomOut={handleZoomOut}
+        handleGridToggle={() => {}}
+        handleZoomIn={() => {}}
+        handleZoomOut={() => {}}
         handleDelete={handleDelete}
         isDeleteDisabled={!selectedElement}
       />
       <Flex flex="1">
         <Sidebar
           setMode={setSelectedMode}
-          openBoothModal={openBoothModal}
+          openBoothModal={() => setIsBoothModalOpen(true)}
           addText={addText}
+          addShape={handleAddShape}
+          addImage={handleImageButtonClick}
+          openImageModal={openImageModal}
         />
+
         <Box flex="1" position="relative" bg="white" p={4}>
           {memoizedElements}
         </Box>
         <PropertiesPanel
-          selectedShape={selectedElement}
-          onShapeUpdate={handleShapeUpdate}
+          selectedShape={
+            selectedElement?.type === "shape" ? selectedElement : null
+          }
+          selectedBooth={
+            selectedElement?.type === "booth" ? selectedElement : null
+          }
+          selectedImage={
+            selectedElement?.type === "image" ? selectedElement : null
+          }
+          selectedText={
+            selectedElement?.type === "text" ? selectedElement : null
+          }
           mainTemplate={mainTemplate}
-          onMainTemplateUpdate={handleMainTemplateUpdate}
+          onShapeUpdate={handleShapeUpdate}
+          onBoothUpdate={handleBoothUpdate}
+          onImageUpdate={handleImageUpdate}
+          onTextUpdate={handleTextUpdate}
+          onMainTemplateUpdate={handleMainTemplateUpdate} // Truyền hàm cập nhật cho mainTemplate
           locationTypes={locationTypes}
         />
       </Flex>
       <BoothDetails
         isOpen={isBoothModalOpen}
-        onClose={closeBoothModal}
+        onClose={() => setIsBoothModalOpen(false)}
         onSave={handleAddBooth}
         locationTypes={locationTypes}
       />
+      <Modal isOpen={isImageModalOpen} onClose={closeModal} size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Upload Image</ModalHeader>
+          <ModalBody>
+            <Center>
+              <Input
+                type="file"
+                ref={imageInputRef}
+                onChange={handleImageChange}
+              />
+            </Center>
+            {imagePreview && (
+              <Box mt={4} textAlign="center">
+                <Image src={imagePreview} alt="Preview" maxWidth="100%" />
+              </Box>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={closeImageModal} variant="outline" mr={3}>
+              Cancel
+            </Button>
+            <Button
+              colorScheme="blue"
+              onClick={handleUploadImage}
+              isDisabled={!imagePreview}
+            >
+              Upload
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Flex>
   );
 };

@@ -7,8 +7,10 @@ import { ref, getDownloadURL } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
 import { Divider } from "@mui/material";
 
-const API_EVENTS = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
-const API_VENDOR_IN_EVENT = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent";
+const API_EVENTS =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const API_VENDOR_IN_EVENT =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent";
 
 const EventStaff = () => {
   const [events, setEvents] = useState([]);
@@ -48,25 +50,45 @@ const EventStaff = () => {
 
             // Kiểm tra phản hồi từ API
             if (checkResponse.data.status === "accept") {
-              console.log(`Vendor ${vendorId} accepted in event:`, event.eventId);
+              console.log(
+                `Vendor ${vendorId} accepted in event:`,
+                event.eventId
+              );
 
               // Tải hình ảnh từ Firebase cho sự kiện
-              const imageRef = ref(storage, `${hostId}/${event.eventId}/thumbnail`);
+              const imageRef = ref(
+                storage,
+                `${hostId}/${event.eventId}/thumbnail`
+              );
               try {
                 event.logo = await getDownloadURL(imageRef);
-                console.log("Fetched image for event:", event.eventId, event.logo);
+                console.log(
+                  "Fetched image for event:",
+                  event.eventId,
+                  event.logo
+                );
               } catch (error) {
-                console.error("Error fetching image for event:", event.eventId, error);
+                console.error(
+                  "Error fetching image for event:",
+                  event.eventId,
+                  error
+                );
                 event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu không có ảnh
               }
 
               return event; // Trả về sự kiện nếu vendor được chấp nhận
             } else {
-              console.log(`Vendor ${vendorId} not accepted in event:`, event.eventId);
+              console.log(
+                `Vendor ${vendorId} not accepted in event:`,
+                event.eventId
+              );
               return null;
             }
           } catch (error) {
-            console.error(`Error checking vendor in event ${event.eventId}:`, error);
+            console.error(
+              `Error checking vendor in event ${event.eventId}:`,
+              error
+            );
             return null;
           }
         })
@@ -77,8 +99,12 @@ const EventStaff = () => {
       console.log("Valid events after filtering by vendor:", validEvents);
 
       setEvents(validEvents);
-      setFilteredEvents(validEvents.filter((event) => event.status?.toLowerCase() === "on-going"));
-      console.log("Filtered events (on-going):", filteredEvents);
+      setFilteredEvents(
+        validEvents.filter(
+          (event) => event.status?.toLowerCase() === "upcoming"
+        )
+      );
+      console.log("Filtered events (upcoming):", filteredEvents);
     } catch (error) {
       console.error("Error fetching events:", error);
     }
@@ -92,7 +118,9 @@ const EventStaff = () => {
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
-    const filtered = events.filter((event) => event.name.toLowerCase().includes(term));
+    const filtered = events.filter((event) =>
+      event.name.toLowerCase().includes(term)
+    );
     setFilteredEvents(filtered);
   };
 
@@ -102,16 +130,24 @@ const EventStaff = () => {
     let filtered;
     switch (key) {
       case "1":
-        filtered = events.filter((event) => event.status?.toLowerCase() === "on-going");
+        filtered = events.filter(
+          (event) => event.status?.toLowerCase() === "upcoming"
+        );
         break;
       case "2":
-        filtered = events.filter((event) => event.status?.toLowerCase() === "running");
+        filtered = events.filter(
+          (event) => event.status?.toLowerCase() === "running"
+        );
         break;
       case "3":
-        filtered = events.filter((event) => event.status?.toLowerCase() === "cancelled");
+        filtered = events.filter(
+          (event) => event.status?.toLowerCase() === "cancelled"
+        );
         break;
       case "5":
-        filtered = events.filter((event) => event.status?.toLowerCase() === "trash");
+        filtered = events.filter(
+          (event) => event.status?.toLowerCase() === "trash"
+        );
         break;
       case "4":
       default:
@@ -122,7 +158,7 @@ const EventStaff = () => {
   };
 
   const items = [
-    { key: "1", label: "On-going" },
+    { key: "1", label: "Up Coming" },
     { key: "2", label: "Running" },
     { key: "3", label: "Cancelled" },
     { key: "4", label: "All" },
@@ -161,9 +197,13 @@ const EventStaff = () => {
               <div className="event-info-container">
                 <div className="event-date">
                   <div className="event-date-box">
-                    <span className="event-date-day">{new Date(event.startDate).getDate()}</span>
+                    <span className="event-date-day">
+                      {new Date(event.startDate).getDate()}
+                    </span>
                     <span className="event-date-month">
-                      {new Date(event.startDate).toLocaleString("en", { month: "short" })}
+                      {new Date(event.startDate).toLocaleString("en", {
+                        month: "short",
+                      })}
                     </span>
                   </div>
                 </div>
@@ -182,7 +222,11 @@ const EventStaff = () => {
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={[
-          <Button key="create" type="primary" onClick={() => setIsModalVisible(false)}>
+          <Button
+            key="create"
+            type="primary"
+            onClick={() => setIsModalVisible(false)}
+          >
             Create
           </Button>,
           <Button key="cancel" onClick={() => setIsModalVisible(false)}>
@@ -195,7 +239,14 @@ const EventStaff = () => {
           <p>Event Name </p>
           <Input required />
 
-          <div className="date" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div
+            className="date"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <div>
               <p>Start date</p>
               <Input type="date" required style={{ width: "150%" }} />
@@ -206,7 +257,14 @@ const EventStaff = () => {
             </div>
           </div>
 
-          <div className="time" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div
+            className="time"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <div>
               <p>Start time</p>
               <Input type="time" required style={{ width: "186%" }} />

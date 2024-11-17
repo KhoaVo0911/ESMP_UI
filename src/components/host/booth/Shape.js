@@ -9,7 +9,7 @@ const Shape = ({ shape, onShapeUpdate, isMainTemplate }) => {
 
     return (
       <g>
-        {shape.type === "rectangle" && (
+        {shape.name === "rectangle" && (
           <rect
             width="100%"
             height="100%"
@@ -18,7 +18,7 @@ const Shape = ({ shape, onShapeUpdate, isMainTemplate }) => {
             strokeWidth={strokeWidth}
           />
         )}
-        {shape.type === "circle" && (
+        {shape.name === "circle" && (
           <circle
             cx="50%"
             cy="50%"
@@ -28,7 +28,7 @@ const Shape = ({ shape, onShapeUpdate, isMainTemplate }) => {
             strokeWidth={strokeWidth}
           />
         )}
-        {shape.type === "triangle" && (
+        {shape.name === "triangle" && (
           <polygon
             points="50,0 100,100 0,100"
             fill={fillColor}
@@ -36,7 +36,7 @@ const Shape = ({ shape, onShapeUpdate, isMainTemplate }) => {
             strokeWidth={strokeWidth}
           />
         )}
-        {shape.type === "pentagon" && (
+        {shape.name === "pentagon" && (
           <polygon
             points="50,0 100,38 82,100 18,100 0,38"
             fill={fillColor}
@@ -44,7 +44,7 @@ const Shape = ({ shape, onShapeUpdate, isMainTemplate }) => {
             strokeWidth={strokeWidth}
           />
         )}
-        {shape.type === "hexagon" && (
+        {shape.name === "hexagon" && (
           <polygon
             points="50,0 90,25 90,75 50,100 10,75 10,25"
             fill={fillColor}
@@ -52,7 +52,7 @@ const Shape = ({ shape, onShapeUpdate, isMainTemplate }) => {
             strokeWidth={strokeWidth}
           />
         )}
-        {shape.type === "star" && (
+        {shape.name === "star" && (
           <polygon
             points="50,0 61,35 98,35 68,57 79,91 50,70 21,91 32,57 2,35 39,35"
             fill={fillColor}
@@ -60,7 +60,7 @@ const Shape = ({ shape, onShapeUpdate, isMainTemplate }) => {
             strokeWidth={strokeWidth}
           />
         )}
-        {shape.type === "arrow" && (
+        {shape.name === "arrow" && (
           <polygon
             points="10,40 70,40 70,20 100,50 70,80 70,60 10,60"
             fill={fillColor}

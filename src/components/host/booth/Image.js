@@ -1,49 +1,27 @@
 import React from "react";
-import { Rnd } from "react-rnd";
 import { Box } from "@chakra-ui/react";
 
-const ImageElement = ({
-  image,
-  onDragEnd,
-  onResizeEnd,
-  onClick,
-  isSelected,
-}) => {
+const ImageElement = ({ image, onClick, isSelected }) => {
   return (
-    <Rnd
-      default={{
-        x: image.x,
-        y: image.y,
-        width: image.width,
-        height: image.height,
-      }}
-      bounds="parent"
-      onDragStop={(e, d) => {
-        onDragEnd({ ...image, x: d.x, y: d.y });
-      }}
-      onResizeStop={(e, direction, ref, delta, position) => {
-        onResizeEnd({
-          ...image,
-          width: ref.style.width.replace("px", ""),
-          height: ref.style.height.replace("px", ""),
-          x: position.x,
-          y: position.y,
-        });
-      }}
+    <Box
+      width={image.width}
+      height={image.height}
+      position="absolute"
+      top={image.y}
+      left={image.x}
       onClick={onClick}
       style={{
         border: isSelected ? "2px solid blue" : "1px solid transparent",
+        transform: `rotate(${image.rotation || 0}deg)`,
         zIndex: isSelected ? 10 : 1,
       }}
     >
-      <Box width="100%" height="100%">
-        <img
-          src={image.src}
-          alt="Uploaded"
-          style={{ width: "100%", height: "100%", pointerEvents: "none" }}
-        />
-      </Box>
-    </Rnd>
+      <img
+        src={image.src}
+        alt="Uploaded"
+        style={{ width: "100%", height: "100%", pointerEvents: "none" }}
+      />
+    </Box>
   );
 };
 
