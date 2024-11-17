@@ -250,18 +250,20 @@ const ManageProducts = () => {
         {productItems.length > 0 ? (
           productItems.map((productItem) => (
             <GridItem
-              key={productItem.productItemId}
-              border="1px solid #e0e0e0"
-              borderRadius="lg"
-              overflow="hidden"
-              boxShadow="lg"
-              _hover={{ boxShadow: "2xl", transform: "scale(1.05)" }}
-              transition="all 0.3s ease"
-              display="flex"
-              flexDirection="column"
-              justifyContent="space-between"
-              height="350px"
-            >
+            key={productItem.productItemId}
+            border="1px solid #e0e0e0"
+            borderRadius="lg"
+            overflow="hidden"
+            boxShadow="lg"
+            _hover={{ boxShadow: "2xl", transform: "scale(1.05)" }}
+            transition="all 0.3s ease"
+            display="flex"
+            flexDirection="column"
+            justifyContent="space-between"
+            height="350px"
+            maxWidth="250px" // Giới hạn chiều ngang của card
+          >
+          
               <Image
                 src={productItem.imageURL || "https://via.placeholder.com/150"}
                 alt={productItem.name}

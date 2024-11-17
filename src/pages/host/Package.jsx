@@ -17,11 +17,11 @@ import {
   useDisclosure,
   useToast,
   Progress,
-  Grid,
 } from "@chakra-ui/react";
-import axios from "axios";
 
-const Package = () => {
+const API_COURSE = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/package";
+
+const CourseList = () => {
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState({
     content: "",
@@ -29,37 +29,52 @@ const Package = () => {
     showQR: false,
     qrUrl: "",
   });
-  const [remainingTime, setRemainingTime] = useState(120); // Countdown timer initialized to 120 seconds
-  const { isOpen, onOpen, onClose } = useDisclosure(); // Chakra UI hook for modal state
-  const toast = useToast(); // Chakra UI hook for toast notifications
-  const countdownIntervalRef = useRef(null); // Reference to store the countdown interval
+  const [remainingTime, setRemainingTime] = useState(120);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
+  const countdownIntervalRef = useRef(null);
 
   useEffect(() => {
-    // Update the course data structure to align with the Package component
-    const courseData = [
-      {
-        courseID: "COURSE001",
+    const fetchCourses = async () => {
+      const accessToken = sessionStorage.getItem("accessToken") || "";
 
-        courseName: "Gold Plan - Buy 3 months get 1 month free",
-        coursePrice: 400000,
-      },
-      {
-        courseID: "COURSE002",
+      try {
+        const response = await fetch(API_COURSE, {
+          method: "GET",
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-        courseName: "Premiere Plan - Buy 6 months get 2 months free",
-        coursePrice: 750000,
-      },
-    ];
+        if (!response.ok) {
+          throw new Error("Failed to fetch courses");
+        }
 
-    setCourses(courseData);
+        const data = await response.json();
+        const activeCourses = data.filter((course) => course.status);
+        setCourses(activeCourses);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách khóa học:", error);
+        toast({
+          title: "Lỗi tải dữ liệu",
+          description: "Không thể tải danh sách khóa học.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    };
+
+    fetchCourses();
   }, []);
 
   const handleCourseClick = (course, index) => {
-    const paidPrice = courses[index].coursePrice;
-    const paidContent = courses[index].courseID;
+    const paidPrice = courses[index].price;
+    const paidContent = courses[index].id;
     const qrUrl = `https://img.vietqr.io/image/ACB-18254271-compact2.png?amount=${paidPrice}&addInfo=${paidContent}&accountName=Dinh Quang Minh`;
 
-    const newStartTime = new Date(); // Create a new Date object to use as the start time
+    const newStartTime = new Date();
 
     setSelectedCourse({
       content: paidContent,
@@ -68,9 +83,8 @@ const Package = () => {
       qrUrl: qrUrl,
     });
 
-    setRemainingTime(120); // Reset the countdown timer to 120 seconds
+    setRemainingTime(120);
 
-    // Clear any existing countdown intervals before creating a new one
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
     }
@@ -78,7 +92,7 @@ const Package = () => {
     countdownIntervalRef.current = setInterval(() => {
       setRemainingTime((prevTime) => {
         if (prevTime <= 1) {
-          clearInterval(countdownIntervalRef.current); // Stop countdown when time runs out
+          clearInterval(countdownIntervalRef.current);
           toast({
             title: "Thanh toán thất bại",
             description: "Hết thời gian chờ. Vui lòng thử lại.",
@@ -86,29 +100,67 @@ const Package = () => {
             duration: 5000,
             isClosable: true,
           });
-          setSelectedCourse((prevState) => ({ ...prevState, showQR: false })); // Hide QR code
-          onClose(); // Close the modal if the payment fails
+          setSelectedCourse((prevState) => ({ ...prevState, showQR: false }));
+          onClose();
           return 0;
         }
-        return prevTime - 1; // Decrease the countdown by 1 second
+        return prevTime - 1;
       });
     }, 1000);
 
-    onOpen(); // Open the modal when a course is clicked
+    const transactionCheckInterval = setInterval(() => {
+      checkPaid(paidPrice, paidContent, transactionCheckInterval, newStartTime);
+    }, 2000);
+
+    onOpen();
+  };
+
+  const checkPaid = async (price, content, intervalId, startTime) => {
+    try {
+      const response = await fetch(
+        "https://script.googleusercontent.com/macros/echo?user_content_key=8mGZWlfGvyWWCS0cgyAlbllHqG0udaCGO6tQG01QDu_wCpCCVmBzuMQkZjU8HftH-T-t8S8NkPOO0HpzZqbIUpIRb8DGG9xPm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnAYXetFrC-zWvA_lqYZvPnJoCEY4_DQEloQ1meRe94z4CqWcnBBqRLMg8PXC-uxuJBvFcvoj2FToq-yfHtQXpYQW0UstbE5dAtz9Jw9Md8uu&lib=MbbErZamKd_6ahvdDuCk2MKVwqDhlS6o-"
+      );
+      const data = await response.json();
+      const lastPaid = data.data[data.data.length - 1];
+
+      const lastPrice =
+        lastPaid && lastPaid["Giá trị"] ? parseFloat(lastPaid["Giá trị"]) : 0;
+      const lastContent =
+        lastPaid && lastPaid["Mô tả"]
+          ? lastPaid["Mô tả"].trim().toLowerCase()
+          : "";
+      const transactionTime = new Date(lastPaid["Ngày diễn ra"]).getTime();
+
+      const startTimestamp = new Date(startTime).getTime();
+
+      if (
+        lastPrice >= price &&
+        lastContent.includes(content.toLowerCase()) &&
+        transactionTime > startTimestamp
+      ) {
+        clearInterval(intervalId);
+        clearInterval(countdownIntervalRef.current);
+        toast({
+          title: "Thanh toán thành công",
+          description: "Bạn đã thanh toán thành công cho khóa học.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+        setSelectedCourse((prevState) => ({ ...prevState, showQR: false }));
+        onClose();
+      }
+    } catch (error) {
+      console.error("Lỗi:", error);
+    }
   };
 
   return (
-    <VStack spacing={8} align="center" padding={4} bg="white" minH="80vh">
-      <Text fontSize="2xl" fontWeight="bold" mb={8}>
-        Compare Plans
-      </Text>
-      <Text fontSize="md" mb={8}>
-        Choose your workspace plan according to Platform usage time.
-      </Text>
-      <Grid templateColumns="repeat(2, 1fr)" gap={6}>
+    <VStack spacing={8} align="center" padding={4} bg="#f5f5dc" minH="100vh">
+      <Flex wrap="wrap" justify="center" gap={6}>
         {courses.map((item, index) => (
           <Box
-            key={item.courseID}
+            key={item.id}
             position="relative"
             maxW="280px"
             textAlign="center"
@@ -120,11 +172,21 @@ const Package = () => {
             transition="0.3s ease-in-out"
             border="1px solid #d4af37"
           >
+            <Image
+              src={item.avatar || "https://via.placeholder.com/300x180"}
+              alt={item.name}
+              borderRadius="md"
+              boxShadow="lg"
+              width="100%"
+              height="180px"
+              objectFit="cover"
+              mb={4}
+            />
             <Heading size="md" color="#6b4226" mb={2}>
-              {item.courseName}
+              {item.name}
             </Heading>
             <Text fontSize="lg" fontWeight="bold" color="#8b4513" mb={4}>
-              {item.coursePrice.toLocaleString()} VND
+              {parseInt(item.price).toLocaleString()} VND
             </Text>
             <Button
               colorScheme="yellow"
@@ -138,9 +200,8 @@ const Package = () => {
             </Button>
           </Box>
         ))}
-      </Grid>
+      </Flex>
 
-      {/* Modal for displaying the QR code */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent position="relative">
@@ -153,7 +214,7 @@ const Package = () => {
               mx="auto"
               mb={4}
               boxShadow="md"
-              width={["80%", "70%", "60%"]} // Responsive size for different screen sizes
+              width={["80%", "70%", "60%"]}
             />
             <Text fontSize="lg" mb={2} color="yellow.400">
               Mã QR thanh toán tự động
@@ -161,21 +222,13 @@ const Package = () => {
             <Text fontSize="sm" color="gray.500" p={5}>
               (Xác nhận tự động - Thường không quá 3')
             </Text>
-            <Flex
-              alignItems="center"
-              justifyContent="space-between"
-              width="100%"
-            >
-              <Text>Số tiền: {selectedCourse.price.toLocaleString()} VND</Text>
+            <Flex alignItems="center" justifyContent="space-between" width="100%">
+              <Text>Số tiền: {parseInt(selectedCourse.price).toLocaleString()} VND</Text>
               <Text>Nội dung: {selectedCourse.content}</Text>
             </Flex>
 
             <Box mt={4} p={2} borderTop="1px solid gray">
-              <Flex
-                alignItems="center"
-                justifyContent="space-between"
-                width="100%"
-              >
+              <Flex alignItems="center" justifyContent="space-between" width="100%">
                 <Text>Đang chờ thanh toán</Text>
                 <Text>
                   Thời gian còn lại:{" "}
@@ -185,11 +238,11 @@ const Package = () => {
                 </Text>
               </Flex>
               <Progress
-                value={(remainingTime / 120) * 100} // Calculate progress based on remaining time
+                value={(remainingTime / 120) * 100}
                 size="sm"
                 colorScheme="yellow"
                 mt={2}
-                width="100%" // Make the progress bar span the full width of the modal
+                width="100%"
               />
             </Box>
           </ModalBody>
@@ -204,4 +257,4 @@ const Package = () => {
   );
 };
 
-export default Package;
+export default CourseList;

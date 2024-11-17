@@ -111,7 +111,7 @@ const CourseList = () => {
   const checkPaid = async (price, content, intervalId, startTime) => {
     try {
       const response = await fetch(
-        "https://script.googleusercontent.com/macros/echo?user_content_key=8mGZWlfGvyWWCS0cgyAlbllHqG0udaCGO6tQG01QDu_wCpCCVmBzuMQkZjU8HftH-T-t8S8NkPOO0HpzZqbIUpIRb8DGG9xPm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnAYXetFrC-zWvA_lqYZvPnJoCEY4_DQEloQ1meRe94z4CqWcnBBqRLMg8PXC-uxuJBvFcvoj2FToq-yfHtQXpYQW0UstbE5dAtz9Jw9Md8uu&lib=MbbErZamKd_6ahvdDuCk2MKVwqDhlS6o-"
+        "https://script.googleusercontent.com/macros/echo?user_content_key=ezaHN4Gj4g-_qKyEpIFtMZQPkwJ0BbYQk3LG5p8k9b31Q7-kvTSXe2ZhZFRNoR7KhGYLTKEhpEOtSOcEac_Ekkb6_uiOxp_qm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnKv_VMEXf_TlwaF4o_-JkqZsBeOE2g6GtB2F-g5rnh9Lg6IxlmlB0WqV6H5thtDBueCS5gbHSu7aRDOzV-kpgRZaH2A0H0nPU9z9Jw9Md8uu&lib=MbbErZamKd_6ahvdDuCk2MKVwqDhlS6o-"
       );
       const data = await response.json();
       const lastPaid = data.data[data.data.length - 1];
