@@ -14,6 +14,7 @@ import {
   Select,
   Flex,
 } from "@chakra-ui/react";
+import { v4 as uuidv4 } from "uuid";
 
 const BoothDetails = ({
   booth,
@@ -23,6 +24,7 @@ const BoothDetails = ({
   locationTypes = [],
 }) => {
   const [boothDetails, setBoothDetails] = useState({
+    locationId: uuidv4(),
     name: booth?.name || "",
     typeId:
       booth?.typeId ||
@@ -48,13 +50,24 @@ const BoothDetails = ({
 
   const handleTypeChange = (e) => {
     const selectedTypeId = e.target.value;
+    const isValidTypeId = locationTypes.some(
+      (type) => type.typeId === selectedTypeId
+    );
+
     setBoothDetails({
       ...boothDetails,
-      typeId: selectedTypeId,
+      typeId: isValidTypeId
+        ? selectedTypeId
+        : locationTypes[0]?.typeId || "defaultTypeId",
     });
   };
 
   const handleSave = () => {
+    // if (!boothDetails.locationId) {
+    //   console.error("BoothDetails missing locationId:", boothDetails);
+    //   return;
+    // }
+    console.log(boothDetails, "1111");
     onSave(boothDetails);
     onClose();
   };
