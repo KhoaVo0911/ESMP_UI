@@ -26,16 +26,15 @@ const API_PACKAGE = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.co
 
 const PackageAdmin = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { isOpen: isDetailOpen, onOpen: onOpenDetail, onClose: onCloseDetail } = useDisclosure();
   const [packages, setPackages] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     eventstoragetime: "",
     price: "",
+    description: "",
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [selectedAccount, setSelectedAccount] = useState(null);
 
   const accessToken = sessionStorage.getItem("accessToken") || "";
 
@@ -66,9 +65,10 @@ const PackageAdmin = () => {
       const payload = {
         name: formData.name,
         price: formData.price,
-        eventstoragetime: parseInt(formData.eventstoragetime, 10), // Chuyển thành số nguyên
+        eventstoragetime: parseInt(formData.eventstoragetime, 10),
+        description: formData.description,
       };
-  
+
       await axios.post(API_PACKAGE, payload, {
         headers: {
           Authorization: `${accessToken}`,
@@ -81,21 +81,23 @@ const PackageAdmin = () => {
         name: "",
         eventstoragetime: "",
         price: "",
+        description: "",
       });
     } catch (error) {
       console.error("Error creating package:", error);
       alert("Error creating package: " + error.response?.data?.message || error.message);
     }
   };
-  
+
   const handleEditPackage = async () => {
     try {
       const payload = {
         name: formData.name,
         price: formData.price,
-        eventstoragetime: parseInt(formData.eventstoragetime, 10), // Chuyển thành số nguyên
+        eventstoragetime: parseInt(formData.eventstoragetime, 10),
+        description: formData.description,
       };
-  
+
       await axios.put(`${API_PACKAGE}/${editId}`, payload, {
         headers: {
           Authorization: `${accessToken}`,
@@ -106,9 +108,9 @@ const PackageAdmin = () => {
       fetchPackages();
       setFormData({
         name: "",
-        description: "",
         eventstoragetime: "",
         price: "",
+        description: "",
       });
       setIsEditing(false);
       setEditId(null);
@@ -117,7 +119,6 @@ const PackageAdmin = () => {
       alert("Error updating package: " + error.response?.data?.message || error.message);
     }
   };
-  
 
   const handleToggleStatus = async (id, currentStatus) => {
     try {
@@ -144,6 +145,7 @@ const PackageAdmin = () => {
       name: pkg.name,
       eventstoragetime: pkg.eventstoragetime,
       price: pkg.price,
+      description: pkg.description || "",
     });
     onOpen();
   };
@@ -169,6 +171,7 @@ const PackageAdmin = () => {
               name: "",
               eventstoragetime: "",
               price: "",
+              description: "",
             });
             onOpen();
           }}
@@ -196,8 +199,11 @@ const PackageAdmin = () => {
               </Text>
               <Text>
                 Storage Time:{" "}
-                <strong>{pkg.eventstoragetime} {pkg.eventstoragetime > 1 ? "Months" : "Month"}</strong>
+                <strong>
+                  {pkg.eventstoragetime} {pkg.eventstoragetime > 1 ? "Months" : "Month"}
+                </strong>
               </Text>
+              <Text>Description: {pkg.description || "No description provided."}</Text>
               <Text fontSize="lg" fontWeight="bold" color="teal.800">
                 {pkg.price} VND
               </Text>
@@ -264,6 +270,16 @@ const PackageAdmin = () => {
                 type="number"
                 placeholder="Enter price"
                 value={formData.price}
+                onChange={handleInputChange}
+              />
+            </FormControl>
+
+            <FormControl mt={4}>
+              <FormLabel>Description</FormLabel>
+              <Input
+                name="description"
+                placeholder="Enter package description"
+                value={formData.description}
                 onChange={handleInputChange}
               />
             </FormControl>

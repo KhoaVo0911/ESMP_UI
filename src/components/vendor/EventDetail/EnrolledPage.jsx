@@ -9,31 +9,40 @@ import {
   Spinner,
   Flex,
   Divider,
+  HStack,
 } from "@chakra-ui/react";
-import SelectBooth from "./SelectBooth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { ref, getDownloadURL } from "firebase/storage";
+import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
+import SelectBooth from "./SelectBooth";
 
-const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const BASE_URL =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
 
 const EventEnrolled = () => {
-  const navigate = useNavigate();
+  const { state } = useLocation(); // Lấy state từ điều hướng
+  const eventId = state?.eventId; // Lấy eventId từ state
   const accessToken = sessionStorage.getItem("accessToken") || "";
   const vendorId = sessionStorage.getItem("vendorId") || "";
-  const eventId = sessionStorage.getItem("eventId");
   const hostId = sessionStorage.getItem("hostId") || ""; // Lấy hostId từ sessionStorage
 
   const [eventDetail, setEventDetail] = useState(null);
   const [boothData, setBoothData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    if (!eventId) {
+      console.error("Missing eventId");
+      navigate("/"); // Quay lại trang chính nếu thiếu eventId
+      return;
+    }
+
     const fetchEventDetail = async () => {
       try {
-        const response = await axios.get(`${URL}/${eventId}`, {
+        const response = await axios.get(`${BASE_URL}/${eventId}`, {
           headers: {
             Authorization: `${accessToken}`,
             "Content-Type": "application/json",
@@ -42,12 +51,18 @@ const EventEnrolled = () => {
         const event = response.data;
 
         // Lấy URL ảnh từ Firebase
-        const imageRef = ref(storage, `${hostId}/${eventId}/thumbnail`);
         try {
-          event.logo = await getDownloadURL(imageRef);
+          const imagesRef = ref(storage, `${hostId}/${eventId}`);
+          const imagesList = await listAll(imagesRef);
+          if (imagesList.items.length > 0) {
+            const mainImageRef = imagesList.items[0]; // Lấy file đầu tiên
+            event.logo = await getDownloadURL(mainImageRef);
+          } else {
+            event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu không có ảnh
+          }
         } catch (error) {
-          console.error("Error fetching event image:", error);
-          event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu không có ảnh
+          console.warn("Error fetching event image:", error);
+          event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu lỗi
         }
 
         setEventDetail(event);
@@ -60,7 +75,7 @@ const EventEnrolled = () => {
     };
 
     fetchEventDetail();
-  }, [eventId, accessToken, hostId]);
+  }, [eventId, accessToken, hostId, navigate]);
 
   const handleShopClick = () => {
     navigate("/shop", {
@@ -83,7 +98,9 @@ const EventEnrolled = () => {
   if (error) {
     return (
       <Box p={10} textAlign="center">
-        <Text fontSize="xl" color="red.500">{error}</Text>
+        <Text fontSize="xl" color="red.500">
+          {error}
+        </Text>
       </Box>
     );
   }
@@ -91,7 +108,9 @@ const EventEnrolled = () => {
   if (!eventDetail) {
     return (
       <Box p={10} textAlign="center">
-        <Text fontSize="xl" color="gray.500">No event details available</Text>
+        <Text fontSize="xl" color="gray.500">
+          No event details available
+        </Text>
       </Box>
     );
   }
@@ -103,14 +122,12 @@ const EventEnrolled = () => {
           <Text fontSize="4xl" fontWeight="bold" color="black">
             {eventDetail.name}
           </Text>
-          <div style={{ width: "45%", display: "flex", justifyContent: "space-between" }}>
+          <HStack spacing={6}>
             <Text fontSize="lg" fontWeight="bold" color="gray.600">
-              {new Date(eventDetail.startDate).toLocaleDateString()} - {new Date(eventDetail.endDate).toLocaleDateString()}
+              {new Date(eventDetail.startDate).toLocaleDateString()} -{" "}
+              {new Date(eventDetail.endDate).toLocaleDateString()}
             </Text>
-            <Text fontSize="lg" fontWeight="bold" color="gray.600">
-              {eventDetail.time}
-            </Text>
-          </div>
+          </HStack>
           <Button colorScheme="teal" size="lg" onClick={handleShopClick}>
             Shop
           </Button>
@@ -126,7 +143,10 @@ const EventEnrolled = () => {
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
       <Text fontSize="md" color="gray.600" mb={10}>
-        Welcome to the <strong>{eventDetail.name}</strong>, where we come together to celebrate the full moon and immerse ourselves in the warm, vibrant atmosphere of autumn. This year's event promises to bring you and your family a culturally rich and meaningful experience.
+        Welcome to the <strong>{eventDetail.name}</strong>, where we come
+        together to celebrate the full moon and immerse ourselves in the warm,
+        vibrant atmosphere of autumn. This year's event promises to bring you
+        and your family a culturally rich and meaningful experience.
       </Text>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
@@ -135,10 +155,7 @@ const EventEnrolled = () => {
         Select Booth
       </Text>
       <Box>
-        <SelectBooth
-          boothData={boothData}
-          setBoothData={setBoothData}
-        />
+        <SelectBooth boothData={boothData} setBoothData={setBoothData} />
       </Box>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
@@ -146,7 +163,7 @@ const EventEnrolled = () => {
       <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
         Location
       </Text>
-      <div style={{ width: "100%", height: "300px", marginBottom: "20px" }}>
+      <Box width="100%" height="300px" mb={10}>
         <iframe
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.6100105370224!2d106.8073080746704!3d10.84112758931162!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752731176b07b1%3A0xb752b24b379bae5e!2sFPT%20University%20HCMC!5e0!3m2!1sen!2s!4v1726308048313!5m2!1sen!2s"
           width="100%"
@@ -157,7 +174,7 @@ const EventEnrolled = () => {
           referrerPolicy="no-referrer-when-downgrade"
           title="FPT University HCMC Map"
         ></iframe>
-      </div>
+      </Box>
     </Box>
   );
 };

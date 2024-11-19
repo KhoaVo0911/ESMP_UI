@@ -14,17 +14,18 @@ import { ArrowBack } from "@mui/icons-material";
 import SelectBooth from "./SelectBooth";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { ref, getDownloadURL } from "firebase/storage";
+import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
 
-const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const URL =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
 
 const EventPageStaff = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
   const accessToken = sessionStorage.getItem("accessToken") || "";
   const vendorId = sessionStorage.getItem("vendorId") || "";
-  const hostId = sessionStorage.getItem("hostId") || ""; 
+  const hostId = sessionStorage.getItem("hostId") || "";
 
   const [eventDetail, setEventDetail] = useState(null);
   const [boothData, setBoothData] = useState([]);
@@ -42,18 +43,26 @@ const EventPageStaff = () => {
         });
         const event = response.data;
 
-        const imageRef = ref(storage, `${hostId}/${eventId}/thumbnail`);
+        // Fetch image from Firebase
         try {
-          event.logo = await getDownloadURL(imageRef);
+          const imagesRef = ref(storage, `${hostId}/${eventId}`);
+          const imagesList = await listAll(imagesRef);
+
+          if (imagesList.items.length > 0) {
+            const mainImageRef = imagesList.items[0]; // Get the first image
+            event.logo = await getDownloadURL(mainImageRef);
+          } else {
+            event.logo = "https://via.placeholder.com/150"; // Default image if no files are found
+          }
         } catch (error) {
           console.error("Error fetching event image:", error);
-          event.logo = "https://via.placeholder.com/150";
+          event.logo = "https://via.placeholder.com/150"; // Default fallback image
         }
 
         setEventDetail(event);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching event detail:", error);
+        console.error("Error fetching event details:", error);
         setError("Failed to fetch event details");
         setLoading(false);
       }
@@ -87,7 +96,9 @@ const EventPageStaff = () => {
   if (error) {
     return (
       <Box p={10} textAlign="center">
-        <Text fontSize="xl" color="red.500">{error}</Text>
+        <Text fontSize="xl" color="red.500">
+          {error}
+        </Text>
       </Box>
     );
   }
@@ -95,7 +106,9 @@ const EventPageStaff = () => {
   if (!eventDetail) {
     return (
       <Box p={10} textAlign="center">
-        <Text fontSize="xl" color="gray.500">No event details available</Text>
+        <Text fontSize="xl" color="gray.500">
+          No event details available
+        </Text>
       </Box>
     );
   }
@@ -112,7 +125,9 @@ const EventPageStaff = () => {
             marginRight: "10px",
           }}
         />
-        <Text fontSize="2xl" fontWeight="bold" color="black">Event Details</Text>
+        <Text fontSize="2xl" fontWeight="bold" color="black">
+          Event Details
+        </Text>
       </Flex>
 
       <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={10} mb={10}>
@@ -120,9 +135,16 @@ const EventPageStaff = () => {
           <Text fontSize="4xl" fontWeight="bold" color="black">
             {eventDetail.name}
           </Text>
-          <div style={{ width: "45%", display: "flex", justifyContent: "space-between" }}>
+          <div
+            style={{
+              width: "45%",
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
             <Text fontSize="lg" fontWeight="bold" color="gray.600">
-              {new Date(eventDetail.startDate).toLocaleDateString()} - {new Date(eventDetail.endDate).toLocaleDateString()}
+              {new Date(eventDetail.startDate).toLocaleDateString()} -{" "}
+              {new Date(eventDetail.endDate).toLocaleDateString()}
             </Text>
             <Text fontSize="lg" fontWeight="bold" color="gray.600">
               {eventDetail.time}
@@ -137,13 +159,18 @@ const EventPageStaff = () => {
           alt={eventDetail.name}
           borderRadius="lg"
           boxShadow="lg"
+          maxH="300px"
+          objectFit="cover"
         />
       </Grid>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
       <Text fontSize="md" color="gray.600" mb={10}>
-        Welcome to the <strong>{eventDetail.name}</strong>, where we come together to celebrate the full moon and immerse ourselves in the warm, vibrant atmosphere of autumn. This year's event promises to bring you and your family a culturally rich and meaningful experience.
+        Welcome to the <strong>{eventDetail.name}</strong>, where we come
+        together to celebrate the full moon and immerse ourselves in the warm,
+        vibrant atmosphere of autumn. This year's event promises to bring you
+        and your family a culturally rich and meaningful experience.
       </Text>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
@@ -152,10 +179,7 @@ const EventPageStaff = () => {
         Select Booth
       </Text>
       <Box>
-        <SelectBooth
-          boothData={boothData}
-          setBoothData={setBoothData}
-        />
+        <SelectBooth boothData={boothData} setBoothData={setBoothData} />
       </Box>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />

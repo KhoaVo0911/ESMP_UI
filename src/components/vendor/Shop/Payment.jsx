@@ -70,9 +70,21 @@ const Payment = ({ removeItem }) => {
   }, [cartItems, vendorId]);
 
   useEffect(() => {
-    const latestQrUrl = sessionStorage.getItem("urlQr") || "defaultBank-defaultAccount";
-    const newQrUrl = `https://img.vietqr.io/image/${latestQrUrl}-compact2.png?amount=${totalPrice}&addInfo=Event Tech&accountName=Quang Minh`;
-    setQrUrl(newQrUrl);
+    const refreshQrUrl = () => {
+      const latestQrUrl = sessionStorage.getItem("urlQr") || "defaultBank-defaultAccount";
+      const newQrUrl = `https://img.vietqr.io/image/${latestQrUrl}-compact2.png?amount=${totalPrice}&addInfo=Event Tech&accountName=Quang Minh`;
+      setQrUrl(newQrUrl);
+    };
+
+    // Cập nhật ngay khi component được mount
+    refreshQrUrl();
+
+    // Thêm event listener để lắng nghe thay đổi của sessionStorage
+    window.addEventListener('storage', refreshQrUrl);
+
+    return () => {
+      window.removeEventListener('storage', refreshQrUrl);
+    };
   }, [totalPrice]);
 
   const handleCashOut = () => {
@@ -88,7 +100,6 @@ const Payment = ({ removeItem }) => {
 
   const saveOrder = async () => {
     try {
-      // Bước 1: Tạo order bằng POST
       const orderData = {
         eventId: eventId,
         vendorId: vendorId,
@@ -101,8 +112,8 @@ const Payment = ({ removeItem }) => {
           unitPrice: item.price,
         })),
       };
-  
-      await axios.post(
+
+      const response = await axios.post(
         `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order`,
         orderData,
         {
@@ -112,26 +123,14 @@ const Payment = ({ removeItem }) => {
           },
         }
       );
-  
-      // Bước 2: Lấy order mới nhất của vendor bằng GET
-      const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order/vendor/${vendorId}`,
-        {
-          headers: {
-            Authorization: `${accessToken}`,
-          },
-        }
-      );
-  
-      // Giả định rằng response trả về danh sách và lấy phần tử đầu tiên là order mới nhất
-      const latestOrder = response.data[response.data.length - 1];
-const orderId = latestOrder?.orderId;
-return orderId;
+
+      const latestOrder = response.data;
+      return latestOrder.orderId;
     } catch (error) {
-      console.error("Error creating or fetching order:", error);
+      console.error("Error creating order:", error);
       toast({
         title: "Lỗi khi tạo đơn hàng",
-        description: "Đã xảy ra lỗi khi tạo hoặc lấy ID của đơn hàng. Vui lòng thử lại.",
+        description: "Đã xảy ra lỗi khi tạo đơn hàng. Vui lòng thử lại.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -139,7 +138,6 @@ return orderId;
       return null;
     }
   };
-  
 
   const createTransaction = async (orderId) => {
     try {
@@ -237,26 +235,26 @@ return orderId;
       </Text>
 
       <HStack align="start" spacing={8} justify="center">
-      <VStack p={5} borderWidth="1px" borderRadius="md" boxShadow="lg" bg="white" width="60%" spacing={5} align="stretch">
-        {cartItems.map((item, index) => (
-          <HStack key={index} justify="space-between" p={4} borderWidth="1px" borderRadius="lg" boxShadow="sm" bg="gray.50" width="100%">
-            <HStack spacing={4} width="70%">
-              <Image src={images[item.productItemId] || "https://via.placeholder.com/150"} alt={item.name} boxSize="60px" borderRadius="full" />
-              <VStack align="start" spacing={1} width="100%">
-                <Text fontWeight="medium" noOfLines={2} maxWidth="180px">{item.name}</Text>
-                <HStack>
-                  <Text fontSize="md" fontWeight="bold" color="gray.700">Số lượng:</Text>
-                  <Text fontSize="md" fontWeight="bold" color="blue.600">{item.quantity}</Text>
-                </HStack>
-              </VStack>
+        <VStack p={5} borderWidth="1px" borderRadius="md" boxShadow="lg" bg="white" width="60%" spacing={5} align="stretch">
+          {cartItems.map((item, index) => (
+            <HStack key={index} justify="space-between" p={4} borderWidth="1px" borderRadius="lg" boxShadow="sm" bg="gray.50" width="100%">
+              <HStack spacing={4} width="70%">
+                <Image src={images[item.productItemId] || "https://via.placeholder.com/150"} alt={item.name} boxSize="60px" borderRadius="full" />
+                <VStack align="start" spacing={1} width="100%">
+                  <Text fontWeight="medium" noOfLines={2} maxWidth="180px">{item.name}</Text>
+                  <HStack>
+                    <Text fontSize="md" fontWeight="bold" color="gray.700">Số lượng:</Text>
+                    <Text fontSize="md" fontWeight="bold" color="blue.600">{item.quantity}</Text>
+                  </HStack>
+                </VStack>
+              </HStack>
+              <Text fontWeight="bold" color="blue.600" minWidth="80px" textAlign="right">
+                {(item.price * item.quantity).toLocaleString()} VND
+              </Text>
+              <IconButton icon={<DeleteIcon />} colorScheme="red" onClick={() => removeItem(index)} aria-label="Remove Item" />
             </HStack>
-            <Text fontWeight="bold" color="blue.600" minWidth="80px" textAlign="right">
-              {(item.price * item.quantity).toLocaleString()} VND
-            </Text>
-            <IconButton icon={<DeleteIcon />} colorScheme="red" onClick={() => removeItem(index)} aria-label="Remove Item" />
-          </HStack>
-        ))}
-      </VStack>
+          ))}
+        </VStack>
 
         <Box p={6} borderWidth="1px" borderRadius="md" boxShadow="lg" bg="white" width="30%">
           <Text fontSize="2xl" fontWeight="bold" mb={4} color="blue.700">Thanh toán</Text>

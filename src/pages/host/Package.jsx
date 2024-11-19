@@ -18,14 +18,17 @@ import {
   useToast,
   Progress,
 } from "@chakra-ui/react";
+import axios from "axios";
 
-const API_COURSE = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/package";
+const API_PACKAGE =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/package";
 
-const CourseList = () => {
-  const [courses, setCourses] = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState({
+const PackageList = () => {
+  const [packages, setPackages] = useState([]);
+  const [selectedPackage, setSelectedPackage] = useState({
     content: "",
     price: "",
+    description: "",
     showQR: false,
     qrUrl: "",
   });
@@ -34,31 +37,25 @@ const CourseList = () => {
   const toast = useToast();
   const countdownIntervalRef = useRef(null);
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      const accessToken = sessionStorage.getItem("accessToken") || "";
+  const accessToken = sessionStorage.getItem("accessToken") || "";
 
+  useEffect(() => {
+    const fetchPackages = async () => {
       try {
-        const response = await fetch(API_COURSE, {
-          method: "GET",
+        const response = await axios.get(API_PACKAGE, {
           headers: {
             Authorization: `${accessToken}`,
             "Content-Type": "application/json",
           },
         });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch courses");
-        }
-
-        const data = await response.json();
-        const activeCourses = data.filter((course) => course.status);
-        setCourses(activeCourses);
+        // Lọc các gói có trạng thái active
+        const activePackages = response.data.filter((pkg) => pkg.status);
+        setPackages(activePackages);
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách khóa học:", error);
+        console.error("Error fetching packages:", error);
         toast({
           title: "Lỗi tải dữ liệu",
-          description: "Không thể tải danh sách khóa học.",
+          description: "Không thể tải danh sách gói.",
           status: "error",
           duration: 5000,
           isClosable: true,
@@ -66,19 +63,17 @@ const CourseList = () => {
       }
     };
 
-    fetchCourses();
-  }, []);
+    fetchPackages();
+  }, [accessToken]);
 
-  const handleCourseClick = (course, index) => {
-    const paidPrice = courses[index].price;
-    const paidContent = courses[index].id;
-    const qrUrl = `https://img.vietqr.io/image/ACB-18254271-compact2.png?amount=${paidPrice}&addInfo=${paidContent}&accountName=Dinh Quang Minh`;
-
+  const handlePackageClick = (pkg) => {
+    const qrUrl = `https://img.vietqr.io/image/ACB-18254271-compact2.png?amount=${pkg.price}&addInfo=${pkg.description}&accountName=Dinh Quang Minh`;
     const newStartTime = new Date();
 
-    setSelectedCourse({
-      content: paidContent,
-      price: paidPrice,
+    setSelectedPackage({
+      content: pkg.description,
+      price: pkg.price,
+      description: pkg.description,
       showQR: true,
       qrUrl: qrUrl,
     });
@@ -100,7 +95,7 @@ const CourseList = () => {
             duration: 5000,
             isClosable: true,
           });
-          setSelectedCourse((prevState) => ({ ...prevState, showQR: false }));
+          setSelectedPackage((prevState) => ({ ...prevState, showQR: false }));
           onClose();
           return 0;
         }
@@ -109,19 +104,24 @@ const CourseList = () => {
     }, 1000);
 
     const transactionCheckInterval = setInterval(() => {
-      checkPaid(paidPrice, paidContent, transactionCheckInterval, newStartTime);
+      checkPaid(
+        pkg.price,
+        pkg.description,
+        transactionCheckInterval,
+        newStartTime
+      );
     }, 2000);
 
     onOpen();
   };
 
-  const checkPaid = async (price, content, intervalId, startTime) => {
+  const checkPaid = async (price, description, intervalId, startTime) => {
     try {
-      const response = await fetch(
-        "https://script.googleusercontent.com/macros/echo?user_content_key=8mGZWlfGvyWWCS0cgyAlbllHqG0udaCGO6tQG01QDu_wCpCCVmBzuMQkZjU8HftH-T-t8S8NkPOO0HpzZqbIUpIRb8DGG9xPm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnAYXetFrC-zWvA_lqYZvPnJoCEY4_DQEloQ1meRe94z4CqWcnBBqRLMg8PXC-uxuJBvFcvoj2FToq-yfHtQXpYQW0UstbE5dAtz9Jw9Md8uu&lib=MbbErZamKd_6ahvdDuCk2MKVwqDhlS6o-"
+      const response = await axios.get(
+        "https://script.googleusercontent.com/macros/echo?user_content_key=sfoSNLx5GRCbDs5uKLVukjxXVCO-zoVh0YrGTSqqzjAZZLs_PRwvjkNIG1J8ROGnt9NOZvqcrXZH4sj3Ynzzs_Rg5L2rloSpm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnGzmiW6YfwUI-IFTkZPDW3Qhx49gvcLvmaxfvmNYILLzHEfRAI-GMs9URhNVjzo6vwQAdcoIo8r4bnDQ8wtSOeMl4ZsuUTDnRtz9Jw9Md8uu&lib=MbbErZamKd_6ahvdDuCk2MKVwqDhlS6o-"
       );
-      const data = await response.json();
-      const lastPaid = data.data[data.data.length - 1];
+      const data = response.data.data;
+      const lastPaid = data[data.length - 1];
 
       const lastPrice =
         lastPaid && lastPaid["Giá trị"] ? parseFloat(lastPaid["Giá trị"]) : 0;
@@ -130,37 +130,52 @@ const CourseList = () => {
           ? lastPaid["Mô tả"].trim().toLowerCase()
           : "";
       const transactionTime = new Date(lastPaid["Ngày diễn ra"]).getTime();
-
       const startTimestamp = new Date(startTime).getTime();
 
       if (
-        lastPrice >= price &&
-        lastContent.includes(content.toLowerCase()) &&
+        lastPrice === parseFloat(price) &&
+        lastContent.includes(description.toLowerCase()) &&
         transactionTime > startTimestamp
       ) {
         clearInterval(intervalId);
         clearInterval(countdownIntervalRef.current);
         toast({
           title: "Thanh toán thành công",
-          description: "Bạn đã thanh toán thành công cho khóa học.",
+          description: "Bạn đã thanh toán thành công cho gói.",
           status: "success",
           duration: 5000,
           isClosable: true,
         });
-        setSelectedCourse((prevState) => ({ ...prevState, showQR: false }));
+        setSelectedPackage((prevState) => ({ ...prevState, showQR: false }));
         onClose();
       }
     } catch (error) {
-      console.error("Lỗi:", error);
+      console.error("Lỗi kiểm tra giao dịch:", error);
     }
   };
+  // (#1A2D42, #2E4156, #AAB7B7, #C0C8CA, #D4D8DD).
+
 
   return (
-    <VStack spacing={8} align="center" padding={4} bg="#f5f5dc" minH="100vh">
+    <VStack spacing={8} align="center" padding={4} bg="white" minH="100vh">
+      <Heading
+        as="h1"
+        size="lg"
+        textAlign="center"
+        mb={6}
+        color="#2E4156"
+        bgGradient="linear(to-r, teal.400, teal.600)"
+        bgClip="text"
+      >
+        Welcome to the Service Package Management Page{" "}
+      </Heading>
+      <Text textAlign="center" color="#2E4156" mb={8}>
+      Here, you can view and purchase service packages. Choose the package that suits your needs!
+      </Text>
       <Flex wrap="wrap" justify="center" gap={6}>
-        {courses.map((item, index) => (
+        {packages.map((pkg) => (
           <Box
-            key={item.id}
+            key={pkg.id}
             position="relative"
             maxW="280px"
             textAlign="center"
@@ -170,31 +185,35 @@ const CourseList = () => {
             p={4}
             _hover={{ transform: "scale(1.05)" }}
             transition="0.3s ease-in-out"
-            border="1px solid #d4af37"
+            border="1px solid #2E4156"
+            width="300px"
           >
-            <Image
-              src={item.avatar || "https://via.placeholder.com/300x180"}
-              alt={item.name}
+            {/* <Image
+              src="https://via.placeholder.com/300x180" // Placeholder image
+              alt={pkg.name}
               borderRadius="md"
               boxShadow="lg"
               width="100%"
               height="180px"
               objectFit="cover"
               mb={4}
-            />
-            <Heading size="md" color="#6b4226" mb={2}>
-              {item.name}
+            /> */}
+            <Heading size="md" color="#1A2D42" mb={2}>
+              {pkg.name}
             </Heading>
-            <Text fontSize="lg" fontWeight="bold" color="#8b4513" mb={4}>
-              {parseInt(item.price).toLocaleString()} VND
+            <Text fontSize="sm" mb={2}>
+              {pkg.description}
+            </Text>
+            <Text fontSize="lg" fontWeight="bold" color="#1A2D42" mb={4}>
+              {parseInt(pkg.price).toLocaleString()} VND
             </Text>
             <Button
-              colorScheme="yellow"
+              colorScheme="#1A2D42"
               variant="outline"
-              borderColor="#d4af37"
-              color="#6b4226"
-              _hover={{ bg: "#d4af37", color: "white" }}
-              onClick={() => handleCourseClick(item, index)}
+              borderColor="#1A2D42"
+              color="#1A2D42"
+              _hover={{ bg: "#1A2D42", color: "white" }}
+              onClick={() => handlePackageClick(pkg)}
             >
               Mua
             </Button>
@@ -209,26 +228,34 @@ const CourseList = () => {
           <ModalCloseButton />
           <ModalBody textAlign="center">
             <Image
-              src={selectedCourse.qrUrl}
+              src={selectedPackage.qrUrl}
               alt="QR Code"
               mx="auto"
               mb={4}
               boxShadow="md"
               width={["80%", "70%", "60%"]}
             />
-            <Text fontSize="lg" mb={2} color="yellow.400">
+            <Text fontSize="lg" mb={2} color="#1A2D42">
               Mã QR thanh toán tự động
             </Text>
             <Text fontSize="sm" color="gray.500" p={5}>
               (Xác nhận tự động - Thường không quá 3')
             </Text>
-            <Flex alignItems="center" justifyContent="space-between" width="100%">
-              <Text>Số tiền: {parseInt(selectedCourse.price).toLocaleString()} VND</Text>
-              <Text>Nội dung: {selectedCourse.content}</Text>
+            <Flex
+              alignItems="center"
+              justifyContent="space-between"
+              width="100%"
+            >
+              <Text>Số tiền: {selectedPackage.price.toLocaleString()} VND</Text>
+              <Text>Nội dung: {selectedPackage.description}</Text>
             </Flex>
 
             <Box mt={4} p={2} borderTop="1px solid gray">
-              <Flex alignItems="center" justifyContent="space-between" width="100%">
+              <Flex
+                alignItems="center"
+                justifyContent="space-between"
+                width="100%"
+              >
                 <Text>Đang chờ thanh toán</Text>
                 <Text>
                   Thời gian còn lại:{" "}
@@ -240,7 +267,7 @@ const CourseList = () => {
               <Progress
                 value={(remainingTime / 120) * 100}
                 size="sm"
-                colorScheme="yellow"
+                colorScheme="blue"
                 mt={2}
                 width="100%"
               />
@@ -257,4 +284,4 @@ const CourseList = () => {
   );
 };
 
-export default CourseList;
+export default PackageList;
