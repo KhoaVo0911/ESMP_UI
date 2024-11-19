@@ -24,10 +24,10 @@ import {
 import { DeleteIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { storage } from "./../../../shared/firebase/firebaseConfig";
+import { storage } from "./../../../../shared/firebase/firebaseConfig";
 import { ref, getDownloadURL } from "firebase/storage";
 
-const Payment = ({ removeItem }) => {
+const StaffPayment = ({ removeItem }) => {
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [qrUrl, setQrUrl] = useState("");
@@ -197,7 +197,7 @@ return orderId;
           isClosable: true,
         });
         setTimeout(() => {
-          navigate("/shop", {
+          navigate("/staffshop", {
             state: { accessToken, vendorId, eventId },
           });
         }, 3000);
@@ -218,7 +218,7 @@ return orderId;
       });
 
       setTimeout(() => {
-        navigate("/shop", {
+        navigate("/staffshop", {
           state: { accessToken, vendorId, eventId },
         });
       }, 3000);
@@ -344,4 +344,4 @@ return orderId;
   );
 };
 
-export default Payment;
+export default StaffPayment;

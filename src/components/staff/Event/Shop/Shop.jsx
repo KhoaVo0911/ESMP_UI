@@ -137,7 +137,7 @@ const StaffShop = () => {
   };
 
   const handleGoToOrderedList = () => {
-    navigate("/ordered-list", {
+    navigate("/staff-ordered-list", {
       state: { accessToken, vendorId, eventId },
     });
   };

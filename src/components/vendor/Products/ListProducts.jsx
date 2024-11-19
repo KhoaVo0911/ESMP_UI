@@ -42,7 +42,7 @@ const ProductList = () => {
     setLoading(true);
     try {
       const productResponse = await axios.get(
-        "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product",
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
         {
           headers: {
             Authorization: `${accessToken}`,

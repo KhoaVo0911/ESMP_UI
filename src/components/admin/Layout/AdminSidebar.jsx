@@ -45,6 +45,11 @@ const AdminSideBar = ({ collapsed }) => {
           icon: <FormatListBulletedIcon />,
           label: <span style={{ fontWeight: "bold" }}>Transaction History</span>,
         },
+        {
+          key: "3",
+          icon: <FormatListBulletedIcon />,
+          label: <span style={{ fontWeight: "bold" }}>Package</span>,
+        }
         
       ],
     },
@@ -60,7 +65,7 @@ const AdminSideBar = ({ collapsed }) => {
         navigate("/adtransaction");
         break;
       case "3":
-        navigate("/ManageProductItems");
+        navigate("/admin-package");
         break;
       case "4":
         navigate("/eventsVendor");

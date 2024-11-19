@@ -11,50 +11,65 @@ import {
   useDisclosure,
   Spinner,
 } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import SelectBooth from "./SelectBooth";
-import { ref, getDownloadURL } from "firebase/storage";
+import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
+import SelectBooth from "./SelectBooth";
 
-const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
-const vendorInEventURL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent";
+const BASE_URL =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const vendorInEventURL =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent";
 
 const EventDetail = () => {
-  const eventId = sessionStorage.getItem("eventId");
+  const { state } = useLocation(); // Lấy state từ điều hướng
+  const eventId = state?.eventId; // eventId được truyền từ trang trước
   const accessToken = sessionStorage.getItem("accessToken");
   const vendorId = sessionStorage.getItem("vendorId");
-  const hostId = sessionStorage.getItem("hostId") || ""; // Get hostId from sessionStorage
+  const hostId = sessionStorage.getItem("hostId") || "";
+
   const [eventDetail, setEventDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if vendor is registered in the event and navigate if true
+    if (!eventId) {
+      console.error("Missing eventId");
+      navigate("/"); // Nếu thiếu eventId, quay lại trang chính
+      return;
+    }
+
+    // Kiểm tra vendor đã đăng ký sự kiện chưa
     const checkVendorInEvent = async () => {
       try {
-        const response = await axios.get(`${vendorInEventURL}/${vendorId}/${eventId}`, {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await axios.get(
+          `${vendorInEventURL}/${vendorId}/${eventId}`,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-        // If vendorId and eventId match, navigate to /eventenrolled
-        if (response.data.eventId === eventId && response.data.vendorId === vendorId) {
-          navigate("/eventenrolled", { state: { accessToken, eventId, vendorId } });
+        if (
+          response.data.eventId === eventId &&
+          response.data.vendorId === vendorId
+        ) {
+          navigate("/eventenrolled", {
+            state: { accessToken, eventId, vendorId },
+          });
         }
       } catch (error) {
-        console.error("Error checking vendor status in event:", error);
+        console.warn("Vendor is not registered in the event:", error);
       }
     };
 
-    checkVendorInEvent();
-
-    // Fetch event details from API
     const fetchEventDetail = async () => {
       try {
-        const response = await axios.get(`${URL}/${eventId}`, {
+        const response = await axios.get(`${BASE_URL}/${eventId}`, {
           headers: {
             Authorization: `${accessToken}`,
             "Content-Type": "application/json",
@@ -62,25 +77,34 @@ const EventDetail = () => {
         });
         const event = response.data;
 
-        // Get image URL from Firebase
-        const imageRef = ref(storage, `${hostId}/${eventId}/thumbnail`);
+        // Lấy hình ảnh từ Firebase
         try {
-          event.logo = await getDownloadURL(imageRef);
+          const imagesRef = ref(storage, `${hostId}/${eventId}`);
+          const imagesList = await listAll(imagesRef);
+          if (imagesList.items.length > 0) {
+            const mainImageRef = imagesList.items[0];
+            event.logo = await getDownloadURL(mainImageRef);
+          } else {
+            event.logo = "https://via.placeholder.com/150";
+          }
         } catch (error) {
-          console.error("Error fetching event image:", error);
-          event.logo = "https://via.placeholder.com/150"; // Default URL if image is not available
+          console.warn("Error fetching event image:", error);
+          event.logo = "https://via.placeholder.com/150";
         }
 
         setEventDetail(event);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching event details:", error);
+        setLoading(false);
       }
     };
 
+    checkVendorInEvent();
     fetchEventDetail();
   }, [eventId, accessToken, vendorId, hostId, navigate]);
 
-  if (!eventDetail) {
+  if (loading) {
     return (
       <Flex justifyContent="center" alignItems="center" height="100vh">
         <Spinner size="xl" color="teal.500" />
@@ -88,9 +112,19 @@ const EventDetail = () => {
     );
   }
 
+  if (!eventDetail) {
+    return (
+      <Box p={10} textAlign="center">
+        <Text fontSize="xl" color="gray.500">
+          No event details found
+        </Text>
+      </Box>
+    );
+  }
+
   return (
     <Box padding="40px" bgGradient="linear(to-r, #f0f4f8, #d4f1f4)" minH="100vh">
-      {/* Event Details Card */}
+      {/* Chi tiết sự kiện */}
       <Flex
         direction={{ base: "column", lg: "row" }}
         justify="space-between"
@@ -103,7 +137,7 @@ const EventDetail = () => {
         maxW="1200px"
         mx="auto"
       >
-        {/* Event Info */}
+        {/* Thông tin sự kiện */}
         <VStack align="flex-start" spacing={6} maxW="500px">
           <Text fontSize="3xl" fontWeight="bold" color="teal.700">
             {eventDetail.name}
@@ -119,7 +153,7 @@ const EventDetail = () => {
           </Button>
         </VStack>
 
-        {/* Event Image */}
+        {/* Hình ảnh sự kiện */}
         <Image
           src={eventDetail.logo}
           alt={eventDetail.name}
@@ -134,12 +168,22 @@ const EventDetail = () => {
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
-      {/* Event Description */}
-      <Text fontSize="lg" color="gray.700" mb={8} maxW="900px" mx="auto" textAlign="center">
-        Welcome to <strong>{eventDetail.name}</strong>, where we come together to celebrate and immerse ourselves in a unique experience. This event promises to bring you and your family a culturally rich and meaningful experience, filled with excitement and warmth.
+      {/* Mô tả sự kiện */}
+      <Text
+        fontSize="lg"
+        color="gray.700"
+        mb={8}
+        maxW="900px"
+        mx="auto"
+        textAlign="center"
+      >
+        Welcome to <strong>{eventDetail.name}</strong>, where we come together
+        to celebrate and immerse ourselves in a unique experience. This event
+        promises to bring you and your family a culturally rich and meaningful
+        experience, filled with excitement and warmth.
       </Text>
 
-      {/* Render SelectBooth component as a modal */}
+      {/* Component SelectBooth */}
       <Box>
         <SelectBooth
           isPopup={true}

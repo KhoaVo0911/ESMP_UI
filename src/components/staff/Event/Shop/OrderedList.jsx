@@ -29,7 +29,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { FaCheckCircle, FaTimesCircle, FaShippingFast } from "react-icons/fa";
 import axios from "axios";
 
-const OrderedList = () => {
+const StaffOrderedList = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
@@ -115,7 +115,7 @@ const OrderedList = () => {
   }, [orders, accessToken]);
 
   const handleBack = () => {
-    navigate("/shop", { state: { accessToken, vendorId, eventId } });
+    navigate("/staffshop", { state: { accessToken, vendorId, eventId } });
   };
 
   const handleViewDetails = async (orderId) => {
@@ -313,4 +313,4 @@ const OrderedList = () => {
   );
 };
 
-export default OrderedList;
+export default StaffOrderedList ;

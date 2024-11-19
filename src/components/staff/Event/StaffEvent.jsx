@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Tabs, Input, Button, Card, Row, Col, Modal } from "antd";
+import { Card, Row, Col } from "antd";
 import axios from "axios";
-import SearchIcon from "@mui/icons-material/Search";
-import { ref, getDownloadURL } from "firebase/storage";
+import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
-import { Divider } from "@mui/material";
 
 const API_EVENTS =
   "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
@@ -14,277 +12,110 @@ const API_VENDOR_IN_EVENT =
 
 const EventStaff = () => {
   const [events, setEvents] = useState([]);
-  const [filteredEvents, setFilteredEvents] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState("1");
+  const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
-  const accessToken = sessionStorage.getItem("accessToken") || ""; // Lấy accessToken từ sessionStorage
-  const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId từ sessionStorage
-  const hostId = sessionStorage.getItem("hostId") || ""; // Lấy hostId từ sessionStorage
+  const accessToken = sessionStorage.getItem("accessToken") || "";
+  const vendorId = sessionStorage.getItem("vendorId") || "";
+  const hostId = sessionStorage.getItem("hostId") || "";
 
-  // Hàm fetch dữ liệu sự kiện và lọc theo vendorId và eventId
-  const fetchEvents = async () => {
+  // Fetch events and check vendor participation
+  const fetchEvents = useCallback(async () => {
+    setLoading(true);
+
     try {
-      console.log("Fetching all events from API...");
-      const response = await axios.get(API_EVENTS, {
-        headers: {
-          Authorization: `${accessToken}`,
-          "Content-Type": "application/json",
-        },
+      // Fetch events for the host
+      const response = await axios.get(`${API_EVENTS}/host/${hostId}`, {
+        headers: { Authorization: accessToken },
       });
-
       const allEvents = response.data;
-      console.log("All events fetched:", allEvents);
 
-      // Kiểm tra từng sự kiện qua API /api/vendorinevent/:vendorId/:eventId
-      const eventsWithVendor = await Promise.all(
+      // Check vendor participation and fetch images
+      const eventsWithImages = await Promise.all(
         allEvents.map(async (event) => {
-          const checkUrl = `${API_VENDOR_IN_EVENT}/${vendorId}/${event.eventId}`;
-          console.log("Calling API to check vendor in event:", checkUrl);
-
           try {
+            const checkUrl = `${API_VENDOR_IN_EVENT}/${vendorId}/${event.eventId}`;
             const checkResponse = await axios.get(checkUrl, {
-              headers: { Authorization: `${accessToken}` },
+              headers: { Authorization: accessToken },
             });
 
-            // Kiểm tra phản hồi từ API
             if (checkResponse.data.status === "accept") {
-              console.log(
-                `Vendor ${vendorId} accepted in event:`,
-                event.eventId
-              );
-
-              // Tải hình ảnh từ Firebase cho sự kiện
-              const imageRef = ref(
-                storage,
-                `${hostId}/${event.eventId}/thumbnail`
-              );
+              // Fetch image from Firebase
+              const imagesRef = ref(storage, `${hostId}/${event.eventId}`);
               try {
-                event.logo = await getDownloadURL(imageRef);
-                console.log(
-                  "Fetched image for event:",
-                  event.eventId,
-                  event.logo
-                );
-              } catch (error) {
-                console.error(
-                  "Error fetching image for event:",
-                  event.eventId,
-                  error
-                );
+                const imagesList = await listAll(imagesRef);
+                if (imagesList.items.length > 0) {
+                  const mainImageRef = imagesList.items[0]; // Lấy hình ảnh đầu tiên
+                  event.logo = await getDownloadURL(mainImageRef);
+                } else {
+                  event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu không có ảnh
+                }
+              } catch {
                 event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu không có ảnh
               }
-
-              return event; // Trả về sự kiện nếu vendor được chấp nhận
-            } else {
-              console.log(
-                `Vendor ${vendorId} not accepted in event:`,
-                event.eventId
-              );
-              return null;
+              return event; // Return valid event
             }
-          } catch (error) {
-            console.error(
-              `Error checking vendor in event ${event.eventId}:`,
-              error
-            );
-            return null;
+            return null; // Exclude events not accepted
+          } catch {
+            return null; // Exclude events on error
           }
         })
       );
 
-      // Lọc ra các sự kiện hợp lệ
-      const validEvents = eventsWithVendor.filter((event) => event !== null);
-      console.log("Valid events after filtering by vendor:", validEvents);
-
+      const validEvents = eventsWithImages.filter((event) => event !== null);
       setEvents(validEvents);
-      setFilteredEvents(
-        validEvents.filter(
-          (event) => event.status?.toLowerCase() === "upcoming"
-        )
-      );
-      console.log("Filtered events (upcoming):", filteredEvents);
     } catch (error) {
       console.error("Error fetching events:", error);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [accessToken, hostId, vendorId]);
 
   useEffect(() => {
     fetchEvents();
-  }, [accessToken]);
+  }, [fetchEvents]);
 
-  // Tìm kiếm sự kiện
-  const handleSearch = (e) => {
-    const term = e.target.value.toLowerCase();
-    setSearchTerm(term);
-    const filtered = events.filter((event) =>
-      event.name.toLowerCase().includes(term)
-    );
-    setFilteredEvents(filtered);
+  const handleEventClick = (event) => {
+    navigate(`/eventStaff/${event.eventId}`, {
+      state: { eventId: event.eventId, accessToken },
+    });
   };
-
-  // Lọc sự kiện theo trạng thái
-  const handleTabChange = (key) => {
-    setActiveTab(key);
-    let filtered;
-    switch (key) {
-      case "1":
-        filtered = events.filter(
-          (event) => event.status?.toLowerCase() === "upcoming"
-        );
-        break;
-      case "2":
-        filtered = events.filter(
-          (event) => event.status?.toLowerCase() === "running"
-        );
-        break;
-      case "3":
-        filtered = events.filter(
-          (event) => event.status?.toLowerCase() === "cancelled"
-        );
-        break;
-      case "5":
-        filtered = events.filter(
-          (event) => event.status?.toLowerCase() === "trash"
-        );
-        break;
-      case "4":
-      default:
-        filtered = events;
-        break;
-    }
-    setFilteredEvents(filtered);
-  };
-
-  const items = [
-    { key: "1", label: "Up Coming" },
-    { key: "2", label: "Running" },
-    { key: "3", label: "Cancelled" },
-    { key: "4", label: "All" },
-    { key: "5", label: "Trash" },
-  ];
 
   return (
-    <>
-      <Tabs defaultActiveKey="1" items={items} onChange={handleTabChange} />
-      <Input
-        placeholder="Search..."
-        className="inputsearch"
-        suffix={<SearchIcon />}
-        value={searchTerm}
-        onChange={handleSearch}
-      />
-
-      <Row gutter={[40, 20]} style={{ marginTop: "20px" }}>
-        {filteredEvents.map((event) => (
-          <Col key={event.eventId} xs={24} sm={12} md={8} lg={8}>
-            <Card
-              className="event-card"
-              hoverable
-              onClick={() => {
-                sessionStorage.setItem("eventId", event.eventId);
-                navigate(`/eventStaff/${event.eventId}`, {
-                  state: { accessToken, hostId },
-                });
-              }}
-              cover={
-                <div className="event-card-cover">
-                  <img alt={event.name} src={event.logo} />
-                </div>
-              }
-            >
-              <div className="event-info-container">
-                <div className="event-date">
-                  <div className="event-date-box">
-                    <span className="event-date-day">
-                      {new Date(event.startDate).getDate()}
-                    </span>
-                    <span className="event-date-month">
-                      {new Date(event.startDate).toLocaleString("en", {
-                        month: "short",
-                      })}
-                    </span>
-                  </div>
-                </div>
-                <div className="event-details">
-                  <h3 className="event-title">{event.name}</h3>
-                  <p className="event-description">{event.description}</p>
-                </div>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      <Modal
-        title="Create Event"
-        visible={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        footer={[
-          <Button
-            key="create"
-            type="primary"
-            onClick={() => setIsModalVisible(false)}
-          >
-            Create
-          </Button>,
-          <Button key="cancel" onClick={() => setIsModalVisible(false)}>
-            Cancel
-          </Button>,
-        ]}
-      >
-        <Divider />
-        <div>
-          <p>Event Name </p>
-          <Input required />
-
-          <div
-            className="date"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <p>Start date</p>
-              <Input type="date" required style={{ width: "150%" }} />
-            </div>
-            <div className="date-end">
-              <p>End date</p>
-              <Input type="date" required style={{ width: "150%" }} />
-            </div>
-          </div>
-
-          <div
-            className="time"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <p>Start time</p>
-              <Input type="time" required style={{ width: "186%" }} />
-            </div>
-            <div className="date-time">
-              <p>End time</p>
-              <Input type="time" required style={{ width: "184%" }} />
-            </div>
-          </div>
-
-          <div>
-            <p>Event Description</p>
-            <Input.TextArea placeholder="Please mention here" />
-          </div>
-          <div>
-            <p>Event Thumbnail</p>
-          </div>
-        </div>
-      </Modal>
-    </>
+    <div style={{ padding: "20px", backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
+      <h1 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "20px" }}>
+        Your Events
+      </h1>
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "20px" }}>Loading events...</div>
+      ) : (
+        <Row gutter={[40, 20]}>
+          {events.map((event) => (
+            <Col key={event.eventId} xs={24} sm={12} md={8} lg={8}>
+              <Card
+                hoverable
+                cover={
+                  <img
+                    alt={event.name}
+                    src={event.logo}
+                    style={{ height: "200px", objectFit: "cover" }}
+                  />
+                }
+                onClick={() => handleEventClick(event)}
+                style={{ borderRadius: "8px", overflow: "hidden" }}
+              >
+                <h3 style={{ fontSize: "18px", fontWeight: "bold" }}>{event.name}</h3>
+                <p style={{ margin: "8px 0" }}>
+                  {new Date(event.startDate).toLocaleDateString()} -{" "}
+                  {new Date(event.endDate).toLocaleDateString()}
+                </p>
+                <p style={{ color: "#666" }}>{event.description}</p>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
+    </div>
   );
 };
 

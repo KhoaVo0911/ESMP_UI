@@ -40,6 +40,9 @@ import LocationTypePage from "./components/extensionEvent/LocationTypePage.jsx";
 import TestQRCODE from "./components/vendor/Shop/textInputQRcode.jsx";
 import EventConfigPage from "./pages/host/EventConfigPage.jsx";
 import StaffShop from "./components/staff/Event/Shop/Shop.jsx";
+import StaffPayment from "./components/staff/Event/Shop/Payment.jsx";
+import StaffOrderedList from "./components/staff/Event/Shop/OrderedList.jsx";
+import PackageAdmin from "./components/admin/PackageAdmin.jsx";
 import ExtensionEvent from "./pages/host/ExtensionEvent.jsx";
 
 const AppRoutes = () => {
@@ -184,6 +187,30 @@ const AppRoutes = () => {
           <StaffLayout>
             <StaffShop />
           </StaffLayout>
+        }
+      />
+       <Route
+        path="/staff-payment"
+        element={
+          <StaffLayout>
+            <StaffPayment/>
+          </StaffLayout>
+        }
+      />
+        <Route
+        path="/staff-ordered-list"
+        element={
+          <StaffLayout>
+            <StaffOrderedList />
+          </StaffLayout>
+        }
+      />
+         <Route
+        path="/admin-package"
+        element={
+          <AdminLayout>
+            <PackageAdmin/>
+          </AdminLayout>
         }
       />
       <Route
