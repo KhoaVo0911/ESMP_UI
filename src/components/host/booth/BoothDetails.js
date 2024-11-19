@@ -24,9 +24,9 @@ const BoothDetails = ({
 }) => {
   const [boothDetails, setBoothDetails] = useState({
     name: booth?.name || "",
-    type:
-      booth?.type ||
-      (locationTypes.length > 0 ? locationTypes[0].typeName : ""),
+    typeId:
+      booth?.typeId ||
+      (locationTypes.length > 0 ? locationTypes[0].typeId : ""),
     width: booth?.width || 100,
     height: booth?.height || 100,
     x: booth?.x || 100,
@@ -36,9 +36,9 @@ const BoothDetails = ({
   useEffect(() => {
     setBoothDetails({
       name: booth?.name || "",
-      type:
-        booth?.type ||
-        (locationTypes.length > 0 ? locationTypes[0].typeName : ""),
+      typeId:
+        booth?.typeId ||
+        (locationTypes.length > 0 ? locationTypes[0].typeId : ""),
       width: booth?.width || 100,
       height: booth?.height || 100,
       x: booth?.x || 100,
@@ -47,10 +47,10 @@ const BoothDetails = ({
   }, [booth, locationTypes, isOpen]);
 
   const handleTypeChange = (e) => {
-    const selectedType = e.target.value;
+    const selectedTypeId = e.target.value;
     setBoothDetails({
       ...boothDetails,
-      type: selectedType,
+      typeId: selectedTypeId,
     });
   };
 
@@ -77,9 +77,13 @@ const BoothDetails = ({
           </FormControl>
           <FormControl mb={4}>
             <FormLabel>Booth Type</FormLabel>
-            <Select value={boothDetails.type} onChange={handleTypeChange}>
+            <Select
+              value={boothDetails.typeId}
+              onChange={handleTypeChange}
+              // placeholder="Select Booth Type"
+            >
               {locationTypes?.map((type) => (
-                <option key={type.id} value={type.typeName}>
+                <option key={type.typeId} value={type.typeId}>
                   {type.typeName} (
                   {type.price?.toLocaleString("vi-VN", {
                     style: "currency",

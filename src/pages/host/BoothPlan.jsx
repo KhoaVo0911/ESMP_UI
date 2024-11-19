@@ -28,6 +28,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   updateLocationMap,
   createLocationMap,
+  deleteLocationMap,
 } from "../../shared/locationMapApi";
 import { storage } from "../../shared/firebase/firebaseConfig";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -84,30 +85,134 @@ const BoothPlan = () => {
           }
         );
         const data = response.data;
+        console.log(data, "data");
         if (data) {
-          const boothsWithLocation = data.booths.map((booth) => ({
-            ...booth,
-            x: booth.location?.x ?? 0,
-            y: booth.location?.y ?? 0,
-            width: booth.location?.width || 100,
-            height: booth.location?.height || 100,
-            rotation: booth.location?.rotation ?? 0,
-          }));
+          // Xử lý dữ liệu booths
+          const boothsWithLocation = data.booths.map((booth) => {
+            const location = booth.location.locationId;
+            const locationTypeId = booth.location.typeId;
+            const x = booth.location?.x ?? 0;
+            const y = booth.location?.y ?? 0;
+            const width = booth.location?.width || 100;
+            const height = booth.location?.height || 100;
+            const rotation = booth.location?.rotation ?? 0;
 
-          const shapesWithLocation = data.shapes.map((shape) => ({
-            ...shape,
-            name: shape.name,
-            x: shape.location?.x ?? 0,
-            y: shape.location?.y ?? 0,
-            width: shape.location?.width || 100,
-            height: shape.location?.height || 100,
-            rotation: shape.location?.rotation ?? 0,
-          }));
+            console.log(
+              `Booth ID: ${
+                locationTypeId || "Unknown"
+              }, X: ${x}, Y: ${y}, Width: ${width}, Height: ${height}, Rotation: ${rotation}`
+            );
+            console.log("Booth Raw Data:", booth);
+            return {
+              ...booth,
+              location,
+              locationTypeId,
+              x,
+              y,
+              width,
+              height,
+              rotation,
+            };
+          });
 
+          // Xử lý dữ liệu shapes
+          const shapesWithLocation = data.shapes.map((shape) => {
+            const location = shape.location.locationId;
+            const name = shape.name;
+            const x = shape.location?.x ?? 0;
+            const y = shape.location?.y ?? 0;
+            const width = shape.location?.width || 100;
+            const height = shape.location?.height || 100;
+            const rotation = shape.location?.rotation ?? 0;
+
+            console.log(
+              `Shape Location: ${
+                location || "Unknown"
+              }, X: ${x}, Y: ${y}, Width: ${width}, Height: ${height}, Rotation: ${rotation}`
+            );
+
+            return {
+              ...shape,
+              location,
+              name,
+              x,
+              y,
+              width,
+              height,
+              rotation,
+            };
+          });
+
+          // Xử lý dữ liệu mainTemplate
+          const updatedMainTemplate = {
+            ...data.mainTemplate,
+            x: data.mainTemplate?.x || 0,
+            y: data.mainTemplate?.y || 0,
+            width: data.mainTemplate?.width || 600,
+            height: data.mainTemplate?.height || 400,
+            rotation: data.mainTemplate?.rotation || 0,
+          };
+
+          console.log(
+            `Main Template: X: ${updatedMainTemplate.x}, Y: ${updatedMainTemplate.y}, Width: ${updatedMainTemplate.width}, Height: ${updatedMainTemplate.height}, Rotation: ${updatedMainTemplate.rotation}`
+          );
+
+          // Xử lý dữ liệu imageElements
+          const imageElementsWithLocation = data.imageElements.map((image) => {
+            const x = image.location?.x ?? 0;
+            const y = image.location?.y ?? 0;
+            const width = image.location?.width || 150;
+            const height = image.location?.height || 150;
+            const rotation = image.location?.rotation ?? 0;
+
+            console.log(
+              `Image ID: ${
+                image.locationId || "Unknown"
+              }, X: ${x}, Y: ${y}, Width: ${width}, Height: ${height}, Rotation: ${rotation}`
+            );
+
+            return {
+              ...image,
+              x,
+              y,
+              width,
+              height,
+              rotation,
+            };
+          });
+
+          // Xử lý dữ liệu textElements
+          const textElementsWithLocation = data.textElements.map((text) => {
+            const location = text.location.locationId;
+            const x = text.location?.x ?? 0;
+            const y = text.location?.y ?? 0;
+            const width = text.location?.width || 150;
+            const height = text.location?.height || 50;
+            const rotation = text.location?.rotation ?? 0;
+
+            console.log(
+              `Text Name: ${
+                text.name || "Unknown"
+              }, X: ${x}, Y: ${y}, Width: ${width}, Height: ${height}, Rotation: ${rotation}`
+            );
+
+            return {
+              ...text,
+              location,
+              x,
+              y,
+              width,
+              height,
+              rotation,
+            };
+          });
+
+          // Cập nhật state
           setBooths(boothsWithLocation);
           setShapes(shapesWithLocation);
-          setMainTemplate(data.mainTemplate || mainTemplate);
-          setImageElements(data.imageElements || []);
+          setMainTemplate(updatedMainTemplate);
+          setImageElements(imageElementsWithLocation);
+          setTextElements(textElementsWithLocation);
         }
       } catch (error) {
         console.error("Error fetching Location Map:", error);
@@ -120,7 +225,9 @@ const BoothPlan = () => {
         const response = await axios.get(
           `${BASE_URL}/map/locationTyple/${hostId}/${eventId}`,
           {
-            headers: { Authorization: getAccessToken() },
+            headers: {
+              Authorization: sessionStorage.getItem("accessToken"),
+            },
           }
         );
         setLocationTypes(response.data);
@@ -142,16 +249,29 @@ const BoothPlan = () => {
   const handleBoothUpdate = (updatedBooth) => {
     setBooths((prevBooths) =>
       prevBooths.map((booth) =>
-        booth.locationId === updatedBooth.locationId ? updatedBooth : booth
+        booth.location === updatedBooth.location
+          ? {
+              ...booth, // Giữ nguyên các thuộc tính cũ
+              x: updatedBooth.x, // Cập nhật giá trị x mới
+              y: updatedBooth.y, // Cập nhật giá trị y mới
+            }
+          : booth
       )
     );
+    console.log(updatedBooth, "update");
     addModifiedElement(updatedBooth);
   };
 
   const handleShapeUpdate = (updatedShape) => {
     setShapes((prevShapes) =>
       prevShapes.map((shape) =>
-        shape.locationId === updatedShape.locationId ? updatedShape : shape
+        shape.location === updatedShape.location
+          ? {
+              ...shape,
+              x: updatedShape.x,
+              y: updatedShape.y,
+            }
+          : shape
       )
     );
     addModifiedElement(updatedShape);
@@ -160,7 +280,7 @@ const BoothPlan = () => {
   const handleImageUpdate = (updatedImage) => {
     setImageElements((prevImages) =>
       prevImages.map((img) =>
-        img.locationId === updatedImage.locationId ? updatedImage : img
+        img.location === updatedImage.location ? updatedImage : img
       )
     );
     setSelectedElement(updatedImage);
@@ -174,21 +294,71 @@ const BoothPlan = () => {
 
   const handleSave = async () => {
     try {
-      const mainTemplateData = {
-        eventId: eventId,
-        name: mainTemplate.name || "Main Template",
-        x: mainTemplate.x || 0,
-        y: mainTemplate.y || 0,
-        width: mainTemplate.width || 600,
-        height: mainTemplate.height || 400,
-        rotation: mainTemplate.rotation || 0,
+      const payload = {
+        booths: booths.map((booth) => {
+          // Log toàn bộ booth trước khi chuyển đổi
+          console.log("Booth Data:", booth);
+          return {
+            typeId: booth.locationTypeId || "",
+            rotation: booth.rotation || 0,
+            x: booth.x || 0,
+            y: booth.y || 0,
+            height: booth.height || 0,
+            width: booth.width || 0,
+            status: booth.status || "",
+          };
+        }),
+        shapes: shapes.map((shape) => ({
+          name: shape.name || "",
+          rotation: shape.rotation || 0,
+          x: shape.x || 0,
+          y: shape.y || 0,
+          height: shape.height || 0,
+          width: shape.width || 0,
+        })),
+        textElements: textElements.map((text) => ({
+          name: text.name || "",
+          rotation: text.rotation || 0,
+          x: text.x || 0,
+          y: text.y || 0,
+          height: text.height || 0,
+          width: text.width || 0,
+        })),
+        mainTemplate: {
+          eventId: eventId,
+          name: mainTemplate.name || "Main Template",
+          x: mainTemplate.x || 0,
+          y: mainTemplate.y || 0,
+          width: mainTemplate.width || 600,
+          height: mainTemplate.height || 400,
+          rotation: mainTemplate.rotation || 0,
+        },
+        imageElements: imageElements.map((image) => image.src || ""),
       };
 
-      await createLocationMap(hostId, eventId, mainTemplateData);
-      alert("Map created successfully with mainTemplate only!");
+      console.log("Payload to send:", payload);
+
+      const deleteIds = booths.map((booth) => {
+        // Log toàn bộ booth trước khi chuyển đổi
+        console.log("Booth Data:", booth);
+        return booth.location; // Trả về locationId để xóa
+      });
+
+      // Thực hiện xóa từng locationId
+      for (const locationId of deleteIds) {
+        if (locationId) {
+          await deleteLocationMap(locationId);
+          console.log(`Deleted location map for locationId: ${locationId}`);
+        } else {
+          console.log("No locationId found for this booth.");
+        }
+      }
+      // Gửi dữ liệu lên server
+      await createLocationMap(hostId, eventId, payload);
+      alert("Map saved successfully!");
     } catch (error) {
-      console.error("Error creating map:", error);
-      alert("Failed to create map.");
+      console.error("Error saving map:", error);
+      alert("Failed to save map.");
     }
   };
 
@@ -226,7 +396,6 @@ const BoothPlan = () => {
         const url = await uploadImageToFirebase(file);
         if (url) {
           const newImage = {
-            locationId: uuidv4(),
             src: url,
             x: 100,
             y: 100,
@@ -256,16 +425,16 @@ const BoothPlan = () => {
       const { locationId } = selectedElement;
 
       setBooths((prevBooths) =>
-        prevBooths.filter((booth) => booth.locationId !== locationId)
+        prevBooths.filter((booth) => booth.location.locationId !== locationId)
       );
       setShapes((prevShapes) =>
-        prevShapes.filter((shape) => shape.locationId !== locationId)
+        prevShapes.filter((shape) => shape.location.locationId !== locationId)
       );
       setImageElements((prevImages) =>
         prevImages.filter((img) => img.locationId !== locationId)
       );
       setTextElements((prevTexts) =>
-        prevTexts.filter((text) => text.locationId !== locationId)
+        prevTexts.filter((text) => text.location.locationId !== locationId)
       );
 
       addModifiedElement({ ...selectedElement, deleted: true });
@@ -291,30 +460,71 @@ const BoothPlan = () => {
   };
 
   const handleTextClick = (text) => {
+    if (
+      !text ||
+      !text.location ||
+      !text.location.locationId ||
+      !text.locationId
+    ) {
+      console.error("Text click failed: missing locationId", text.location);
+      return;
+    }
+
     setSelectedElement(text);
     setSelectedBoothId(null);
   };
 
-  const handleTextUpdate = (updatedText) => {
-    setTextElements((prevTexts) =>
-      prevTexts.map((text) =>
-        text.locationId === updatedText.locationId ? updatedText : text
-      )
-    );
-    addModifiedElement(updatedText);
-  };
+  // const handleTextUpdate = (updatedText) => {
+  //   setTextElements((prevTexts) =>
+  //     prevTexts.map((text) =>
+  //       text.location === updatedText.location
+  //         ? {
+  //             ...text,
+  //             name: updatedText.name,
+  //             x: updatedText.x,
+  //             y: updatedText.y,
+  //           }
+  //         : text
+  //     )
+  //   );
+  //   addModifiedElement(updatedText);
+  // };
 
-  const handleTextContentChange = (updatedText) => {
+  // const handleTextContentChange = (updatedText) => {
+  //   setTextElements((prevTexts) =>
+  //     prevTexts.map((text) =>
+  //       text.location === updatedText.location
+  //         ? {
+  //             ...text,
+  //             name: updatedText.name,
+  //             x: updatedText.x,
+  //             y: updatedText.y,
+  //           }
+  //         : text
+  //     )
+  //   );
+  // };
+  const updateTextElements = (updatedText, trackChanges = false) => {
     setTextElements((prevTexts) =>
       prevTexts.map((text) =>
-        text.locationId === updatedText.locationId ? updatedText : text
+        text.location === updatedText.location
+          ? {
+              ...text,
+              name: updatedText.name,
+              x: updatedText.x,
+              y: updatedText.y,
+            }
+          : text
       )
     );
+
+    if (trackChanges) {
+      addModifiedElement(updatedText);
+    }
   };
 
   const addText = () => {
     const newText = {
-      locationId: uuidv4(),
       x: 100,
       y: 100,
       width: 150,
@@ -328,16 +538,15 @@ const BoothPlan = () => {
   const handleAddBooth = (newBoothDetails) => {
     const newBooth = {
       ...newBoothDetails,
-      locationId: uuidv4(),
+      rotation: 0,
+      status: "Available",
       type: "booth",
     };
     setBooths([...booths, newBooth]);
-    setIsBoothModalOpen(false);
   };
 
   const handleAddShape = (shapeName) => {
     const newShape = {
-      locationId: uuidv4(),
       name: shapeName,
       x: 100,
       y: 100,
@@ -346,6 +555,7 @@ const BoothPlan = () => {
       type: "shape",
     };
     setShapes([...shapes, newShape]);
+    console.log(newShape, "shape");
   };
 
   const memoizedElements = [
@@ -384,12 +594,15 @@ const BoothPlan = () => {
         onResizeStop={(e, direction, ref, delta, position) => {
           const updatedShape = {
             ...shape,
+
             width: ref.offsetWidth,
             height: ref.offsetHeight,
             x: position.x,
             y: position.y,
           };
           handleShapeUpdate(updatedShape);
+          console.log(updatedShape, "acb");
+          console.log("Key của Shape:", shape.locationId);
         }}
         style={{
           transform: `rotate(${shape.rotation || 0}deg)`,
@@ -402,12 +615,13 @@ const BoothPlan = () => {
     )),
     ...booths.map((booth) => (
       <Rnd
-        key={booth.locationId}
+        key={booth.location.locationId}
         size={{ width: booth.width, height: booth.height }}
         position={{ x: booth.x || 0, y: booth.y || 0 }}
         onDragStop={(e, d) => {
           const updatedBooth = { ...booth, x: d.x, y: d.y };
           handleBoothUpdate(updatedBooth);
+          console.log(updatedBooth, "as");
         }}
         onResizeStop={(e, direction, ref, delta, position) => {
           const updatedBooth = {
@@ -418,6 +632,7 @@ const BoothPlan = () => {
             y: position.y,
           };
           handleBoothUpdate(updatedBooth);
+          console.log("Key của Booth:", booth.location.locationId);
         }}
         style={{
           zIndex: selectedBoothId === booth.locationId ? 10 : 1,
@@ -446,6 +661,7 @@ const BoothPlan = () => {
             y: position.y,
           };
           handleImageUpdate(updatedImage);
+          console.log("Key của Image:", image.locationId);
         }}
         style={{
           zIndex: selectedElement?.locationId === image.locationId ? 10 : 1,
@@ -466,16 +682,53 @@ const BoothPlan = () => {
         <ImageElement image={image} />
       </Rnd>
     )),
+    // ...textElements.map((text) => (
+    //   <Rnd>
+    //     <TextElement
+    //       key={text.locationId}
+    //       text={text}
+    //       isSelected={selectedElement?.locationId === text.locationId}
+    //       onClick={() => handleTextClick(text)}
+    //       onTextChange={(updatedText) => handleTextContentChange(updatedText)}
+    //       onDragEnd={(updatedText) => handleTextUpdate(updatedText)}
+    //       onResizeEnd={(updatedText) => handleTextUpdate(updatedText)}
+    //     />
+    //   </Rnd>
+    // )),
     ...textElements.map((text) => (
-      <TextElement
+      <Rnd
         key={text.locationId}
-        text={text}
-        isSelected={selectedElement?.locationId === text.locationId}
+        size={{ width: text.width, height: text.height }}
+        position={{ x: text.x, y: text.y }}
+        onDragStop={(e, d) => {
+          const updatedText = { ...text, x: d.x, y: d.y };
+          updateTextElements(updatedText);
+          console.log(text, "text");
+        }}
+        onResizeStop={(e, direction, ref, delta, position) => {
+          const updatedText = {
+            ...text,
+            width: ref.offsetWidth,
+            height: ref.offsetHeight,
+            x: position.x,
+            y: position.y,
+          };
+          updateTextElements(updatedText);
+          console.log(updatedText, "text");
+        }}
+        style={{
+          zIndex: selectedElement?.locationId === text.locationId ? 10 : 1,
+          transform: `rotate(${text.rotation || 0}deg)`,
+        }}
         onClick={() => handleTextClick(text)}
-        onTextChange={(updatedText) => handleTextContentChange(updatedText)}
-        onDragEnd={(updatedText) => handleTextUpdate(updatedText)}
-        onResizeEnd={(updatedText) => handleTextUpdate(updatedText)}
-      />
+      >
+        <TextElement
+          text={text}
+          isSelected={selectedElement?.locationId === text.locationId}
+          onClick={() => handleTextClick(text)}
+          onTextChange={(updatedText) => updateTextElements(updatedText)}
+        />
+      </Rnd>
     )),
   ];
 
@@ -521,7 +774,7 @@ const BoothPlan = () => {
           onShapeUpdate={handleShapeUpdate}
           onBoothUpdate={handleBoothUpdate}
           onImageUpdate={handleImageUpdate}
-          onTextUpdate={handleTextUpdate}
+          onTextUpdate={updateTextElements}
           onMainTemplateUpdate={handleMainTemplateUpdate} // Truyền hàm cập nhật cho mainTemplate
           locationTypes={locationTypes}
         />

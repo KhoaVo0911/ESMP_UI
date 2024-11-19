@@ -406,6 +406,36 @@ const PropertiesPanel = ({
       </FormControl>
       <Grid templateColumns="repeat(2, 1fr)" gap={2} mb={4}>
         <FormControl>
+          <FormLabel>Width (px)</FormLabel>
+          <Input
+            type="number"
+            value={selectedText.width}
+            onChange={(e) =>
+              handleChange(
+                "width",
+                parseFloat(e.target.value),
+                onTextUpdate,
+                selectedText
+              )
+            }
+          />
+        </FormControl>
+        <FormControl>
+          <FormLabel>Height (px)</FormLabel>
+          <Input
+            type="number"
+            value={selectedText.height}
+            onChange={(e) =>
+              handleChange(
+                "height",
+                parseFloat(e.target.value),
+                onTextUpdate,
+                selectedText
+              )
+            }
+          />
+        </FormControl>
+        <FormControl>
           <FormLabel>Font Size</FormLabel>
           <Input
             type="number"
