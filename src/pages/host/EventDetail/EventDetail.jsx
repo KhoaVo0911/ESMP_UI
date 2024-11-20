@@ -18,6 +18,7 @@ import {
 } from "@chakra-ui/react";
 import { format } from "date-fns";
 import ArrowBack from "@mui/icons-material/ArrowBack";
+import MapboxComponent from "../../../components/MapBox/MapboxComponent";
 
 const EventDetails = () => {
   const location = useLocation();
@@ -130,6 +131,12 @@ const EventDetails = () => {
         ) : (
           <Text>No services available.</Text>
         )}
+      </Box>
+      <Box mb={6}>
+        <Text fontWeight="bold" color="purple.900" mb={2}>
+          Location:
+        </Text>
+        <MapboxComponent />
       </Box>
 
       <Button onClick={handleBackClick} colorScheme="purple" mt={6}>
