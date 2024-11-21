@@ -54,7 +54,7 @@ const ProductList = () => {
       setFilteredData(productResponse.data);
 
       const categoryResponse = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category/hostId/${hostId}`,
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category/host/${hostId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
