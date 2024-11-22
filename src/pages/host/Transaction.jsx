@@ -1,11 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
   Table,
   Thead,
   Tbody,
@@ -16,237 +11,401 @@ import {
   Badge,
   Button,
   Flex,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
 } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import {
+  getPaymentsByEventId,
+  updatePaymentStatus,
+  createPayment,
+} from "../../shared/host/transactionApi";
+import { format } from "date-fns";
 
-const Transaction = () => {
-  const navigate = useNavigate(); // Để điều hướng về trang event
+const TransactionList = () => {
+  const { eventId } = useParams(); // Lấy eventId từ URL
+  const [payments, setPayments] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const paymentsPerPage = 10; // Số giao dịch trên mỗi trang
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedPayment, setSelectedPayment] = useState(null);
 
-  // Dữ liệu mẫu của giao dịch
-  const transactions = [
-    {
-      id: 1,
-      orderId: "#15267",
-      date: "Mar 1, 2023",
-      shop: "BBQ",
-      quantity: 1,
-      amount: 140000,
-      status: "Success",
-    },
-    {
-      id: 2,
-      orderId: "#153587",
-      date: "Jan 26, 2023",
-      shop: "BBQ",
-      quantity: 1,
-      amount: 140000,
-      status: "Success",
-    },
-    {
-      id: 3,
-      orderId: "#12436",
-      date: "Feb 12, 2033",
-      shop: "BBQ",
-      quantity: 1,
-      amount: 140000,
-      status: "Success",
-    },
-    {
-      id: 4,
-      orderId: "#16879",
-      date: "Feb 12, 2033",
-      shop: "BBQ",
-      quantity: 1,
-      amount: 140000,
-      status: "Success",
-    },
-    {
-      id: 5,
-      orderId: "#16378",
-      date: "Feb 28, 2033",
-      shop: "BBQ",
-      quantity: 1,
-      amount: 140000,
-      status: "Rejected",
-    },
-    {
-      id: 6,
-      orderId: "#16609",
-      date: "Mar 13, 2033",
-      shop: "BBQ",
-      quantity: 1,
-      amount: 140000,
-      status: "Success",
-    },
-    {
-      id: 7,
-      orderId: "#16907",
-      date: "Mar 18, 2033",
-      shop: "BBQ",
-      quantity: 1,
-      amount: 140000,
-      status: "Pending",
-    },
-  ];
+  // Fetch danh sách payments từ API
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const data = await getPaymentsByEventId(eventId);
+        console.log(data, "data");
+        if (Array.isArray(data)) {
+          setPayments(data);
+        } else {
+          console.error("API response is not an array:", data);
+          setPayments([]);
+        }
+      } catch (error) {
+        console.error("Error fetching payments:", error);
+      }
+    };
 
-  // State để lưu trạng thái lọc giao dịch
-  const [filteredTransactions, setFilteredTransactions] =
-    useState(transactions);
+    fetchPayments();
+  }, [eventId]);
 
-  // Hàm tính tổng doanh thu từ các giao dịch thành công
-  const calculateTotalRevenue = () => {
-    return transactions
-      .filter((transaction) => transaction.status === "Success")
-      .reduce((acc, transaction) => acc + transaction.amount, 0);
+  const indexOfLastPayment = currentPage * paymentsPerPage;
+  const indexOfFirstPayment = indexOfLastPayment - paymentsPerPage;
+  const currentPayments = payments.slice(
+    indexOfFirstPayment,
+    indexOfLastPayment
+  );
+
+  const totalPages = Math.ceil(payments.length / paymentsPerPage);
+
+  // Xử lý chuyển trang
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
   };
 
-  // Tính tổng doanh thu
-  const totalRevenue = calculateTotalRevenue();
-
-  // Tính tổng tiền bị từ chối
-  const totalRejected = transactions
-    .filter((transaction) => transaction.status === "Rejected")
-    .reduce((acc, transaction) => acc + transaction.amount, 0);
-
-  // Lọc giao dịch theo trạng thái (không phân biệt chữ hoa, chữ thường)
-  const filterTransactions = (status) => {
-    if (status === "All") {
-      setFilteredTransactions(transactions); // Hiển thị tất cả các giao dịch
-    } else {
-      setFilteredTransactions(
-        transactions.filter(
-          (transaction) =>
-            transaction.status.toLowerCase() === status.toLowerCase()
-        )
-      );
-    }
-  };
-
-  // Đếm giao dịch dựa trên trạng thái
-  const countTransactions = (status) => {
-    if (status === "All") return transactions.length;
-    return transactions.filter(
-      (transaction) => transaction.status.toLowerCase() === status.toLowerCase()
-    ).length;
+  // Hàm mở popup
+  const handleViewDetails = (payment) => {
+    setSelectedPayment(payment);
+    onOpen();
   };
 
   return (
     <Box p={8} bg="white" borderRadius="md" boxShadow="md">
-      <Flex justify="space-between" mb={6}>
-        {/* Hiển thị Total Revenue */}
-        <Stat bg="green.100" p={4} borderRadius="md">
-          <StatLabel>Total Revenue</StatLabel>
-          <StatNumber>{totalRevenue.toLocaleString()} ₫</StatNumber>
-          <StatHelpText>as of {new Date().toLocaleDateString()}</StatHelpText>
-        </Stat>
-
-        {/* Hiển thị Rejected Payments */}
-        <Stat bg="gray.100" p={4} borderRadius="md">
-          <StatLabel>Rejected Payments</StatLabel>
-          <StatNumber>{totalRejected.toLocaleString()} ₫</StatNumber>
-          <StatHelpText>as of {new Date().toLocaleDateString()}</StatHelpText>
-        </Stat>
-      </Flex>
-
-      <Text fontSize="2xl" fontWeight="bold" mb={4}>
-        Payment History
+      <Text fontSize="3xl" fontWeight="bold" mb={6}>
+        Payment List
       </Text>
 
-      <Tabs
-        variant="solid-rounded"
-        colorScheme="blue"
-        onChange={(index) => {
-          const tabStatus = ["All", "Success", "Pending", "Rejected"];
-          filterTransactions(tabStatus[index]);
-        }}
-      >
-        <TabList>
-          <Tab>
-            All{" "}
-            <Badge ml={2} colorScheme="blue">
-              {countTransactions("All")}
-            </Badge>
-          </Tab>
-          <Tab>
-            Success{" "}
-            <Badge ml={2} colorScheme="green">
-              {countTransactions("Success")}
-            </Badge>
-          </Tab>
-          <Tab>
-            Pending{" "}
-            <Badge ml={2} colorScheme="yellow">
-              {countTransactions("Pending")}
-            </Badge>
-          </Tab>
-          <Tab>
-            Rejected{" "}
-            <Badge ml={2} colorScheme="red">
-              {countTransactions("Rejected")}
-            </Badge>
-          </Tab>
-        </TabList>
+      <Table variant="simple">
+        <Thead>
+          <Tr>
+            <Th textAlign="center">No</Th>
+            <Th textAlign="center">Vendor Name</Th>
+            <Th textAlign="center">LocationType Name</Th>
+            <Th textAlign="center">Deposit</Th>
+            <Th textAlign="center">Total</Th>
+            <Th textAlign="center">Status</Th>
+            <Th textAlign="center">Action</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {currentPayments.map((payment, index) => (
+            <Tr key={payment.id}>
+              <Td textAlign="center">{indexOfFirstPayment + index + 1}</Td>
+              <Td textAlign="center">{payment.name}</Td>
+              <Td textAlign="center">{payment.locationtyname}</Td>
+              <Td textAlign="center">{payment.deposit}</Td>
+              <Td textAlign="center">{payment.totalprofit}</Td>
+              <Td textAlign="center">
+                <Badge
+                  colorScheme={
+                    payment.status === "Success Deposit" ? "green" : "yellow"
+                  }
+                >
+                  {payment.status}
+                </Badge>
+              </Td>
+              <Td textAlign="center">
+                <Button
+                  colorScheme="blue"
+                  onClick={() => handleViewDetails(payment)}
+                >
+                  View
+                </Button>
+              </Td>
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
 
-        {/* Hiển thị giao dịch */}
-        <TabPanels mt={4}>
-          <TabPanel>
-            <Table variant="simple">
-              <Thead>
-                <Tr>
-                  <Th>No</Th>
-                  <Th>Order ID</Th>
-                  <Th>Date</Th>
-                  <Th>Shop Name</Th>
-                  <Th>Quantity</Th>
-                  <Th>Total Amount</Th>
-                  <Th>Status</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {filteredTransactions.map((transaction, index) => (
-                  <Tr key={transaction.id}>
-                    <Td>{index + 1}</Td>
-                    <Td>{transaction.orderId}</Td>
-                    <Td>{transaction.date}</Td>
-                    <Td>{transaction.shop}</Td>
-                    <Td>{transaction.quantity}</Td>
-                    <Td>{transaction.amount.toLocaleString()} </Td>
+      {/* Pagination */}
+      <Flex justify="center" mt={4}>
+        {Array.from({ length: totalPages }, (_, i) => (
+          <Button
+            key={i}
+            onClick={() => handlePageChange(i + 1)}
+            colorScheme={currentPage === i + 1 ? "blue" : "gray"}
+            mx={1}
+          >
+            {i + 1}
+          </Button>
+        ))}
+      </Flex>
+
+      {/* Popup chi tiết */}
+      {selectedPayment && (
+        <Modal isOpen={isOpen} onClose={onClose}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Payment Details</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Table
+                variant="simple"
+                width="105%"
+                maxWidth="800px"
+                margin="0 auto"
+              >
+                <Tbody>
+                  <Tr>
+                    <Th width="50%">Vendor Name</Th>
+                    <Td>{selectedPayment.name}</Td>
+                  </Tr>
+                  <Tr>
+                    <Th>LocationType Name</Th>
+                    <Td>{selectedPayment.locationtyname}</Td>
+                  </Tr>
+                  <Tr>
+                    <Th>Deposit Payment Date</Th>
+                    <Td>
+                      {selectedPayment.depositpaymentdate
+                        ? format(
+                            new Date(selectedPayment.depositpaymentdate),
+                            "MM/dd/yyyy HH:mm:ss"
+                          )
+                        : "N/A"}
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Th>Deposit</Th>
+                    <Td>{selectedPayment.deposit}</Td>
+                  </Tr>
+                  <Tr>
+                    <Th>Total Profit</Th>
+                    <Td>{selectedPayment.totalprofit}</Td>
+                  </Tr>
+                  <Tr>
+                    <Th>Profit Percent</Th>
+                    <Td>{selectedPayment.profitpercent} %</Td>
+                  </Tr>
+                  <Tr>
+                    <Th>Profit Payment Date</Th>
+                    <Td>
+                      {selectedPayment.profitpaymentdate
+                        ? format(
+                            new Date(selectedPayment.profitpaymentdate),
+                            "MM/dd/yyyy HH:mm:ss"
+                          )
+                        : "N/A"}
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Th>Status</Th>
                     <Td>
                       <Badge
                         colorScheme={
-                          transaction.status === "Success"
+                          selectedPayment.status === "Success Deposit"
                             ? "green"
-                            : transaction.status === "Pending"
-                            ? "yellow"
-                            : "red"
+                            : "yellow"
                         }
                       >
-                        {transaction.status}
+                        {selectedPayment.status}
                       </Badge>
                     </Td>
                   </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
-      {/* Nút Back */}
-      <Button
-        mb={4}
-        onClick={() => navigate("/events")}
-        backgroundColor="#170F49"
-        color="white"
-        _hover={{ bg: "#1B2559" }}
-      >
-        Back to Events
-      </Button>
+                </Tbody>
+              </Table>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      )}
     </Box>
   );
 };
 
-export default Transaction;
+export default TransactionList;
+
+// import React, { useState, useEffect } from "react";
+// import {
+//   Box,
+//   Table,
+//   Thead,
+//   Tbody,
+//   Tr,
+//   Th,
+//   Td,
+//   Text,
+//   Badge,
+//   Button,
+//   Flex,
+//   useDisclosure,
+//   Modal,
+//   ModalOverlay,
+//   ModalContent,
+//   ModalHeader,
+//   ModalBody,
+//   ModalCloseButton,
+// } from "@chakra-ui/react";
+// import { useLocation, useParams } from "react-router-dom";
+
+// const VendorList = () => {
+//   const { eventId } = useParams(); // Lấy eventId từ URL
+//   const location = useLocation(); // Lấy state từ navigation
+//   const hostId = location.state?.hostId || sessionStorage.getItem("hostId") || ""; // Lấy hostId
+
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const vendorsPerPage = 10; // Số vendor trên mỗi trang
+//   const { isOpen, onOpen, onClose } = useDisclosure();
+//   const [selectedVendor, setSelectedVendor] = useState(null);
+//   const [vendors, setVendors] = useState([]); // Dữ liệu vendor
+
+//   // Fetch data từ API
+//   useEffect(() => {
+//     const fetchVendors = async () => {
+//       try {
+//         const response = await fetch(
+//           `/api/vendors?hostId=${hostId}&eventId=${eventId}`
+//         ); // API giả sử nhận hostId và eventId
+//         const data = await response.json();
+//         setVendors(data);
+//       } catch (error) {
+//         console.error("Error fetching vendors:", error);
+//       }
+//     };
+
+//     if (hostId && eventId) {
+//       fetchVendors();
+//     }
+//   }, [hostId, eventId]);
+
+//   const indexOfLastVendor = currentPage * vendorsPerPage;
+//   const indexOfFirstVendor = indexOfLastVendor - vendorsPerPage;
+//   const currentVendors = vendors.slice(indexOfFirstVendor, indexOfLastVendor);
+
+//   const totalPages = Math.ceil(vendors.length / vendorsPerPage);
+
+//   // Xử lý chuyển trang
+//   const handlePageChange = (newPage) => {
+//     setCurrentPage(newPage);
+//   };
+
+//   // Hàm mở popup
+//   const handleViewDetails = (vendor) => {
+//     setSelectedVendor(vendor);
+//     onOpen();
+//   };
+
+//   return (
+//     <Box p={8} bg="white" borderRadius="md" boxShadow="md">
+//       <Text fontSize="3xl" fontWeight="bold" mb={6}>
+//         Transaction List
+//       </Text>
+
+//       {vendors.length === 0 ? (
+//         <Text>No transactions found for this event.</Text>
+//       ) : (
+//         <>
+//           <Table variant="simple">
+//             <Thead>
+//               <Tr>
+//                 <Th>No</Th>
+//                 <Th>Vendor Name</Th>
+//                 <Th>Deposit</Th>
+//                 <Th>Total</Th>
+//                 <Th>Status</Th>
+//                 <Th>Action</Th>
+//               </Tr>
+//             </Thead>
+//             <Tbody>
+//               {currentVendors.map((vendor, index) => (
+//                 <Tr key={vendor.id}>
+//                   <Td>{indexOfFirstVendor + index + 1}</Td>
+//                   <Td>{vendor.name}</Td>
+//                   <Td>{vendor.deposit}</Td>
+//                   <Td>{vendor.total}</Td>
+//                   <Td>
+//                     <Badge
+//                       colorScheme={
+//                         vendor.status === "Active" ? "green" : "red"
+//                       }
+//                     >
+//                       {vendor.status}
+//                     </Badge>
+//                   </Td>
+//                   <Td>
+//                     <Button
+//                       colorScheme="blue"
+//                       onClick={() => handleViewDetails(vendor)}
+//                     >
+//                       View
+//                     </Button>
+//                   </Td>
+//                 </Tr>
+//               ))}
+//             </Tbody>
+//           </Table>
+
+//           {/* Pagination */}
+//           <Flex justify="center" mt={4}>
+//             {Array.from({ length: totalPages }, (_, i) => (
+//               <Button
+//                 key={i}
+//                 onClick={() => handlePageChange(i + 1)}
+//                 colorScheme={currentPage === i + 1 ? "blue" : "gray"}
+//                 mx={1}
+//               >
+//                 {i + 1}
+//               </Button>
+//             ))}
+//           </Flex>
+//         </>
+//       )}
+
+//       {/* Popup chi tiết */}
+//       {selectedVendor && (
+//         <Modal isOpen={isOpen} onClose={onClose}>
+//           <ModalOverlay />
+//           <ModalContent>
+//             <ModalHeader>Transaction Details</ModalHeader>
+//             <ModalCloseButton />
+//             <ModalBody>
+//               <Table variant="simple">
+//                 <Tbody>
+//                   <Tr>
+//                     <Th>Vendor Name</Th>
+//                     <Td>{selectedVendor.name}</Td>
+//                   </Tr>
+//                   <Tr>
+//                     <Th>LocationType Name</Th>
+//                     <Td>Sample Type</Td>
+//                   </Tr>
+//                   <Tr>
+//                     <Th>Deposit Payment Date</Th>
+//                     <Td>Sample Date</Td>
+//                   </Tr>
+//                   <Tr>
+//                     <Th>Deposit</Th>
+//                     <Td>{selectedVendor.deposit}</Td>
+//                   </Tr>
+//                   <Tr>
+//                     <Th>Total Profit</Th>
+//                     <Td>TBD</Td>
+//                   </Tr>
+//                   <Tr>
+//                     <Th>% Profit</Th>
+//                     <Td>TBD</Td>
+//                   </Tr>
+//                   <Tr>
+//                     <Th>Profit Payment Date</Th>
+//                     <Td>TBD</Td>
+//                   </Tr>
+//                   <Tr>
+//                     <Th>Status</Th>
+//                     <Td>{selectedVendor.status}</Td>
+//                   </Tr>
+//                 </Tbody>
+//               </Table>
+//             </ModalBody>
+//           </ModalContent>
+//         </Modal>
+//       )}
+//     </Box>
+//   );
+// };
+
+// export default VendorList;

@@ -189,15 +189,15 @@ const AppRoutes = () => {
           </StaffLayout>
         }
       />
-       <Route
+      <Route
         path="/staff-payment"
         element={
           <StaffLayout>
-            <StaffPayment/>
+            <StaffPayment />
           </StaffLayout>
         }
       />
-        <Route
+      <Route
         path="/staff-ordered-list"
         element={
           <StaffLayout>
@@ -205,11 +205,11 @@ const AppRoutes = () => {
           </StaffLayout>
         }
       />
-         <Route
+      <Route
         path="/admin-package"
         element={
           <AdminLayout>
-            <PackageAdmin/>
+            <PackageAdmin />
           </AdminLayout>
         }
       />
@@ -230,7 +230,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/event/transactions"
+        path="/eventpayment/:eventId"
         element={
           <HostLayout>
             <Transaction />
