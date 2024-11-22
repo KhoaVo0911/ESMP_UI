@@ -29,6 +29,10 @@ const VendorSideBar = ({ collapsed }) => {
     } else if (location.pathname.startsWith("/eventsVendor")) {
       setSelectedMenuItem("4");
     } 
+    else if (location.pathname.startsWith("/map-sample")) {
+      setSelectedMenuItem("5");
+    } 
+    
   }, [location.pathname]);
 
   const defaultItems = [
@@ -56,6 +60,11 @@ const VendorSideBar = ({ collapsed }) => {
           icon: <EventIcon />,
           label: <span style={{ fontWeight: "bold" }}>Events</span>,
         },
+        {
+          key: "5",
+          icon: <EventIcon />,
+          label: <span style={{ fontWeight: "bold" }}>Map Location</span>,
+        },
         
       ],
     },
@@ -77,7 +86,7 @@ const VendorSideBar = ({ collapsed }) => {
         navigate("/eventsVendor", { state: { accessToken, vendorId } });
         break;
       case "5":
-        navigate("/Transaction", { state: { accessToken, vendorId } });
+        navigate("/Map-sample", { state: { accessToken, vendorId } });
         break;
       default:
         navigate("/dashboardVendor", { state: { accessToken, vendorId } });

@@ -266,6 +266,7 @@ const HostSideBar = ({ collapsed }) => {
               case "8":
                 navigate(`/event/${eventId}/booth-plan`);
                 break;
+                
               case "9":
                 navigate(`/event/${eventId}/extensionEvent`);
                 break;
@@ -286,6 +287,7 @@ const HostSideBar = ({ collapsed }) => {
             location.pathname.startsWith("/event-detail") ||
             location.pathname.startsWith(`/eventpayment/${eventId}`) ||
             location.pathname.startsWith(`/event/${eventId}/booth-plan`) ||
+            location.pathname.startsWith(`/event/${eventId}/booth-plan-view`) ||
             location.pathname.startsWith(`/event/${eventId}/location-type`) ||
             location.pathname.startsWith(`/event/${eventId}/extensionEvent`)
               ? eventDetailItems
