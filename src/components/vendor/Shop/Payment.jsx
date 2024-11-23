@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   VStack,
@@ -38,8 +38,8 @@ const Payment = ({ removeItem }) => {
   const [change, setChange] = useState(0);
   const toast = useToast();
 
-  const cartItems = JSON.parse(sessionStorage.getItem("cartItems")) || [];
-  const totalPrice = sessionStorage.getItem("totalPrice") || 0;
+  const cartItems = useMemo(() => JSON.parse(sessionStorage.getItem("cartItems")) || [], []);
+  const totalPrice = useMemo(() => Number(sessionStorage.getItem("totalPrice")) || 0, []);
 
   const location = useLocation();
   const accessToken = location.state?.accessToken || sessionStorage.getItem("accessToken");
@@ -47,6 +47,12 @@ const Payment = ({ removeItem }) => {
   const eventId = location.state?.eventId || sessionStorage.getItem("eventId");
 
   const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+  useEffect(() => {
+    const latestQrUrl = sessionStorage.getItem("urlQr") || "defaultBank-defaultAccount";
+    const newQrUrl = `https://img.vietqr.io/image/${latestQrUrl}-compact2.png?amount=${totalPrice}&addInfo=Event Tech&accountName=Quang Minh`;
+    setQrUrl(newQrUrl);
+  }, [totalPrice]);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -66,116 +72,13 @@ const Payment = ({ removeItem }) => {
       setImages((prevImages) => ({ ...prevImages, ...newImages }));
     };
 
-    fetchImages();
+    if (cartItems.length > 0 && vendorId) {
+      fetchImages();
+    }
   }, [cartItems, vendorId]);
 
-  useEffect(() => {
-    const refreshQrUrl = () => {
-      const latestQrUrl = sessionStorage.getItem("urlQr") || "defaultBank-defaultAccount";
-      const newQrUrl = `https://img.vietqr.io/image/${latestQrUrl}-compact2.png?amount=${totalPrice}&addInfo=Event Tech&accountName=Quang Minh`;
-      setQrUrl(newQrUrl);
-    };
-
-    // Cập nhật ngay khi component được mount
-    refreshQrUrl();
-
-    // Thêm event listener để lắng nghe thay đổi của sessionStorage
-    window.addEventListener('storage', refreshQrUrl);
-
-    return () => {
-      window.removeEventListener('storage', refreshQrUrl);
-    };
-  }, [totalPrice]);
-
-  const handleCashOut = () => {
-    setChange(0);
-    setCashAmount(0);
-    onOpen();
-  };
-
-  const handleCashPayment = (amount) => {
-    setCashAmount(amount);
-    setChange(amount - totalPrice);
-  };
-
-  const saveOrder = async () => {
-    try {
-      const orderData = {
-        eventId: eventId,
-        vendorId: vendorId,
-        name: userName,
-        totalAmount: totalQuantity,
-        totalPrice: Number(totalPrice),
-        details: cartItems.map((item) => ({
-          productitemId: item.productItemId,
-          quantity: item.quantity,
-          unitPrice: item.price,
-        })),
-      };
-
-      const response = await axios.post(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order`,
-        orderData,
-        {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const latestOrder = response.data;
-      return latestOrder.orderId;
-    } catch (error) {
-      console.error("Error creating order:", error);
-      toast({
-        title: "Lỗi khi tạo đơn hàng",
-        description: "Đã xảy ra lỗi khi tạo đơn hàng. Vui lòng thử lại.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return null;
-    }
-  };
-
-  const createTransaction = async (orderId) => {
-    try {
-      await axios.post(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/transaction`,
-        {
-          orderId: orderId,
-          transactionType: paymentMethod === "QR" ? "Chuyển khoản" : "Tiền mặt",
-          price: totalPrice,
-        },
-        {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      toast({
-        title: "Tạo giao dịch thành công",
-        description: "Giao dịch của bạn đã được ghi nhận thành công.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error creating transaction:", error);
-      toast({
-        title: "Lỗi khi tạo giao dịch",
-        description: "Đã xảy ra lỗi khi tạo giao dịch. Vui lòng thử lại.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const handleConfirmCashPayment = async () => {
-    if (cashAmount < totalPrice) {
+  const handleConfirmPayment = async () => {
+    if (paymentMethod === "Cash" && cashAmount < totalPrice) {
       toast({
         title: "Số tiền không đủ",
         description: "Vui lòng nhập số tiền lớn hơn hoặc bằng tổng tiền cần thanh toán.",
@@ -183,44 +86,32 @@ const Payment = ({ removeItem }) => {
         duration: 3000,
         isClosable: true,
       });
-    } else {
-      const orderId = await saveOrder();
-      if (orderId) {
-        await createTransaction(orderId);
-        toast({
-          title: "Thanh toán thành công",
-          description: `Số tiền thừa: ${change.toLocaleString()} VND.`,
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        setTimeout(() => {
-          navigate("/shop", {
-            state: { accessToken, vendorId, eventId },
-          });
-        }, 3000);
-      }
+      return;
     }
-  };
 
-  const handleConfirmQrPayment = async () => {
-    const orderId = await saveOrder();
-    if (orderId) {
-      await createTransaction(orderId);
+    try {
       toast({
-        title: "Thanh toán QR thành công",
-        description: "Bạn đã thanh toán thành công qua QR Code.",
+        title: "Thanh toán thành công",
+        description:
+          paymentMethod === "QR"
+            ? "Bạn đã thanh toán thành công qua QR Code."
+            : `Số tiền thừa: ${change.toLocaleString()} VND.`,
         status: "success",
         duration: 3000,
         isClosable: true,
       });
 
-      setTimeout(() => {
-        navigate("/shop", {
-          state: { accessToken, vendorId, eventId },
-        });
-      }, 3000);
+      navigate("/shop", {
+        state: { accessToken, vendorId, eventId },
+      });
+    } catch (error) {
+      console.error("Error in payment process:", error);
     }
+  };
+
+  const handleCashPayment = (amount) => {
+    setCashAmount(amount);
+    setChange(amount - totalPrice);
   };
 
   return (
@@ -276,10 +167,10 @@ const Payment = ({ removeItem }) => {
 
           <HStack justify="space-between" mt={6}>
             <Text color="red.500" fontWeight="bold">{totalQuantity} sản phẩm</Text>
-            <Text fontSize="lg" fontWeight="bold" color="blue.600">{Number(totalPrice).toLocaleString()} VND</Text>
+            <Text fontSize="lg" fontWeight="bold" color="blue.600">{totalPrice.toLocaleString()} VND</Text>
           </HStack>
 
-          <Button colorScheme="blue" width="100%" mt={6} size="lg" fontWeight="bold" onClick={handleCashOut}>
+          <Button colorScheme="blue" width="100%" mt={6} size="lg" fontWeight="bold" onClick={onOpen}>
             Thanh toán
           </Button>
         </Box>
@@ -287,10 +178,8 @@ const Payment = ({ removeItem }) => {
 
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalOverlay />
-        <ModalContent width="600px" maxW="90%">
-          <ModalHeader textAlign="center">
-            {paymentMethod === "QR" ? "Quét mã QR để thanh toán" : "Thanh toán tiền mặt"}
-          </ModalHeader>
+        <ModalContent>
+          <ModalHeader textAlign="center">{paymentMethod === "QR" ? "Quét mã QR để thanh toán" : "Thanh toán tiền mặt"}</ModalHeader>
           <ModalCloseButton />
           <ModalBody textAlign="center">
             {paymentMethod === "QR" ? (
@@ -300,7 +189,9 @@ const Payment = ({ removeItem }) => {
               </>
             ) : (
               <>
-                <Text fontSize="lg" mb={4}>Số tiền cần thanh toán: {Number(totalPrice).toLocaleString()} VND</Text>
+                <Text fontSize="lg" mb={4}>
+                  Số tiền cần thanh toán: <strong>{totalPrice.toLocaleString()} VND</strong>
+                </Text>
                 <Input
                   placeholder="Nhập số tiền khách đưa"
                   type="number"
@@ -317,7 +208,24 @@ const Payment = ({ removeItem }) => {
                 />
                 <HStack spacing={6} justifyContent="center" mb={4}>
                   {[50000, 100000, 200000, 500000].map((amount) => (
-                    <Button key={amount} onClick={() => handleCashPayment(amount)} color="white" fontWeight="bold" width="120px" height="60px" borderRadius="md" boxShadow="md" fontSize="md" _hover={{ bg: "blue.300" }} bg={amount === 50000 ? "red.200" : amount === 100000 ? "green.200" : amount === 200000 ? "orange.200" : "blue.200"}>{amount.toLocaleString()} VND</Button>
+                    <Button
+                      key={amount}
+                      onClick={() => handleCashPayment(amount)}
+                      color="white"
+                      fontWeight="bold"
+                      width="120px"
+                      height="60px"
+                      borderRadius="md"
+                      boxShadow="md"
+                      fontSize="small"
+                      bg={
+                        amount === 50000 ? "red.200" :
+                        amount === 100000 ? "green.200" :
+                        amount === 200000 ? "orange.200" : "blue.200"
+                      }
+                    >
+                      {amount.toLocaleString()} VND
+                    </Button>
                   ))}
                 </HStack>
                 {cashAmount >= totalPrice && (
@@ -329,11 +237,13 @@ const Payment = ({ removeItem }) => {
             )}
           </ModalBody>
           <ModalFooter>
-            {paymentMethod === "QR" ? (
-              <Button colorScheme="green" onClick={handleConfirmQrPayment} mr={3}>Xác nhận thanh toán</Button>
-            ) : (
-              <Button colorScheme="green" onClick={handleConfirmCashPayment} mr={3}>Xác nhận thanh toán</Button>
-            )}
+            <Button
+              colorScheme="green"
+              onClick={handleConfirmPayment}
+              isDisabled={paymentMethod === "Cash" && cashAmount < totalPrice}
+            >
+              Xác nhận thanh toán
+            </Button>
             <Button variant="outline" onClick={onClose}>Đóng</Button>
           </ModalFooter>
         </ModalContent>

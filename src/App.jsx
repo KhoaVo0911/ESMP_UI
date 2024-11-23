@@ -5,6 +5,9 @@ import { ChakraProvider, Box } from "@chakra-ui/react";
 import { AnimatePresence } from "framer-motion";
 import AppRoutes from "./routes";
 import theme from "./theme/theme";
+
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from "./shared/auth/AuthContext";
 
 function App() {
@@ -15,6 +18,7 @@ function App() {
           <AnimatePresence mode="wait">
             <Box minH="100vh" bg="gray.50">
               <AppRoutes />
+              <ToastContainer />
             </Box>
           </AnimatePresence>
         </AuthProvider>

@@ -45,6 +45,7 @@ import StaffOrderedList from "./components/staff/Event/Shop/OrderedList.jsx";
 import PackageAdmin from "./components/admin/PackageAdmin.jsx";
 import ExtensionEvent from "./pages/host/ExtensionEvent.jsx";
 import BoothPlanView from "./pages/host/BoothPlanView.jsx";
+import SelectBoothPage from "./components/vendor/EventDetail/SelectBooth.jsx";
 
 const AppRoutes = () => {
   return (
@@ -68,6 +69,15 @@ const AppRoutes = () => {
         element={
           <VendorLayout>
             <BoothPlanView />
+          </VendorLayout>
+        }
+      />
+      
+        <Route
+        path="/selectbooth"
+        element={
+          <VendorLayout>
+            <SelectBoothPage/>
           </VendorLayout>
         }
       />

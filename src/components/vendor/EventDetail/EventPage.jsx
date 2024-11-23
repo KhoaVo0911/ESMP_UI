@@ -148,9 +148,18 @@ const EventDetail = () => {
               {new Date(eventDetail.endDate).toLocaleDateString()}
             </Text>
           </HStack>
-          <Button colorScheme="teal" size="md" onClick={onOpen}>
-            Register Now
-          </Button>
+          <Button
+  colorScheme="teal"
+  size="md"
+  onClick={() =>
+    navigate("/selectbooth", {
+      state: { eventId, vendorId, accessToken },
+    })
+  }
+>
+  Register Now
+</Button>
+
         </VStack>
 
         {/* Hình ảnh sự kiện */}
@@ -185,14 +194,7 @@ const EventDetail = () => {
 
       {/* Component SelectBooth */}
       <Box>
-        <SelectBooth
-          isPopup={true}
-          isOpen={isOpen}
-          onClose={onClose}
-          accessToken={accessToken}
-          eventId={eventId}
-          vendorId={vendorId}
-        />
+        
       </Box>
     </Box>
   );

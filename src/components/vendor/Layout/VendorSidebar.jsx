@@ -60,11 +60,11 @@ const VendorSideBar = ({ collapsed }) => {
           icon: <EventIcon />,
           label: <span style={{ fontWeight: "bold" }}>Events</span>,
         },
-        {
-          key: "5",
-          icon: <EventIcon />,
-          label: <span style={{ fontWeight: "bold" }}>Map Location</span>,
-        },
+        // {
+        //   key: "5",
+        //   icon: <EventIcon />,
+        //   label: <span style={{ fontWeight: "bold" }}>Map Location</span>,
+        // },
         
       ],
     },
