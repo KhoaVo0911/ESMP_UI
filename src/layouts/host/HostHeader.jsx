@@ -29,8 +29,8 @@ const HostHeader = ({ collapsed }) => {
       return "Account Managers";
     } else if (location.pathname.startsWith("/eventconfig")) {
       return "Event Config";
-    } else if (location.pathname.includes("/transactions")) {
-      return "Transaction";
+    } else if (location.pathname.includes("/eventpayment")) {
+      return "Payment List";
     } else if (location.pathname.includes("/booth-plan")) {
       return "Booth Plan";
     } else if (location.pathname.includes("/location-type")) {

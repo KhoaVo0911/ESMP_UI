@@ -230,7 +230,7 @@ const BoothPlan = () => {
     const fetchLocationTypes = async () => {
       try {
         const response = await axios.get(
-          `${BASE_URL}/map/locationTyple/${hostId}/${eventId}`,
+          `${BASE_URL}/map/locationType/${hostId}/${eventId}`,
           {
             headers: {
               Authorization: sessionStorage.getItem("accessToken"),

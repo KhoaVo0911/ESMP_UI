@@ -73,10 +73,10 @@ const HostSideBar = ({ collapsed }) => {
             <span
               style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
             >
-              Transaction
+              Payment List
             </span>
           ),
-          onClick: () => navigate(`/event/${eventId}/transactions`),
+          onClick: () => navigate(`/eventpayment/${eventId}`),
         },
         {
           key: "8",
@@ -261,7 +261,7 @@ const HostSideBar = ({ collapsed }) => {
                 navigate("/packages");
                 break;
               case "7":
-                navigate(`/event/transactions`);
+                navigate(`/eventpayment/${eventId}`);
                 break;
               case "8":
                 navigate(`/event/${eventId}/booth-plan`);
@@ -285,7 +285,7 @@ const HostSideBar = ({ collapsed }) => {
           }}
           items={
             location.pathname.startsWith("/event-detail") ||
-            location.pathname.startsWith("/event/transactions") ||
+            location.pathname.startsWith(`/eventpayment/${eventId}`) ||
             location.pathname.startsWith(`/event/${eventId}/booth-plan`) ||
             location.pathname.startsWith(`/event/${eventId}/booth-plan-view`) ||
             location.pathname.startsWith(`/event/${eventId}/location-type`) ||

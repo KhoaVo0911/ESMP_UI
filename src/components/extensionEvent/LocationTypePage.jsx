@@ -30,7 +30,7 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
   const [editingType, setEditingType] = useState(null);
   const [typeName, setTypeName] = useState("");
   const [price, setPrice] = useState("");
-  const [status, setStatus] = useState("Available");
+  const [status, setStatus] = useState("active");
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -38,7 +38,7 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
     if (eventId && hostId) {
       try {
         const response = await axios.get(
-          `${API_BASE_URL}/locationTyple/${hostId}/${eventId}`,
+          `${API_BASE_URL}/locationType/${hostId}/${eventId}`,
           {
             headers: {
               Authorization: sessionStorage.getItem("accessToken"),
@@ -48,7 +48,7 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
         setLocationTypes(response.data);
       } catch (error) {
         console.error("Error fetching location types:", error);
-        alert("Lỗi khi tải dữ liệu loại vị trí.");
+        // alert("Lỗi khi tải dữ liệu loại vị trí.");
       }
     }
   };
@@ -62,7 +62,7 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
       if (editingType) {
         // Cập nhật loại vị trí
         await axios.put(
-          `${API_BASE_URL}/locationTyple/${hostId}/${eventId}/${editingType.typeId}`,
+          `${API_BASE_URL}/locationType/${hostId}/${eventId}/${editingType.typeId}`,
           { typeName, price: parseFloat(price), status },
           {
             headers: {
@@ -71,11 +71,11 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
             },
           }
         );
-        alert("Cập nhật loại vị trí thành công!");
+        // alert("Cập nhật loại vị trí thành công!");
       } else {
         // Thêm loại vị trí mới
         await axios.post(
-          `${API_BASE_URL}/locationTyple/${hostId}/${eventId}`,
+          `${API_BASE_URL}/locationType/${hostId}/${eventId}`,
           { typeName, price: parseFloat(price), status },
           {
             headers: {
@@ -84,35 +84,35 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
             },
           }
         );
-        alert("Thêm loại vị trí mới thành công!");
+        // alert("Thêm loại vị trí mới thành công!");
       }
       fetchLocationTypes();
       onClose();
       setEditingType(null);
       setTypeName("");
       setPrice("");
-      setStatus("Available");
+      setStatus("Active");
     } catch (error) {
       console.error("Error saving location type:", error);
-      alert("Lỗi khi lưu loại vị trí.");
+      // alert("Lỗi khi lưu loại vị trí.");
     }
   };
 
   const handleDelete = async (typeId) => {
     try {
       await axios.delete(
-        `${API_BASE_URL}/locationTyple/${hostId}/${eventId}/${typeId}`,
+        `${API_BASE_URL}/locationType/${hostId}/${eventId}/${typeId}`,
         {
           headers: {
             Authorization: sessionStorage.getItem("accessToken"),
           },
         }
       );
-      alert("Xóa loại vị trí thành công!");
+      // alert("Xóa loại vị trí thành công!");
       fetchLocationTypes();
     } catch (error) {
       console.error("Error deleting location type:", error);
-      alert("Lỗi khi xóa loại vị trí.");
+      // alert("Lỗi khi xóa loại vị trí.");
     }
   };
 
@@ -192,9 +192,8 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
-                <option value="Available">Available</option>
-                <option value="Booked">Booked</option>
-                <option value="On Hold">On Hold</option>
+                <option value="active">Active</option>
+                <option value="blocked">Blocked</option>
               </Select>
             </FormControl>
           </ModalBody>
