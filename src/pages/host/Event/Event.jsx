@@ -459,7 +459,7 @@ const { TabPane } = Tabs;
 const { TextArea } = Input;
 
 const BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api";
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const Event = () => {

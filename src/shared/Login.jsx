@@ -31,10 +31,10 @@ const LoginComponent = ({ onLoginSuccess }) => {
 
     try {
       // Log the data being sent to ensure it is correct
-      console.log("Logging in with:", { username, password, hostCode });
+      console.log("Logging in with:", { username, password, hostCode, role });
 
-      const apiUrl = `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api`;
-      // const apiUrl = `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/user/login/${role}`;
+      // const apiUrl = `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api`;
+      const apiUrl = `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/user/login/${role}`;
 
       // Send the login request
       const response = await axios.post(apiUrl, {
