@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Flex,
@@ -10,17 +10,53 @@ import {
   MenuList,
   MenuItem,
   Button,
+  Badge,
 } from "@chakra-ui/react";
 import { BellIcon } from "@chakra-ui/icons";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../shared/auth/AuthContext";
+import axios from "axios";
+import Notification from "./Notification";
 
 const VendorHeader = ({ collapsed }) => {
   const location = useLocation();
-  const navigate = useNavigate(); // Initialize navigate hook
+  const navigate = useNavigate();
   const { logout } = useAuth();
   const vendorName = sessionStorage.getItem("vendorName");
+  const vendorId = sessionStorage.getItem("vendorId");
+  const [userId, setUserId] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const hostId = sessionStorage.getItem("hostId");
+        const response = await axios.get(
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendor/host/${hostId}`
+        );
+
+        const vendor = response.data.find((v) => v.vendorid === vendorId);
+        if (vendor) {
+          setUserId(vendor.userid);
+        }
+      } catch (error) {
+        console.error("Failed to fetch vendor info:", error);
+      }
+    };
+
+    if (vendorId) {
+      fetchUserId();
+    }
+  }, [vendorId]);
+
+  const handleNewNotifications = (newCount) => {
+    setUnreadCount(newCount);
+  };
+
+  const handleOpenNotifications = () => {
+    setUnreadCount(0); // Reset số thông báo chưa đọc
+  };
 
   const getPageTitle = () => {
     if (location.pathname.startsWith("/dashboard")) {
@@ -39,16 +75,10 @@ const VendorHeader = ({ collapsed }) => {
       return "Shop";
     } else if (location.pathname.startsWith("/payment")) {
       return "Shop";
-    }
-    else if (location.pathname.startsWith("/qrcodecodecode")) {
+    } else if (location.pathname.startsWith("/qrcodecodecode")) {
       return "Setting QR Code";
     }
-
-    return "Event Information"; // Default title
-  };
-
-  const handleQRCodePage = () => {
-    navigate("/qrcodecodecode"); // Navigate to QR code page
+    return "Event Information";
   };
 
   return (
@@ -78,17 +108,11 @@ const VendorHeader = ({ collapsed }) => {
         </Text>
       </Flex>
 
-      <Flex alignItems="center">
-        <IconButton
-          aria-label="Notifications"
-          icon={<BellIcon />}
-          variant="ghost"
-          fontSize="20px"
-          color="gray.600"
-          mr={4}
-        />
+      <Flex alignItems="center" position="relative">
 
-        <Menu>
+      
+      </Flex>
+      <Flex alignItems="center" position="relative">  <Menu>
           <MenuButton
             as={Button}
             rightIcon={<ChevronDownIcon />}
@@ -105,20 +129,72 @@ const VendorHeader = ({ collapsed }) => {
             <MenuItem fontSize="md" fontWeight="700" color="gray.700">
               👋 Hey, {vendorName}
             </MenuItem>
-            <MenuItem fontSize="md" fontWeight="700" color="gray.700" onClick={handleQRCodePage}>
+            <MenuItem
+              fontSize="md"
+              fontWeight="700"
+              color="gray.700"
+              onClick={() => navigate("/qrcodecodecode")}
+            >
               Generate QR Code
             </MenuItem>
             <MenuItem
               fontSize="md"
               fontWeight="700"
               color="red.500"
-              onClick={logout} // Calls logout function from AuthContext
+              onClick={logout}
             >
               Log out
             </MenuItem>
           </MenuList>
         </Menu>
-      </Flex>
+  <Menu>
+    <MenuButton
+      as={IconButton}
+      aria-label="Notifications"
+      icon={<BellIcon />}
+      variant="ghost"
+      fontSize="24px"
+      color="gray.600"
+      position="relative"
+    />
+    {unreadCount > 0 && (
+      <Badge
+        colorScheme="red"
+        borderRadius="full"
+        fontSize="12px"
+        position="absolute"
+        top="0" // Đẩy badge lên góc trên
+        right="-5px" // Đẩy badge sang phải
+        width="20px"
+        height="20px"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        fontWeight="bold"
+        backgroundColor="red.500"
+        color="white"
+      >
+        {unreadCount}
+      </Badge>
+    )}
+    <MenuList boxShadow="lg" borderRadius="lg" p={0}>
+      {userId ? (
+        <Notification
+          userId={userId}
+          onNewNotifications={handleNewNotifications}
+          onOpenNotifications={handleOpenNotifications}
+        />
+      ) : (
+        <Box p={4}>
+          <Text fontSize="sm" color="gray.500">
+            Loading notifications...
+          </Text>
+        </Box>
+      )}
+    </MenuList>
+  </Menu>
+</Flex>
+
     </Box>
   );
 };

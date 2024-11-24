@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -18,17 +19,14 @@ import {
   useToast,
   Progress,
 } from "@chakra-ui/react";
-import axios from "axios";
 
-const API_PACKAGE =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/package";
+const API_PACKAGE = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/package";
 
-const PackageList = () => {
+const CourseList = () => {
   const [packages, setPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState({
     content: "",
     price: "",
-    description: "",
     showQR: false,
     qrUrl: "",
   });
@@ -37,25 +35,29 @@ const PackageList = () => {
   const toast = useToast();
   const countdownIntervalRef = useRef(null);
 
-  const accessToken = sessionStorage.getItem("accessToken") || "";
-
   useEffect(() => {
+    // Lấy danh sách gói từ API
     const fetchPackages = async () => {
       try {
+        const accessToken = localStorage.getItem("accessToken"); // Lấy accessToken từ localStorage
+        if (!accessToken) {
+          throw new Error("Access token không tồn tại");
+        }
+
         const response = await axios.get(API_PACKAGE, {
           headers: {
-            Authorization: `${accessToken}`,
+            Authorization: `Bearer ${accessToken}`, // Truyền accessToken vào header
             "Content-Type": "application/json",
           },
         });
-        // Lọc các gói có trạng thái active
-        const activePackages = response.data.filter((pkg) => pkg.status);
+
+        const activePackages = response.data.filter((pkg) => pkg.status); // Lọc gói có status là true
         setPackages(activePackages);
       } catch (error) {
         console.error("Error fetching packages:", error);
         toast({
-          title: "Lỗi tải dữ liệu",
-          description: "Không thể tải danh sách gói.",
+          title: "Lỗi",
+          description: "Không thể tải danh sách gói. Vui lòng thử lại.",
           status: "error",
           duration: 5000,
           isClosable: true,
@@ -64,16 +66,18 @@ const PackageList = () => {
     };
 
     fetchPackages();
-  }, [accessToken]);
+  }, [toast]);
 
   const handlePackageClick = (pkg) => {
-    const qrUrl = `https://img.vietqr.io/image/ACB-18254271-compact2.png?amount=${pkg.price}&addInfo=${pkg.description}&accountName=Dinh Quang Minh`;
+    const paidPrice = pkg.price;
+    const paidContent = pkg.description; // Sử dụng description làm nội dung chuyển khoản
+    const qrUrl = `https://img.vietqr.io/image/ACB-18254271-compact2.png?amount=${paidPrice}&addInfo=${paidContent}&accountName=Dinh Quang Minh`;
+
     const newStartTime = new Date();
 
     setSelectedPackage({
-      content: pkg.description,
-      price: pkg.price,
-      description: pkg.description,
+      content: paidContent,
+      price: paidPrice,
       showQR: true,
       qrUrl: qrUrl,
     });
@@ -104,24 +108,19 @@ const PackageList = () => {
     }, 1000);
 
     const transactionCheckInterval = setInterval(() => {
-      checkPaid(
-        pkg.price,
-        pkg.description,
-        transactionCheckInterval,
-        newStartTime
-      );
+      checkPaid(paidPrice, paidContent, transactionCheckInterval, newStartTime);
     }, 2000);
 
     onOpen();
   };
 
-  const checkPaid = async (price, description, intervalId, startTime) => {
+  const checkPaid = async (price, content, intervalId, startTime) => {
     try {
-      const response = await axios.get(
-        "https://script.googleusercontent.com/macros/echo?user_content_key=sfoSNLx5GRCbDs5uKLVukjxXVCO-zoVh0YrGTSqqzjAZZLs_PRwvjkNIG1J8ROGnt9NOZvqcrXZH4sj3Ynzzs_Rg5L2rloSpm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnGzmiW6YfwUI-IFTkZPDW3Qhx49gvcLvmaxfvmNYILLzHEfRAI-GMs9URhNVjzo6vwQAdcoIo8r4bnDQ8wtSOeMl4ZsuUTDnRtz9Jw9Md8uu&lib=MbbErZamKd_6ahvdDuCk2MKVwqDhlS6o-"
+      const response = await fetch(
+        "https://script.googleusercontent.com/macros/echo?user_content_key=ezaHN4Gj4g-_qKyEpIFtMZQPkwJ0BbYQk3LG5p8k9b31Q7-kvTSXe2ZhZFRNoR7KhGYLTKEhpEOtSOcEac_Ekkb6_uiOxp_qm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnKv_VMEXf_TlwaF4o_-JkqZsBeOE2g6GtB2F-g5rnh9Lg6IxlmlB0WqV6H5thtDBueCS5gbHSu7aRDOzV-kpgRZaH2A0H0nPU9z9Jw9Md8uu&lib=MbbErZamKd_6ahvdDuCk2MKVwqDhlS6o-"
       );
-      const data = response.data.data;
-      const lastPaid = data[data.length - 1];
+      const data = await response.json();
+      const lastPaid = data.data[data.data.length - 1];
 
       const lastPrice =
         lastPaid && lastPaid["Giá trị"] ? parseFloat(lastPaid["Giá trị"]) : 0;
@@ -130,18 +129,19 @@ const PackageList = () => {
           ? lastPaid["Mô tả"].trim().toLowerCase()
           : "";
       const transactionTime = new Date(lastPaid["Ngày diễn ra"]).getTime();
+
       const startTimestamp = new Date(startTime).getTime();
 
       if (
-        lastPrice === parseFloat(price) &&
-        lastContent.includes(description.toLowerCase()) &&
+        lastPrice >= price &&
+        lastContent.includes(content.toLowerCase()) &&
         transactionTime > startTimestamp
       ) {
         clearInterval(intervalId);
         clearInterval(countdownIntervalRef.current);
         toast({
           title: "Thanh toán thành công",
-          description: "Bạn đã thanh toán thành công cho gói.",
+          description: "Bạn đã thanh toán thành công cho gói dịch vụ.",
           status: "success",
           duration: 5000,
           isClosable: true,
@@ -150,32 +150,16 @@ const PackageList = () => {
         onClose();
       }
     } catch (error) {
-      console.error("Lỗi kiểm tra giao dịch:", error);
+      console.error("Lỗi:", error);
     }
   };
-  // (#1A2D42, #2E4156, #AAB7B7, #C0C8CA, #D4D8DD).
-
 
   return (
-    <VStack spacing={8} align="center" padding={4} bg="white" minH="100vh">
-      <Heading
-        as="h1"
-        size="lg"
-        textAlign="center"
-        mb={6}
-        color="#2E4156"
-        bgGradient="linear(to-r, teal.400, teal.600)"
-        bgClip="text"
-      >
-        Welcome to the Service Package Management Page{" "}
-      </Heading>
-      <Text textAlign="center" color="#2E4156" mb={8}>
-      Here, you can view and purchase service packages. Choose the package that suits your needs!
-      </Text>
+    <VStack spacing={8} align="center" padding={4} bg="#f5f5dc" minH="100vh">
       <Flex wrap="wrap" justify="center" gap={6}>
-        {packages.map((pkg) => (
+        {packages.map((item) => (
           <Box
-            key={pkg.id}
+            key={item.id}
             position="relative"
             maxW="280px"
             textAlign="center"
@@ -185,12 +169,11 @@ const PackageList = () => {
             p={4}
             _hover={{ transform: "scale(1.05)" }}
             transition="0.3s ease-in-out"
-            border="1px solid #2E4156"
-            width="300px"
+            border="1px solid #d4af37"
           >
             {/* <Image
-              src="https://via.placeholder.com/300x180" // Placeholder image
-              alt={pkg.name}
+              src="https://via.placeholder.com/180"
+              alt={item.name}
               borderRadius="md"
               boxShadow="lg"
               width="100%"
@@ -198,22 +181,19 @@ const PackageList = () => {
               objectFit="cover"
               mb={4}
             /> */}
-            <Heading size="md" color="#1A2D42" mb={2}>
-              {pkg.name}
+            <Heading size="md" color="#6b4226" mb={2}>
+              {item.name}
             </Heading>
-            <Text fontSize="sm" mb={2}>
-              {pkg.description}
-            </Text>
-            <Text fontSize="lg" fontWeight="bold" color="#1A2D42" mb={4}>
-              {parseInt(pkg.price).toLocaleString()} VND
+            <Text fontSize="lg" fontWeight="bold" color="#8b4513" mb={4}>
+              {parseInt(item.price).toLocaleString()} VND
             </Text>
             <Button
-              colorScheme="#1A2D42"
+              colorScheme="yellow"
               variant="outline"
-              borderColor="#1A2D42"
-              color="#1A2D42"
-              _hover={{ bg: "#1A2D42", color: "white" }}
-              onClick={() => handlePackageClick(pkg)}
+              borderColor="#d4af37"
+              color="#6b4226"
+              _hover={{ bg: "#d4af37", color: "white" }}
+              onClick={() => handlePackageClick(item)}
             >
               Mua
             </Button>
@@ -235,21 +215,13 @@ const PackageList = () => {
               boxShadow="md"
               width={["80%", "70%", "60%"]}
             />
-            <Text fontSize="lg" mb={2} color="#1A2D42">
+            <Text fontSize="lg" mb={2} color="yellow.400">
               Mã QR thanh toán tự động
             </Text>
-            <Text fontSize="sm" color="gray.500" p={5}>
-              (Xác nhận tự động - Thường không quá 3')
-            </Text>
-            <Flex
-              alignItems="center"
-              justifyContent="space-between"
-              width="100%"
-            >
+            <Flex alignItems="center" justifyContent="space-between" width="100%">
               <Text>Số tiền: {selectedPackage.price.toLocaleString()} VND</Text>
-              <Text>Nội dung: {selectedPackage.description}</Text>
+              <Text>Nội dung: {selectedPackage.content}</Text>
             </Flex>
-
             <Box mt={4} p={2} borderTop="1px solid gray">
               <Flex
                 alignItems="center"
@@ -267,7 +239,7 @@ const PackageList = () => {
               <Progress
                 value={(remainingTime / 120) * 100}
                 size="sm"
-                colorScheme="blue"
+                colorScheme="yellow"
                 mt={2}
                 width="100%"
               />
@@ -284,4 +256,4 @@ const PackageList = () => {
   );
 };
 
-export default PackageList;
+export default CourseList;

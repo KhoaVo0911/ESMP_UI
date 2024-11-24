@@ -1,23 +1,20 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  InputGroup,
-  InputLeftElement,
   Input,
-  Box,
-  Grid,
-  GridItem,
-  Image,
-} from "@chakra-ui/react";
+  Row,
+  Col,
+  Card,
+  message,
+} from "antd";
+import { SearchOutlined, CalendarOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { SearchIcon, CalendarIcon, InfoIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
+import "./Event.css";
+
+const { TabPane } = Tabs;
 
 const BASE_URL =
   "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
@@ -30,11 +27,11 @@ const EventVendor = () => {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState("0");
 
   const fetchEvents = useCallback(async () => {
     if (!hostId) {
-      console.error("Host ID is missing!");
+      message.error("Host ID is missing!");
       return;
     }
 
@@ -56,7 +53,6 @@ const EventVendor = () => {
               event.imageURL = "https://via.placeholder.com/150";
             }
           } catch (error) {
-            console.error("Error fetching event images:", error);
             event.imageURL = "https://via.placeholder.com/150";
           }
           return event;
@@ -66,6 +62,7 @@ const EventVendor = () => {
       setEvents(eventsWithImages);
     } catch (error) {
       console.error("Error fetching events:", error);
+      message.error("Error fetching events.");
     }
   }, [hostId]);
 
@@ -78,17 +75,17 @@ const EventVendor = () => {
       let filtered = events;
 
       switch (activeTab) {
-        case 0:
+        case "0":
           filtered = events.filter(
             (event) => event.status?.toLowerCase() === "upcoming"
           );
           break;
-        case 1:
+        case "1":
           filtered = events.filter(
             (event) => event.status?.toLowerCase() === "running"
           );
           break;
-        case 2:
+        case "2":
           filtered = events.filter(
             (event) => event.status?.toLowerCase() === "cancelled"
           );
@@ -109,7 +106,7 @@ const EventVendor = () => {
     filterEvents();
   }, [events, activeTab, searchTerm]);
 
-  const handleTabChange = (index) => setActiveTab(index);
+  const handleTabChange = (key) => setActiveTab(key);
 
   const handleSearch = (e) => setSearchTerm(e.target.value.toLowerCase());
 
@@ -120,65 +117,58 @@ const EventVendor = () => {
   };
 
   return (
-    <>
-      <InputGroup mb={4}>
-        <InputLeftElement pointerEvents="none">
-          <SearchIcon color="gray.300" />
-        </InputLeftElement>
-        <Input
-          placeholder="Search events"
-          value={searchTerm}
-          onChange={handleSearch}
-        />
-      </InputGroup>
+    <div className="event-vendor-container">
+      <Input
+        placeholder="Search events"
+        prefix={<SearchOutlined />}
+        value={searchTerm}
+        onChange={handleSearch}
+        style={{ marginBottom: 16 }}
+      />
 
-      <Tabs index={activeTab} onChange={handleTabChange}>
-        <TabList>
-          <Tab>Up Coming</Tab>
-          <Tab>Running</Tab>
-          <Tab>Cancelled</Tab>
-          <Tab>All</Tab>
-        </TabList>
-        <TabPanels>
-          <TabPanel>
-            <Grid templateColumns="repeat(3, 1fr)" gap={6}>
-              {filteredEvents.map((event) => (
-                <GridItem
-                  key={event.eventId}
-                  onClick={() => handleEventClick(event)}
-                  cursor="pointer"
-                  border="1px solid #e2e8f0"
-                  borderRadius="md"
-                  overflow="hidden"
-                >
-                  <Image
-                    src={event.imageURL}
-                    alt={event.name}
-                    objectFit="cover"
-                    w="100%"
-                    h="150px"
-                  />
-                  <Box p={4}>
-                    <Box fontWeight="bold" fontSize="lg" mb={2}>
-                      {event.name}
-                    </Box>
-                    <Box fontSize="sm" mb={2}>
-                      <CalendarIcon />{" "}
+      <Tabs defaultActiveKey="0" onChange={handleTabChange}>
+        <TabPane tab="Up Coming" key="0" />
+        <TabPane tab="Running" key="1" />
+        <TabPane tab="Cancelled" key="2" />
+        <TabPane tab="All" key="3" />
+      </Tabs>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        {filteredEvents.map((event) => (
+          <Col span={8} key={event.eventId}>
+            <Card
+              hoverable
+              cover={
+                <img
+                  alt={event.name}
+                  src={event.imageURL}
+                  style={{ height: 150, objectFit: "cover" }}
+                />
+              }
+              onClick={() => handleEventClick(event)}
+            >
+              <Card.Meta
+                title={event.name}
+                description={
+                  <div>
+                    <p>
+                      <CalendarOutlined />{" "}
                       {`${new Date(event.startDate).toLocaleDateString()} - ${new Date(
                         event.endDate
                       ).toLocaleDateString()}`}
-                    </Box>
-                    <Box fontSize="sm" color="gray.600">
-                      <InfoIcon /> {event.description}
-                    </Box>
-                  </Box>
-                </GridItem>
-              ))}
-            </Grid>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
-    </>
+                    </p>
+                    <p>
+                      <InfoCircleOutlined />{" "}
+                      {event.description || "No description provided."}
+                    </p>
+                  </div>
+                }
+              />
+            </Card>
+          </Col>
+        ))}
+      </Row>
+    </div>
   );
 };
 
