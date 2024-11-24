@@ -7,6 +7,7 @@ import StatisticsNumbers from "../../components/host/stats/StatisticsNumbers";
 import TopVendor from "../../components/host/vendor/TopVendor";
 import HostLayout from "../../layouts/host/HostLayout";
 import CalendarChart from "../../components/host/chart/CalendarChart/CalendarChart";
+import EventLocationSlider from "../../components/host/EventSlider/EventLocationSlider";
 
 const Dashboard = () => {
   return (
@@ -24,7 +25,8 @@ const Dashboard = () => {
           p={6}
           boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
         >
-          <RevenueChart />
+          {/* <RevenueChart /> */}
+          <EventLocationSlider />
         </Box>
         <Box
           bg="white"
