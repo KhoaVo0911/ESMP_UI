@@ -36,7 +36,7 @@ const StaffShop = () => {
   const fetchProductItems = async () => {
     try {
       const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+        `https://esmpbe.id.vn/api/productitem/${vendorId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -53,7 +53,7 @@ const StaffShop = () => {
   const fetchProducts = async () => {
     try {
       const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
+        `https://esmpbe.id.vn/api/product/${vendorId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -70,7 +70,7 @@ const StaffShop = () => {
   const fetchMenuItems = async () => {
     try {
       const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/menu/${vendorId}/${eventId}`,
+        `https://esmpbe.id.vn/api/menu/${vendorId}/${eventId}`,
         {
           headers: {
             Authorization: `${accessToken}`,

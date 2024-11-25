@@ -103,7 +103,7 @@ const StaffPayment = ({ removeItem }) => {
       };
   
       await axios.post(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order`,
+        `https://esmpbe.id.vn/api/order`,
         orderData,
         {
           headers: {
@@ -115,7 +115,7 @@ const StaffPayment = ({ removeItem }) => {
   
       // Bước 2: Lấy order mới nhất của vendor bằng GET
       const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order/vendor/${vendorId}`,
+        `https://esmpbe.id.vn/api/order/vendor/${vendorId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -144,7 +144,7 @@ return orderId;
   const createTransaction = async (orderId) => {
     try {
       await axios.post(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/transaction`,
+        `https://esmpbe.id.vn/api/transaction`,
         {
           orderId: orderId,
           transactionType: paymentMethod === "QR" ? "Chuyển khoản" : "Tiền mặt",

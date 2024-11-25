@@ -19,7 +19,7 @@ import Policy from "./Policy";
 import BoothPayment from "./BoothPayment";
 
 const BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api";
+  "https://esmpbe.id.vn/api";
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const SelectBooth = () => {

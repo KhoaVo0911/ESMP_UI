@@ -16,7 +16,7 @@ import axios from "axios";
 import { ref, getDownloadURL } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
 
-const URL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const URL = "https://esmpbe.id.vn/api/event";
 
 const EventEnrolled = () => {
   const navigate = useNavigate();
