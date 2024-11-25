@@ -21,7 +21,7 @@ const EndEvent = ({
     const fetchVendorInEventId = async () => {
       try {
         const response = await axios.get(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent/${vendorId}/${eventId}`,
+          `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
           {
             headers: {
               Authorization: `${accessToken}`,
@@ -85,7 +85,7 @@ const EndEvent = ({
     try {
       // Cập nhật trạng thái VendorInEvent
       await axios.put(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent/${vendorInEventId}`,
+        `https://esmpbe.id.vn/api/vendorinevent/${vendorInEventId}`,
         {
           vendorinEventId: vendorInEventId,
           eventId: eventId,
@@ -102,7 +102,7 @@ const EndEvent = ({
 
       // Gửi tổng doanh thu và trạng thái vào API event payment
       await axios.put(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/eventpayment/${vendorInEventId}`,
+        `https://esmpbe.id.vn/api/eventpayment/${vendorInEventId}`,
         {
           totalrevenue: totalRevenue,
           status: "Refunding Deposit", // Trạng thái thanh toán

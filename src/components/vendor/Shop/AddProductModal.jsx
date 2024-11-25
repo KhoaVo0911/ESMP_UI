@@ -37,7 +37,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
     setLoading(true);
     try {
       const productItemsResponse = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+        `https://esmpbe.id.vn/api/productitem/${vendorId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -55,7 +55,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
       setProducts(productItemsWithImages);
 
       const productsResponse = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
+        `https://esmpbe.id.vn/api/product/${vendorId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -109,7 +109,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
       };
 
       const response = await axios.post(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/menu/${vendorId}/${eventId}`,
+        `https://esmpbe.id.vn/api/menu/${vendorId}/${eventId}`,
         payload,
         {
           headers: {

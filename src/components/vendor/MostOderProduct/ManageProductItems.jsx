@@ -79,7 +79,7 @@ const ManageProducts = () => {
   const fetchData = async () => {
     try {
       const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
+        `https://esmpbe.id.vn/api/product/${vendorId}`,
         {
           headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
         }
@@ -99,7 +99,7 @@ const ManageProducts = () => {
   const fetchProductItems = async () => {
     try {
       const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+        `https://esmpbe.id.vn/api/productitem/${vendorId}`,
         {
           headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
         }
@@ -173,7 +173,7 @@ const ManageProducts = () => {
       const newProductItemId = editingProductItem
         ? editingProductItem.productItemId
         : (await axios.post(
-            `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+            `https://esmpbe.id.vn/api/productitem/${vendorId}`,
             productItemData,
             {
               headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
@@ -185,7 +185,7 @@ const ManageProducts = () => {
 
       if (editingProductItem) {
         await axios.put(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}/${newProductItemId}`,
+          `https://esmpbe.id.vn/api/productitem/${vendorId}/${newProductItemId}`,
           updatedProductItem,
           {
             headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },

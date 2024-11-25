@@ -55,7 +55,7 @@ const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId t�
     setLoading(true);
     axios
       .get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+        `https://esmpbe.id.vn/api/productitem/${vendorId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -90,7 +90,7 @@ const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId t�
 
   // Tạo sản phẩm mới
   const handleCreateProduct = () => {
-    const apiUrl = `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem`;
+    const apiUrl = `https://esmpbe.id.vn/api/productitem`;
 
     const productData = {
       productId: newProduct.productId,
@@ -152,7 +152,7 @@ const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId t�
   const handleUpdateProduct = () => {
     if (!editProduct) return;
 
-    const apiUrl = `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem`;
+    const apiUrl = `https://esmpbe.id.vn/api/productitem`;
 
     axios
       .put(apiUrl, { ...editProduct, vendorid: vendorId }, {
@@ -189,7 +189,7 @@ const vendorId = sessionStorage.getItem("vendorId") || ""; // Lấy vendorId t�
   const handleDelete = (productId) => {
     axios
       .delete(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${productId}`,
+        `https://esmpbe.id.vn/api/productitem/${productId}`,
         {
           headers: {
             Authorization: `${accessToken}`,

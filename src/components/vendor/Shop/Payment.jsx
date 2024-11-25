@@ -105,7 +105,7 @@ const Payment = ({ removeItem }) => {
       };
   
       await axios.post(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order`,
+        `https://esmpbe.id.vn/api/order`,
         orderData,
         {
           headers: {
@@ -117,7 +117,7 @@ const Payment = ({ removeItem }) => {
   
       // Gọi GET để lấy danh sách order và chọn order mới nhất
       const getOrderResponse = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order/event/${eventId}/${vendorId}`,
+        `https://esmpbe.id.vn/api/order/event/${eventId}/${vendorId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -144,7 +144,7 @@ const Payment = ({ removeItem }) => {
       };
   
       await axios.post(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/transaction`,
+        `https://esmpbe.id.vn/api/transaction`,
         transactionData,
         {
           headers: {

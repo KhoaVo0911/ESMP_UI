@@ -44,7 +44,7 @@ const ProductList = () => {
     setLoading(true);
     try {
       const productResponse = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
+        `https://esmpbe.id.vn/api/product/${vendorId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -57,7 +57,7 @@ const ProductList = () => {
       setFilteredData(productResponse.data);
 
       const categoryResponse = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category/host/${hostId}`,
+        `https://esmpbe.id.vn/api/category/host/${hostId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -108,7 +108,7 @@ const ProductList = () => {
 
       if (editingProduct) {
         await axios.put(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}/${editingProduct.productId}`,
+          `https://esmpbe.id.vn/api/product/${vendorId}/${editingProduct.productId}`,
           payload,
           {
             headers: {
@@ -120,7 +120,7 @@ const ProductList = () => {
         message.success("Product updated successfully!");
       } else {
         await axios.post(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}`,
+          `https://esmpbe.id.vn/api/product/${vendorId}`,
           payload,
           {
             headers: {
@@ -143,7 +143,7 @@ const ProductList = () => {
   const handleDelete = async (id) => {
     try {
       await axios.delete(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/product/${vendorId}/${id}`,
+        `https://esmpbe.id.vn/api/product/${vendorId}/${id}`,
         {
           headers: {
             Authorization: `${accessToken}`,

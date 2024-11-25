@@ -52,7 +52,7 @@ const OrderedList = () => {
     const fetchOrders = async () => {
       try {
         const response = await axios.get(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order/event/${eventId}/${vendorId}`,
+          `https://esmpbe.id.vn/api/order/event/${eventId}/${vendorId}`,
           {
             headers: {
               Authorization: `${accessToken}`,
@@ -71,7 +71,7 @@ const OrderedList = () => {
     const fetchProductItems = async () => {
       try {
         const response = await axios.get(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+          `https://esmpbe.id.vn/api/productitem/${vendorId}`,
           {
             headers: {
               Authorization: `${accessToken}`,
@@ -96,7 +96,7 @@ const OrderedList = () => {
       try {
         for (const order of orders) {
           const response = await axios.get(
-            `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/transaction/order/${order.orderId}`,
+            `https://esmpbe.id.vn/api/transaction/order/${order.orderId}`,
             {
               headers: {
                 Authorization: `${accessToken}`,
@@ -134,7 +134,7 @@ const OrderedList = () => {
       try {
         for (const order of orders) {
           const response = await axios.get(
-            `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order/orderDetail/${order.orderId}`,
+            `https://esmpbe.id.vn/api/order/orderDetail/${order.orderId}`,
             {
               headers: {
                 Authorization: `${accessToken}`,
@@ -174,7 +174,7 @@ const OrderedList = () => {
 
     try {
       const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order/orderDetail/${orderId}`,
+        `https://esmpbe.id.vn/api/order/orderDetail/${orderId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
