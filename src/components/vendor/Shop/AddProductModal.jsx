@@ -179,11 +179,12 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
                       {productNames[product.productId] || product.name}
                     </Text>
                     <Text fontWeight="bold" fontSize="lg" color="gray.600">
-                      {parseInt(product.price).toLocaleString("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                      })}
-                    </Text>
+  {parseInt(product.price).toLocaleString("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  })}
+</Text>
+
                     <VStack align="start" spacing={1} mt={2}>
                       {product.details.map((detail, index) => (
                         <Text key={index} fontSize="sm" color="gray.500">

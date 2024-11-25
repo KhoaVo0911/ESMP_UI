@@ -90,7 +90,7 @@ const Payment = ({ removeItem }) => {
     }
   
     try {
-      // Create an order
+      // Tạo order (POST)
       const orderData = {
         eventId,
         vendorId,
@@ -104,7 +104,7 @@ const Payment = ({ removeItem }) => {
         })),
       };
   
-      const response = await axios.post(
+      await axios.post(
         `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order`,
         orderData,
         {
@@ -115,17 +115,46 @@ const Payment = ({ removeItem }) => {
         }
       );
   
-      const orderId = response.data.orderId; // Use this orderId for any subsequent transaction actions
+      // Gọi GET để lấy danh sách order và chọn order mới nhất
+      const getOrderResponse = await axios.get(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order/event/${eventId}/${vendorId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
   
-      toast({
-        title: "Order Created Successfully",
-        description: "Your order has been created.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
+      // Lấy order mới nhất (nằm dưới cùng hoặc sắp xếp lại)
+      const orders = getOrderResponse.data;
+      const latestOrder = orders.reduce((prev, current) => {
+        return new Date(prev.createAt) > new Date(current.createAt) ? prev : current;
       });
   
-      // Confirm payment after order creation
+      if (!latestOrder) {
+        throw new Error("No orders found.");
+      }
+  
+      // Gọi POST API transaction với orderId từ order mới nhất
+      const transactionData = {
+        orderId: latestOrder.orderId,
+        transactionType: paymentMethod === "QR" ? "Bank Transfer" : "Cash",
+        price: totalPrice,
+      };
+  
+      await axios.post(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/transaction`,
+        transactionData,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      // Thông báo thành công
       toast({
         title: "Payment successful",
         description:
@@ -137,15 +166,15 @@ const Payment = ({ removeItem }) => {
         isClosable: true,
       });
   
-      // Navigate back to the shop
+      // Điều hướng về shop
       navigate("/shop", {
         state: { accessToken, vendorId, eventId },
       });
     } catch (error) {
-      console.error("Error creating order or processing payment:", error);
+      console.error("Error processing payment:", error);
       toast({
         title: "Error",
-        description: "An error occurred while processing your payment or creating the order. Please try again.",
+        description: "An error occurred while processing your payment. Please try again.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -153,6 +182,7 @@ const Payment = ({ removeItem }) => {
     }
   };
   
+
   const handleCashPayment = (amount) => {
     setCashAmount(amount);
     setChange(amount - totalPrice);
