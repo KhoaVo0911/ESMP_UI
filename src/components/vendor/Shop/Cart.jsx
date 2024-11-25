@@ -61,12 +61,12 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
   return (
     <Box p={5} borderRadius="md" boxShadow="lg" bg="white" width="100%">
       <Text fontSize="2xl" fontWeight="bold" mb={4}>
-        Giỏ Hàng
+        Shopping Cart
       </Text>
 
       <VStack spacing={4} align="stretch">
         {itemsWithImages.length === 0 ? (
-          <Text>Không có sản phẩm nào trong giỏ hàng</Text>
+          <Text>No products in the cart</Text>
         ) : (
           itemsWithImages.map((item, index) => (
             <HStack
@@ -111,7 +111,7 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
                 icon={<DeleteIcon />}
                 colorScheme="red"
                 onClick={() => removeItem(index)}
-                aria-label="Xóa sản phẩm"
+                aria-label="Delete product"
               />
             </HStack>
           ))
@@ -119,15 +119,15 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
       </VStack>
 
       <Box mt={8} textAlign="right" fontWeight="bold" fontSize="lg">
-        Tổng: {totalPrice.toLocaleString()} VND
+        Total: {totalPrice.toLocaleString()} VND
       </Box>
 
       <HStack justify="center" mt={8}>
         <Button colorScheme="blue" onClick={handleConfirm}>
-          Xác nhận
+          Confirm
         </Button>
         <Button colorScheme="red" onClick={() => removeItem()}>
-          Xóa tất cả
+          Clear All
         </Button>
       </HStack>
     </Box>

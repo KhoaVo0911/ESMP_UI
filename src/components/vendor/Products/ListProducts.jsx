@@ -24,8 +24,8 @@ import { useLocation } from "react-router-dom";
 const { Option } = Select;
 
 const ProductList = () => {
-  const [data, setData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
+  const [data, setData] = useState([]); // Toàn bộ dữ liệu
+  const [filteredData, setFilteredData] = useState([]); // Dữ liệu sau khi search hoặc sort
   const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -34,10 +34,12 @@ const ProductList = () => {
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("name");
+
   const accessToken = sessionStorage.getItem("accessToken") || "";
   const vendorId = sessionStorage.getItem("vendorId") || "";
   const hostId = sessionStorage.getItem("hostId") || "";
 
+  // Fetch toàn bộ dữ liệu từ API
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -50,6 +52,7 @@ const ProductList = () => {
           },
         }
       );
+
       setData(productResponse.data);
       setFilteredData(productResponse.data);
 
@@ -148,8 +151,7 @@ const ProductList = () => {
           },
         }
       );
-      setData(data.filter((item) => item.productId !== id));
-      setFilteredData(filteredData.filter((item) => item.productId !== id));
+      fetchData();
       message.success("Product deleted successfully!");
     } catch (error) {
       message.error("Error occurred while deleting product!");
@@ -283,28 +285,32 @@ const ProductList = () => {
         </Box>
 
         <Box
-          width="100%"
-          maxHeight="500px"
-          overflowY="auto"
-          border="1px solid #e0e0e0"
-          borderRadius="md"
-          boxShadow="md"
-        >
-          <Table
-            columns={columns}
-            dataSource={filteredData}
-            pagination={false}
-            bordered
-            rowKey="productId"
-            loading={loading}
-            style={{ padding: "10px" }}
-          />
-        </Box>
+  width="100%"
+  border="1px solid #e0e0e0"
+  borderRadius="md"
+  boxShadow="md"
+>
+  <Table
+    columns={columns}
+    dataSource={filteredData}
+    pagination={{
+      pageSize: 10, // Hiển thị 10 sản phẩm mỗi trang
+    }}
+    bordered
+    rowKey="productId"
+    loading={loading}
+    scroll={{
+      y: 400, // Chiều cao nội dung bảng cuộn
+    }}
+    style={{ padding: "10px" }}
+  />
+</Box>
+
       </VStack>
 
       <Modal
         title={editingProduct ? "Edit Product" : "Create New Product"}
-        visible={isModalOpen}
+        open={isModalOpen}
         onCancel={handleCancel}
         onOk={handleSave}
         okText={editingProduct ? "Update" : "Create"}

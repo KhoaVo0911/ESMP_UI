@@ -46,6 +46,7 @@ import PackageAdmin from "./components/admin/PackageAdmin.jsx";
 import ExtensionEvent from "./pages/host/ExtensionEvent.jsx";
 import BoothPlanView from "./pages/host/BoothPlanView.jsx";
 import SelectBoothPage from "./components/vendor/EventDetail/SelectBooth.jsx";
+import StaffAccountManager from "./components/vendor/StaffAccount/ManageStaffAccount.jsx";
 
 const AppRoutes = () => {
   return (
@@ -69,6 +70,14 @@ const AppRoutes = () => {
         element={
           <VendorLayout>
             <BoothPlanView />
+          </VendorLayout>
+        }
+      />
+      <Route
+        path="/staff-account-manager"
+        element={
+          <VendorLayout>
+            <StaffAccountManager />
           </VendorLayout>
         }
       />

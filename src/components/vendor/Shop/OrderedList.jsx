@@ -43,6 +43,9 @@ const OrderedList = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [transactions, setTransactions] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalRevenue, setTotalRevenue] = useState(0); // Tổng doanh thu
+  const itemsPerPage = 10; // Số đơn hàng trên mỗi trang
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -58,7 +61,7 @@ const OrderedList = () => {
         );
         setOrders(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
-        console.error("Lỗi khi tải danh sách đơn hàng:", error);
+        console.error("Error fetching orders:", error);
       } finally {
         setLoading(false);
       }
@@ -77,7 +80,7 @@ const OrderedList = () => {
         );
         setProductItems(response.data);
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách product items:", error);
+        console.error("Error fetching product items:", error);
       }
     };
 
@@ -85,37 +88,41 @@ const OrderedList = () => {
     fetchProductItems();
   }, [accessToken, vendorId, eventId]);
 
-  // Fetch transactions for all orders
+  // Tính tổng doanh thu từ Order Details
   useEffect(() => {
-    const fetchTransactions = async () => {
+    const calculateTotalRevenue = async () => {
+      let total = 0;
       try {
-        const transactionData = {};
-        await Promise.all(
-          orders.map(async (order) => {
-            const response = await axios.get(
-              `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/transaction/order/${order.orderId}`,
-              {
-                headers: {
-                  Authorization: `${accessToken}`,
-                },
-              }
-            );
-            transactionData[order.orderId] = response.data[0]; // Lấy giao dịch đầu tiên cho mỗi order
-          })
-        );
-        setTransactions(transactionData);
+        for (const order of orders) {
+          const response = await axios.get(
+            `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order/orderDetail/${order.orderId}`,
+            {
+              headers: {
+                Authorization: `${accessToken}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const details = response.data;
+          const orderTotal = details.reduce(
+            (sum, item) => sum + parseFloat(item.totalPrice || 0),
+            0
+          );
+          total += orderTotal;
+        }
+        setTotalRevenue(total);
       } catch (error) {
-        console.error("Lỗi khi tải danh sách giao dịch:", error);
+        console.error("Error calculating total revenue:", error);
       }
     };
 
     if (orders.length > 0) {
-      fetchTransactions();
+      calculateTotalRevenue();
     }
   }, [orders, accessToken]);
 
   const handleBack = () => {
-    navigate("/shop", { state: { accessToken, vendorId, eventId } });
+    navigate("/shop", { state: { accessToken, vendorId, eventId, totalRevenue } });
   };
 
   const handleViewDetails = async (orderId) => {
@@ -150,10 +157,10 @@ const OrderedList = () => {
       }));
       openDetail(orderId);
     } catch (error) {
-      console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
+      console.error("Error fetching order details:", error);
       toast({
-        title: "Lỗi",
-        description: "Không thể lấy thông tin chi tiết đơn hàng.",
+        title: "Error",
+        description: "Unable to fetch order details.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -180,13 +187,29 @@ const OrderedList = () => {
     });
   };
 
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  // Pagination logic
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentOrders = orders.slice(startIndex, startIndex + itemsPerPage);
+
+  const calculateDetailTotal = (details) => {
+    return details.reduce((sum, item) => sum + parseFloat(item.totalPrice || 0), 0);
+  };
+
   return (
     <Box minH="100vh" p={5} bgGradient="linear(to-r, blue.100, pink.100)">
       <Button colorScheme="blue" mb={5} onClick={handleBack}>
-        Quay lại
+        Back
       </Button>
       <Text fontSize="2xl" mb={5} fontWeight="bold" textAlign="center">
-        Lịch Sử Giao Dịch
+        Order History
+      </Text>
+
+      <Text fontSize="lg" mb={5} fontWeight="bold" textAlign="center">
+        Total Revenue: {formatCurrency(totalRevenue)}
       </Text>
 
       {loading ? (
@@ -196,19 +219,19 @@ const OrderedList = () => {
           <Table variant="simple" size="md">
             <Thead bg="gray.100">
               <Tr>
-                <Th textAlign="center">Mã ĐH</Th>
-                <Th textAlign="center">Tên khách hàng</Th>
-                <Th textAlign="center">Ngày tạo</Th>
-                <Th textAlign="center">Số lượng</Th>
-                <Th textAlign="center">Trạng thái</Th>
-                <Th textAlign="center">Thanh toán</Th>
+                <Th textAlign="center">Order ID</Th>
+                <Th textAlign="center">Customer Name</Th>
+                <Th textAlign="center">Created Date</Th>
+                <Th textAlign="center">Quantity</Th>
+                <Th textAlign="center">Status</Th>
+                <Th textAlign="center">Payment</Th>
               </Tr>
             </Thead>
             <Tbody>
-              {orders.map((order) => (
+              {currentOrders.map((order) => (
                 <Tr key={order.orderId}>
                   <Td textAlign="center">
-                    <Tooltip label="Click để xem chi tiết" hasArrow placement="top">
+                    <Tooltip label="Click to view details" hasArrow placement="top">
                       <Text
                         as="span"
                         color="blue.500"
@@ -222,11 +245,7 @@ const OrderedList = () => {
                   </Td>
                   <Td textAlign="center">{order.name}</Td>
                   <Td textAlign="center">
-                    {new Date(order.createAt).toLocaleDateString("vi-VN", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
+                    {new Date(order.createAt).toLocaleDateString("vi-VN")}
                   </Td>
                   <Td textAlign="center">{order.totalAmount}</Td>
                   <Td textAlign="center">
@@ -249,62 +268,81 @@ const OrderedList = () => {
                       />
                       <Text>
                         {order.status === "Prepared"
-                          ? "Đang chuẩn bị"
+                          ? "Preparing"
                           : order.status === "Success"
-                          ? "Thành công"
-                          : "Thất bại"}
+                          ? "Successful"
+                          : "Failed"}
                       </Text>
                     </HStack>
                   </Td>
                   <Td textAlign="center">
                     {transactions[order.orderId]
                       ? transactions[order.orderId].transactionType
-                      : "Chưa thanh toán"}
+                      : "Unpaid"}
                   </Td>
                 </Tr>
               ))}
             </Tbody>
           </Table>
+          <HStack mt={5} justify="center">
+            {Array.from({ length: Math.ceil(orders.length / itemsPerPage) }).map((_, index) => (
+              <Button
+                key={index}
+                size="sm"
+                variant={currentPage === index + 1 ? "solid" : "outline"}
+                colorScheme="blue"
+                onClick={() => handlePageChange(index + 1)}
+              >
+                {index + 1}
+              </Button>
+            ))}
+          </HStack>
         </Box>
       ) : (
-        <Text>Không có đơn hàng nào.</Text>
+        <Text>No orders available.</Text>
       )}
 
-      {/* Modal chi tiết đơn hàng */}
+      {/* Order Details Modal */}
       <Modal isOpen={isDetailOpen} onClose={closeDetail} size="xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Chi tiết đơn hàng</ModalHeader>
+          <ModalHeader>Order Details</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {selectedOrder && orderDetails[selectedOrder] ? (
-              <Grid templateColumns="repeat(2, 1fr)" gap={4}>
-                {orderDetails[selectedOrder].map((detail, index) => (
-                  <GridItem
-                    key={index}
-                    p={4}
-                    borderWidth="1px"
-                    borderRadius="md"
-                    boxShadow="md"
-                    bg="gray.50"
-                  >
-                    <VStack align="start" spacing={1}>
-                      <Text fontWeight="bold">Sản phẩm:</Text>
-                      <Text>{detail.productItemName}</Text>
-                      <Text>Số lượng: {detail.quantity}</Text>
-                      <Text>Đơn giá: {formatCurrency(detail.unitPrice)}</Text>
-                      <Text>Tổng giá: {formatCurrency(detail.totalPrice)}</Text>
-                    </VStack>
-                  </GridItem>
-                ))}
-              </Grid>
+              <>
+                <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                  {orderDetails[selectedOrder].map((detail, index) => (
+                    <GridItem
+                      key={index}
+                      p={4}
+                      borderWidth="1px"
+                      borderRadius="md"
+                      boxShadow="md"
+                      bg="gray.50"
+                    >
+                      <VStack align="start" spacing={1}>
+                        <Text fontWeight="bold">Product:</Text>
+                        <Text>{detail.productItemName}</Text>
+                        <Text>Quantity: {detail.quantity}</Text>
+                        <Text>Unit Price: {formatCurrency(detail.unitPrice)}</Text>
+                        <Text>Total Price: {formatCurrency(detail.totalPrice)}</Text>
+                      </VStack>
+                    </GridItem>
+                  ))}
+                </Grid>
+                <Text fontWeight="bold" mt={4}>
+                  Total Order Amount:{" "}
+                  {formatCurrency(calculateDetailTotal(orderDetails[selectedOrder]))}
+                </Text>
+              </>
             ) : (
-              <Text>Đang tải chi tiết...</Text>
+              <Text>Loading details...</Text>
             )}
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" onClick={closeDetail}>
-              Đóng
+              Close
             </Button>
           </ModalFooter>
         </ModalContent>

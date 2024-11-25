@@ -78,6 +78,9 @@ const VendorHeader = ({ collapsed }) => {
     } else if (location.pathname.startsWith("/qrcodecodecode")) {
       return "Setting QR Code";
     }
+    else if (location.pathname.startsWith("/staff-account-manager")) {
+      return "Staff Accounts";
+    }
     return "Event Information";
   };
 
