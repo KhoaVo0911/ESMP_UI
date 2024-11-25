@@ -24,6 +24,8 @@ import {
 import { EditIcon } from "@chakra-ui/icons";
 import axios from "axios";
 
+const BASE_URL = "https://esmpbe.id.vn/api";
+
 const StaffAccountManager = () => {
   const [staffAccounts, setStaffAccounts] = useState([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -38,7 +40,7 @@ const StaffAccountManager = () => {
   // Fetch staff accounts
   const fetchStaffAccounts = async () => {
     try {
-      const response = await axios.get(`/staff/${vendorId}`, {
+      const response = await axios.get(`${BASE_URL}/staff/${vendorId}`, {
         headers: { Authorization: `${accessToken}` },
       });
       setStaffAccounts(response.data);
@@ -68,9 +70,13 @@ const StaffAccountManager = () => {
   const handleUpdateStaff = async () => {
     try {
       const { password, name, status } = selectedStaff; // Only send these fields
-      await axios.put(`/staff/${selectedStaff.staffId}`, { password, name, status }, {
-        headers: { Authorization: `${accessToken}` },
-      });
+      await axios.put(
+        `${BASE_URL}/staff/${selectedStaff.staffId}`,
+        { password, name, status },
+        {
+          headers: { Authorization: `${accessToken}` },
+        }
+      );
       toast({
         title: "Success",
         description: "Staff account updated successfully.",
@@ -101,7 +107,7 @@ const StaffAccountManager = () => {
         name,
         status: !staff.status, // Toggle status
       };
-      await axios.put(`/staff/${staff.staffId}`, updatedStaff, {
+      await axios.put(`${BASE_URL}/staff/${staff.staffId}`, updatedStaff, {
         headers: { Authorization: `${accessToken}` },
       });
       fetchStaffAccounts();
@@ -128,9 +134,13 @@ const StaffAccountManager = () => {
   const handleCreateStaff = async () => {
     try {
       const { username, password, name } = newStaff; // Only send these fields
-      await axios.post(`/staff/${vendorId}`, { username, password, name }, {
-        headers: { Authorization: `${accessToken}` },
-      });
+      await axios.post(
+        `${BASE_URL}/staff/${vendorId}`,
+        { username, password, name },
+        {
+          headers: { Authorization: `${accessToken}` },
+        }
+      );
       toast({
         title: "Success",
         description: "Staff account created successfully.",
