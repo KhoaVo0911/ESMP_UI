@@ -20,15 +20,12 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
-import {
-  getPaymentsByEventId,
-  updatePaymentStatus,
-  createPayment,
-} from "../../shared/host/transactionApi";
+import { getPaymentsByEventId } from "../../shared/host/transactionApi";
 import { format } from "date-fns";
 
 const TransactionList = () => {
   const { eventId } = useParams(); // Lấy eventId từ URL
+  // const eventId = "f588ae9e-92cc-4f4b-8a6e-abec52e5f68a"; // Lấy eventId từ URL
   const [payments, setPayments] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const paymentsPerPage = 10; // Số giao dịch trên mỗi trang
@@ -40,12 +37,10 @@ const TransactionList = () => {
     const fetchPayments = async () => {
       try {
         const data = await getPaymentsByEventId(eventId);
-        console.log(data, "data");
         if (Array.isArray(data)) {
           setPayments(data);
         } else {
           console.error("API response is not an array:", data);
-          setPayments([]);
         }
       } catch (error) {
         console.error("Error fetching payments:", error);
@@ -64,12 +59,10 @@ const TransactionList = () => {
 
   const totalPages = Math.ceil(payments.length / paymentsPerPage);
 
-  // Xử lý chuyển trang
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
 
-  // Hàm mở popup
   const handleViewDetails = (payment) => {
     setSelectedPayment(payment);
     onOpen();
@@ -98,7 +91,7 @@ const TransactionList = () => {
             <Tr key={payment.id}>
               <Td textAlign="center">{indexOfFirstPayment + index + 1}</Td>
               <Td textAlign="center">{payment.name}</Td>
-              <Td textAlign="center">{payment.locationtyname}</Td>
+              <Td textAlign="center">{payment.locationtypename}</Td>
               <Td textAlign="center">{payment.deposit}</Td>
               <Td textAlign="center">{payment.totalprofit}</Td>
               <Td textAlign="center">
@@ -123,7 +116,6 @@ const TransactionList = () => {
         </Tbody>
       </Table>
 
-      {/* Pagination */}
       <Flex justify="center" mt={4}>
         {Array.from({ length: totalPages }, (_, i) => (
           <Button
@@ -137,7 +129,6 @@ const TransactionList = () => {
         ))}
       </Flex>
 
-      {/* Popup chi tiết */}
       {selectedPayment && (
         <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
@@ -145,20 +136,15 @@ const TransactionList = () => {
             <ModalHeader>Payment Details</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              <Table
-                variant="simple"
-                width="105%"
-                maxWidth="800px"
-                margin="0 auto"
-              >
+              <Table variant="simple" width="100%">
                 <Tbody>
                   <Tr>
-                    <Th width="50%">Vendor Name</Th>
+                    <Th>Vendor Name</Th>
                     <Td>{selectedPayment.name}</Td>
                   </Tr>
                   <Tr>
                     <Th>LocationType Name</Th>
-                    <Td>{selectedPayment.locationtyname}</Td>
+                    <Td>{selectedPayment.locationtypename}</Td>
                   </Tr>
                   <Tr>
                     <Th>Deposit Payment Date</Th>
