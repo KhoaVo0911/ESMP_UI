@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Flex,
@@ -10,15 +10,60 @@ import {
   MenuList,
   MenuItem,
   Button,
+  Badge,
+  Spinner,
 } from "@chakra-ui/react";
-import { BellIcon } from "@chakra-ui/icons";
-import { ChevronDownIcon } from "@chakra-ui/icons";
+import { BellIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../shared/auth/AuthContext";
+import { pollNotifications } from "../../shared/notificationService";
+import NotificationList from "../../components/host/NotificationList";
 
 const HostHeader = ({ collapsed }) => {
   const location = useLocation();
-  const { logout } = useAuth();
+  const { currentUser, logout } = useAuth(); // Lấy thông tin người dùng từ AuthContext
+
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const userId = currentUser?.id; // Lấy userId từ currentUser
+
+  useEffect(() => {
+    if (!userId) return; // Nếu không có userId, dừng việc gọi API
+
+    let isPolling = true;
+
+    const fetchNotifications = async () => {
+      setIsLoading(true);
+      while (isPolling) {
+        try {
+          const data = await pollNotifications(userId);
+          setNotifications(data);
+          setUnreadCount(data.filter((n) => !n.status).length); // Đếm thông báo chưa đọc
+        } catch (error) {
+          console.error("Error fetching notifications:", error);
+        } finally {
+          setIsLoading(false);
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // Chờ 2 giây trước lần gọi tiếp theo
+        }
+      }
+    };
+
+    fetchNotifications();
+
+    return () => {
+      isPolling = false; // Dừng polling khi component bị unmount
+    };
+  }, [userId]);
+
+  const markAsRead = (notificationId) => {
+    // Đánh dấu thông báo là đã đọc
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, status: true } : n))
+    );
+    setUnreadCount((prev) => Math.max(prev - 1, 0));
+  };
 
   const getPageTitle = () => {
     if (location.pathname.startsWith("/dashboard")) {
@@ -73,14 +118,43 @@ const HostHeader = ({ collapsed }) => {
       </Flex>
 
       <Flex alignItems="center">
-        <IconButton
-          aria-label="Notifications"
-          icon={<BellIcon />}
-          variant="ghost"
-          fontSize="20px"
-          color="gray.600"
-          mr={4}
-        />
+        {/* Nút thông báo */}
+        <Menu>
+          <MenuButton
+            as={IconButton}
+            aria-label="Notifications"
+            icon={<BellIcon />}
+            variant="ghost"
+            fontSize="20px"
+            color="gray.600"
+            mr={4}
+            position="relative"
+          />
+          {/* Badge hiển thị số lượng thông báo chưa đọc */}
+          {unreadCount > 0 && (
+            <Badge
+              colorScheme="red"
+              borderRadius="full"
+              position="absolute"
+              top="8px"
+              right="8px"
+            >
+              {unreadCount}
+            </Badge>
+          )}
+          <MenuList maxW="400px" maxH="300px" overflowY="auto">
+            {isLoading ? (
+              <Flex justifyContent="center" alignItems="center" p={4}>
+                <Spinner size="sm" />
+              </Flex>
+            ) : (
+              <NotificationList
+                notifications={notifications}
+                onMarkAsRead={markAsRead}
+              />
+            )}
+          </MenuList>
+        </Menu>
 
         <Menu>
           <MenuButton
@@ -92,12 +166,17 @@ const HostHeader = ({ collapsed }) => {
             _focus={{ boxShadow: "none" }}
           >
             <Flex alignItems="center">
-              <Avatar size="sm" name="Host" bg="blue.500" mr={2} />
+              <Avatar
+                size="sm"
+                name={currentUser?.name || "User"}
+                bg="blue.500"
+                mr={2}
+              />
             </Flex>
           </MenuButton>
           <MenuList boxShadow="lg" borderRadius="lg" padding="12px">
             <MenuItem fontSize="md" fontWeight="700" color="gray.700">
-              👋 Hey, Host
+              👋 Hey, {currentUser?.name || "Host"}
             </MenuItem>
             <MenuItem
               fontSize="md"

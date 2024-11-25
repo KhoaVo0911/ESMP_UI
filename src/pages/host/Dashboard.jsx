@@ -25,9 +25,16 @@ const Dashboard = () => {
           p={6}
           boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
         >
-          {/* <RevenueChart /> */}
-          <EventLocationSlider />
+          <RevenueChart />
+          {/* <EventLocationSlider /> */}
         </Box>
+        {/* <Box p={4} bg="white" borderRadius="md" boxShadow="md">
+          <Text fontSize="lg" fontWeight="bold" mb={4}>
+            Event Maps
+          </Text>
+          <EventLocationSlider />
+        </Box> */}
+
         <Box
           bg="white"
           borderRadius="20px"

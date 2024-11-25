@@ -3,87 +3,117 @@ import "slick-carousel/slick/slick-theme.css";
 import React, { useEffect, useState } from "react";
 import Slider from "react-slick";
 import axios from "axios";
-import { Box, Image, Text, Flex, Button } from "@chakra-ui/react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Box, Text, Flex } from "@chakra-ui/react";
 
 const BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api";
+
+const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const EventLocationSlider = () => {
   const [events, setEvents] = useState([]);
-  const loc = useLocation();
-  const hostId = loc.state?.hostId || sessionStorage.getItem("hostId") || "";
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const navigate = useNavigate();
+  const hostId = sessionStorage.getItem("hostId") || "";
 
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchEventsWithMaps = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/host/${hostId}`, {
-          headers: { Authorization: sessionStorage.getItem("accessToken") },
+        const response = await axios.get(`${BASE_URL}/event/host/${hostId}`, {
+          headers: { Authorization: getAccessToken() },
         });
-        setEvents(response.data);
+
+        const fetchedEvents = response.data;
+
+        const eventsWithMaps = await Promise.all(
+          fetchedEvents.map(async (event) => {
+            try {
+              const mapResponse = await axios.get(
+                `${BASE_URL}/map/${hostId}/${event.eventId}`,
+                {
+                  headers: { Authorization: getAccessToken() },
+                }
+              );
+              event.map = mapResponse.data.mainTemplate; // Gắn bản đồ vào event
+            } catch (error) {
+              console.error(
+                `Error fetching map for event ${event.eventId}:`,
+                error
+              );
+              event.map = null;
+            }
+            return event;
+          })
+        );
+
+        setEvents(eventsWithMaps);
       } catch (error) {
         console.error("Error fetching events:", error);
       }
     };
 
-    fetchEvents();
-  }, []);
-
-  const handleEventClick = (event) => {
-    setSelectedEvent(event);
-    // Redirect to Booth Plan if needed
-    navigate(`/booth-plan/${event.eventId}`, { state: { event } });
-  };
+    fetchEventsWithMaps();
+  }, [hostId]);
 
   const settings = {
-    dots: true,
+    dots: false,
     infinite: true,
     speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
+    slidesToShow: 1, // Hiển thị 3 bản đồ mỗi lần
+    slidesToScroll: 1, // Cuộn 1 sự kiện mỗi lần
+    arrows: true, // Hiển thị nút qua lại
   };
 
   return (
-    <Box>
+    <Box
+      maxW="50%" // Đặt giới hạn chiều rộng
+      overflow="hidden" // Ngăn tràn viền
+      p={4} // Padding xung quanh
+      bg="white"
+      borderRadius="md"
+      boxShadow="md"
+    >
       <Slider {...settings}>
         {events.map((event) => (
           <Box
             key={event.eventId}
-            onClick={() => handleEventClick(event)}
-            cursor="pointer"
-            p={4}
+            p={2}
+            border="1px solid"
+            borderRadius="md"
+            boxShadow="md"
+            textAlign="center"
+            m={2}
           >
-            <Image
-              src={event.imageURL || "https://via.placeholder.com/150"}
-              alt={event.name}
-              borderRadius="md"
-              boxShadow="md"
-            />
-            <Text fontWeight="bold" mt={2}>
+            <Text fontWeight="bold" mb={2}>
               {event.name}
             </Text>
+            {event.map ? (
+              <Flex
+                justify="center"
+                align="center"
+                style={{
+                  width: "150px", // Kích thước cố định nhỏ hơn
+                  height: "150px",
+                  backgroundColor: event.map.fillColor || "gray",
+                  border: "1px solid black",
+                  position: "relative",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${event.map.width / 10}px`,
+                    height: `${event.map.height / 10}px`,
+                    position: "absolute",
+                    left: `${event.map.x / 10}px`,
+                    top: `${event.map.y / 10}px`,
+                    backgroundColor: event.map.fillColor || "blue",
+                  }}
+                ></div>
+              </Flex>
+            ) : (
+              <Text color="red">Map not available</Text>
+            )}
           </Box>
         ))}
       </Slider>
-
-      {selectedEvent && (
-        <Box mt={6} p={4} borderWidth="1px" borderRadius="md" boxShadow="md">
-          <Text fontSize="xl" fontWeight="bold">
-            {selectedEvent.name}
-          </Text>
-          <Text mt={2}>Description: {selectedEvent.description}</Text>
-          <Flex mt={4} justify="space-between">
-            <Button
-              colorScheme="blue"
-              onClick={() => handleEventClick(selectedEvent)}
-            >
-              View Booth Plan
-            </Button>
-          </Flex>
-        </Box>
-      )}
     </Box>
   );
 };
