@@ -20,32 +20,76 @@ import {
   ModalBody,
   ModalFooter,
   Input,
+  Tooltip,
 } from "@chakra-ui/react";
 import ProductCard from "./ProductCard";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import Cart from "./Cart";
 import AddProductModal from "./AddProductModal";
 import CreateProductModal from "./CreateProductModal";
+import EndEvent from "./EndEvent";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const Shop = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const totalRevenue = location.state?.totalRevenue || 0;
 
-  const accessToken = location.state?.accessToken || sessionStorage.getItem("accessToken") || "";
-  const vendorId = location.state?.vendorId || sessionStorage.getItem("vendorId") || "";
-  const eventId = location.state?.eventId || sessionStorage.getItem("eventId") || "";
+  const accessToken =
+    location.state?.accessToken || sessionStorage.getItem("accessToken") || "";
+  const vendorId =
+    location.state?.vendorId || sessionStorage.getItem("vendorId") || "";
+  const eventId =
+    location.state?.eventId || sessionStorage.getItem("eventId") || "";
+  const hostId = sessionStorage.getItem("hostId") || "defaultHostId";
 
   const [cart, setCart] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [productItems, setProductItems] = useState([]);
   const [products, setProducts] = useState([]);
   const [menuName, setMenuName] = useState("");
+  const [vendorInEventStatus, setVendorInEventStatus] = useState(null);
   const [showCreateMenuModal, setShowCreateMenuModal] = useState(false);
-  const { isOpen: isCartOpen, onOpen: onOpenCart, onClose: onCloseCart } = useDisclosure();
-  const { isOpen: isAddOpen, onOpen: onOpenAdd, onClose: onCloseAdd } = useDisclosure();
-  const { isOpen: isCreateOpen, onOpen: onOpenCreate, onClose: onCloseCreate } = useDisclosure();
+
+  const {
+    isOpen: isCartOpen,
+    onOpen: onOpenCart,
+    onClose: onCloseCart,
+  } = useDisclosure();
+  const {
+    isOpen: isAddOpen,
+    onOpen: onOpenAdd,
+    onClose: onCloseAdd,
+  } = useDisclosure();
+  const {
+    isOpen: isCreateOpen,
+    onOpen: onOpenCreate,
+    onClose: onCloseCreate,
+  } = useDisclosure();
+
+  const fetchVendorInEventStatus = async () => {
+    try {
+      const response = await axios.get(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent/${vendorId}/${eventId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setVendorInEventStatus(response.data.status);
+    } catch (error) {
+      console.error("Error fetching vendorInEvent status:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (vendorId && eventId && accessToken) {
+      fetchVendorInEventStatus();
+    }
+  }, [vendorId, eventId, accessToken]);
 
   const fetchProductItems = async () => {
     try {
@@ -60,7 +104,7 @@ const Shop = () => {
       );
       setProductItems(response.data);
     } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu sản phẩm", error);
+      console.error("Error fetching product items", error);
     }
   };
 
@@ -77,7 +121,7 @@ const Shop = () => {
       );
       setProducts(response.data);
     } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu sản phẩm", error);
+      console.error("Error fetching products", error);
     }
   };
 
@@ -92,7 +136,9 @@ const Shop = () => {
           },
         }
       );
-      const productItemIds = response.data.productItemIds.map((item) => item.productItemId);
+      const productItemIds = response.data.productItemIds.map(
+        (item) => item.productItemId
+      );
 
       const enrichedProductItems = productItems
         .filter((item) => productItemIds.includes(item.productItemId))
@@ -100,7 +146,9 @@ const Shop = () => {
           return {
             ...item,
             details: item.details.map((detail) => {
-              const productDetails = products.find((product) => product.productId === detail.productId);
+              const productDetails = products.find(
+                (product) => product.productId === detail.productId
+              );
               return {
                 ...detail,
                 name: productDetails ? productDetails.productName : "Unknown",
@@ -113,7 +161,7 @@ const Shop = () => {
       if (error.response && error.response.status === 500) {
         setShowCreateMenuModal(true);
       } else {
-        console.error("Lỗi khi lấy menu sản phẩm", error);
+        console.error("Error fetching menu items", error);
       }
     }
   };
@@ -130,6 +178,10 @@ const Shop = () => {
       fetchMenuItems();
     }
   }, [productItems, products, vendorId, eventId, accessToken]);
+
+  const handleStatusUpdate = async () => {
+    await fetchVendorInEventStatus();
+  };
 
   const addToCart = (product) => {
     setCart((prevCart) => {
@@ -148,10 +200,12 @@ const Shop = () => {
   };
 
   const onOpenCartWithSessionData = () => {
-    sessionStorage.setItem("accessToken", accessToken);
-    sessionStorage.setItem("vendorId", vendorId);
-    sessionStorage.setItem("eventId", eventId);
-    onOpenCart();
+    if (vendorInEventStatus !== "finished") {
+      sessionStorage.setItem("accessToken", accessToken);
+      sessionStorage.setItem("vendorId", vendorId);
+      sessionStorage.setItem("eventId", eventId);
+      onOpenCart();
+    }
   };
 
   const handleGoToOrderedList = () => {
@@ -173,25 +227,83 @@ const Shop = () => {
         }
       );
       setShowCreateMenuModal(false);
-      fetchMenuItems(); // Refresh menu items after creation
+      fetchMenuItems();
     } catch (error) {
-      console.error("Lỗi khi tạo menu mới", error);
+      console.error("Error creating new menu", error);
     }
   };
 
   return (
-    <Box p={5} bgGradient="linear(to-r, blue.100, pink.100)" minH="100vh" textAlign="center">
+    <Box
+      p={5}
+      bgGradient="linear(to-r, blue.100, pink.100)"
+      minH="100vh"
+      textAlign="center"
+    >
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={5}>
-        <Text fontSize="3xl" fontWeight="bold">Danh Sách Sản Phẩm</Text>
-
-        <Box display="flex" alignItems="center">
-          <Button mr={4} colorScheme="blue" onClick={handleGoToOrderedList}>Lịch sử đơn hàng</Button>
-          <Button mr={4} onClick={onOpenAdd}>Thêm sản phẩm</Button>
-          <IconButton
-            icon={<ShoppingCartIcon />}
-            onClick={onOpenCartWithSessionData}
-            aria-label="Xem giỏ hàng"
-          />
+        <Text fontSize="3xl" fontWeight="bold">
+          Menu
+        </Text>
+        <Box display="flex" alignItems="center" gap={4}>
+          <Tooltip
+            label={
+              vendorInEventStatus === "finished"
+                ? "Event is already finished."
+                : "Click to end the event."
+            }
+          >
+            <Box>
+              <EndEvent
+                eventId={eventId}
+                accessToken={accessToken}
+                hostId={hostId}
+                vendorId={vendorId}
+                vendorInEventStatus={vendorInEventStatus}
+                onStatusUpdate={handleStatusUpdate}
+                totalRevenue={totalRevenue}
+              />
+            </Box>
+          </Tooltip>
+          <Button
+            colorScheme="blue"
+            onClick={handleGoToOrderedList}
+          >
+            Order History
+          </Button>
+          <Tooltip
+  label={
+    vendorInEventStatus === "finished"
+      ? "Cannot add product. Event is finished."
+      : "Add a new product."
+  }
+>
+  <Button
+    onClick={() => {
+      if (vendorInEventStatus !== "finished") {
+        onOpenAdd();
+      }
+    }}
+    disabled={vendorInEventStatus === "finished"}
+    cursor={vendorInEventStatus === "finished" ? "not-allowed" : "pointer"}
+  >
+    Add Product
+  </Button>
+</Tooltip>
+          <Tooltip
+            label={
+              vendorInEventStatus === "finished"
+                ? "Cannot open cart. Event is finished."
+                : "View your cart."
+            }
+          >
+            <IconButton
+              icon={<ShoppingCartIcon />}
+              onClick={onOpenCartWithSessionData}
+              aria-label="View Cart"
+              disabled={vendorInEventStatus === "finished"}
+              cursor={vendorInEventStatus === "finished" ? "not-allowed" : "pointer"}
+            />
+          </Tooltip>
         </Box>
       </Box>
 
@@ -199,18 +311,22 @@ const Shop = () => {
         <Box maxHeight="600px" overflowY="auto">
           <SimpleGrid columns={[2, null, 5]} spacing="20px">
             {allProducts.map((product) => (
-              <ProductCard key={product.productItemId} product={product} addToCart={addToCart} />
+              <ProductCard
+                key={product.productItemId}
+                product={product}
+                addToCart={addToCart}
+              />
             ))}
           </SimpleGrid>
         </Box>
       ) : (
-        <Text>Không có sản phẩm nào để hiển thị</Text>
+        <Text>No products to display</Text>
       )}
 
       <Drawer isOpen={isCartOpen} placement="right" onClose={onCloseCart}>
         <DrawerOverlay>
           <DrawerContent maxWidth="700px">
-            <DrawerHeader>Giỏ Hàng</DrawerHeader>
+            <DrawerHeader>Cart</DrawerHeader>
             <DrawerBody>
               <Cart
                 cartItems={cart}
@@ -227,7 +343,9 @@ const Shop = () => {
               />
             </DrawerBody>
             <DrawerFooter>
-              <Button colorScheme="teal" onClick={onCloseCart}>Đóng Giỏ Hàng</Button>
+              <Button colorScheme="teal" onClick={onCloseCart}>
+                Close Cart
+              </Button>
             </DrawerFooter>
           </DrawerContent>
         </DrawerOverlay>
@@ -243,27 +361,32 @@ const Shop = () => {
       />
       <CreateProductModal isOpen={isCreateOpen} onClose={onCloseCreate} />
 
-      {/* Modal to create menu */}
-      <Modal isOpen={showCreateMenuModal} onClose={() => setShowCreateMenuModal(false)}>
+      <Modal
+        isOpen={showCreateMenuModal}
+        onClose={() => setShowCreateMenuModal(false)}
+      >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Tạo Menu Mới</ModalHeader>
+          <ModalHeader>Create New Menu</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Text>Nhập tên cho menu của bạn:</Text>
+            <Text>Enter a name for your menu:</Text>
             <Input
-              placeholder="Tên menu"
+              placeholder="Menu Name"
               value={menuName}
               onChange={(e) => setMenuName(e.target.value)}
               mt={3}
             />
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleCreateMenu}>
-              Tạo Menu
+            <Button colorScheme="blue" onClick={handleCreateMenu}>
+              Create Menu
             </Button>
-            <Button variant="ghost" onClick={() => setShowCreateMenuModal(false)}>
-              Hủy
+            <Button
+              variant="ghost"
+              onClick={() => setShowCreateMenuModal(false)}
+            >
+              Cancel
             </Button>
           </ModalFooter>
         </ModalContent>

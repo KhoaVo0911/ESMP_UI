@@ -29,7 +29,7 @@ const VendorSideBar = ({ collapsed }) => {
     } else if (location.pathname.startsWith("/eventsVendor")) {
       setSelectedMenuItem("4");
     } 
-    else if (location.pathname.startsWith("/map-sample")) {
+    else if (location.pathname.startsWith("/staff-account-manager")) {
       setSelectedMenuItem("5");
     } 
     
@@ -60,11 +60,11 @@ const VendorSideBar = ({ collapsed }) => {
           icon: <EventIcon />,
           label: <span style={{ fontWeight: "bold" }}>Events</span>,
         },
-        // {
-        //   key: "5",
-        //   icon: <EventIcon />,
-        //   label: <span style={{ fontWeight: "bold" }}>Map Location</span>,
-        // },
+        {
+          key: "5",
+          icon: <EventIcon />,
+          label: <span style={{ fontWeight: "bold" }}>Manage Staff Account </span>,
+        },
         
       ],
     },
@@ -86,7 +86,7 @@ const VendorSideBar = ({ collapsed }) => {
         navigate("/eventsVendor", { state: { accessToken, vendorId } });
         break;
       case "5":
-        navigate("/Map-sample", { state: { accessToken, vendorId } });
+        navigate("/staff-account-manager", { state: { accessToken, vendorId } });
         break;
       default:
         navigate("/dashboardVendor", { state: { accessToken, vendorId } });

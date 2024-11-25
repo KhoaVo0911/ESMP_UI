@@ -80,35 +80,79 @@ const Payment = ({ removeItem }) => {
   const handleConfirmPayment = async () => {
     if (paymentMethod === "Cash" && cashAmount < totalPrice) {
       toast({
-        title: "Số tiền không đủ",
-        description: "Vui lòng nhập số tiền lớn hơn hoặc bằng tổng tiền cần thanh toán.",
+        title: "Insufficient funds",
+        description: "Please enter an amount greater than or equal to the total amount.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
       return;
     }
-
+  
     try {
+      // Create an order
+      const orderData = {
+        eventId,
+        vendorId,
+        name: userName,
+        totalAmount: totalQuantity,
+        totalPrice,
+        details: cartItems.map((item) => ({
+          productitemId: item.productItemId,
+          quantity: item.quantity,
+          unitPrice: item.price,
+        })),
+      };
+  
+      const response = await axios.post(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order`,
+        orderData,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      const orderId = response.data.orderId; // Use this orderId for any subsequent transaction actions
+  
       toast({
-        title: "Thanh toán thành công",
-        description:
-          paymentMethod === "QR"
-            ? "Bạn đã thanh toán thành công qua QR Code."
-            : `Số tiền thừa: ${change.toLocaleString()} VND.`,
+        title: "Order Created Successfully",
+        description: "Your order has been created.",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-
+  
+      // Confirm payment after order creation
+      toast({
+        title: "Payment successful",
+        description:
+          paymentMethod === "QR"
+            ? "You have successfully paid using QR Code."
+            : `Change: ${change.toLocaleString()} VND.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+  
+      // Navigate back to the shop
       navigate("/shop", {
         state: { accessToken, vendorId, eventId },
       });
     } catch (error) {
-      console.error("Error in payment process:", error);
+      console.error("Error creating order or processing payment:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while processing your payment or creating the order. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
-
+  
   const handleCashPayment = (amount) => {
     setCashAmount(amount);
     setChange(amount - totalPrice);
@@ -118,11 +162,11 @@ const Payment = ({ removeItem }) => {
     <Box p={5} bgGradient="linear(to-r, blue.100, pink.100)" minH="100vh">
       <HStack alignItems="center" mb={5} cursor="pointer" onClick={() => navigate(-1)}>
         <IconButton icon={<ArrowBackIcon />} size="lg" variant="ghost" aria-label="Go Back" />
-        <Text fontSize="md" fontWeight="bold">Tiếp tục mua sắm</Text>
+        <Text fontSize="md" fontWeight="bold">Continue Shopping</Text>
       </HStack>
 
       <Text fontSize="2xl" mb={5} fontWeight="bold" color="blue.700" textAlign="center">
-        Giỏ hàng của bạn
+        Your Shopping Cart
       </Text>
 
       <HStack align="start" spacing={8} justify="center">
@@ -134,7 +178,7 @@ const Payment = ({ removeItem }) => {
                 <VStack align="start" spacing={1} width="100%">
                   <Text fontWeight="medium" noOfLines={2} maxWidth="180px">{item.name}</Text>
                   <HStack>
-                    <Text fontSize="md" fontWeight="bold" color="gray.700">Số lượng:</Text>
+                    <Text fontSize="md" fontWeight="bold" color="gray.700">Quantity:</Text>
                     <Text fontSize="md" fontWeight="bold" color="blue.600">{item.quantity}</Text>
                   </HStack>
                 </VStack>
@@ -148,10 +192,10 @@ const Payment = ({ removeItem }) => {
         </VStack>
 
         <Box p={6} borderWidth="1px" borderRadius="md" boxShadow="lg" bg="white" width="30%">
-          <Text fontSize="2xl" fontWeight="bold" mb={4} color="blue.700">Thanh toán</Text>
+          <Text fontSize="2xl" fontWeight="bold" mb={4} color="blue.700">Payment</Text>
           <VStack spacing={4} align="stretch">
             <Input
-              placeholder="Tên người nhận"
+              placeholder="Recipient's Name"
               focusBorderColor="blue.500"
               borderColor="gray.300"
               value={userName}
@@ -160,18 +204,18 @@ const Payment = ({ removeItem }) => {
             <RadioGroup onChange={setPaymentMethod} value={paymentMethod}>
               <Stack direction="row">
                 <Radio value="QR">QR Code</Radio>
-                <Radio value="Cash">Tiền mặt</Radio>
+                <Radio value="Cash">Cash</Radio>
               </Stack>
             </RadioGroup>
           </VStack>
 
           <HStack justify="space-between" mt={6}>
-            <Text color="red.500" fontWeight="bold">{totalQuantity} sản phẩm</Text>
+            <Text color="red.500" fontWeight="bold">{totalQuantity} items</Text>
             <Text fontSize="lg" fontWeight="bold" color="blue.600">{totalPrice.toLocaleString()} VND</Text>
           </HStack>
 
           <Button colorScheme="blue" width="100%" mt={6} size="lg" fontWeight="bold" onClick={onOpen}>
-            Thanh toán
+            Pay Now
           </Button>
         </Box>
       </HStack>
@@ -179,21 +223,21 @@ const Payment = ({ removeItem }) => {
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader textAlign="center">{paymentMethod === "QR" ? "Quét mã QR để thanh toán" : "Thanh toán tiền mặt"}</ModalHeader>
+          <ModalHeader textAlign="center">{paymentMethod === "QR" ? "Scan QR Code to Pay" : "Pay with Cash"}</ModalHeader>
           <ModalCloseButton />
           <ModalBody textAlign="center">
             {paymentMethod === "QR" ? (
               <>
                 <Image src={qrUrl} alt="QR Code" mx="auto" mb={4} boxShadow="md" borderRadius="md" width="80%" />
-                <Text fontSize="lg" color="green.500">Quét mã để thanh toán</Text>
+                <Text fontSize="lg" color="green.500">Scan to Pay</Text>
               </>
             ) : (
               <>
                 <Text fontSize="lg" mb={4}>
-                  Số tiền cần thanh toán: <strong>{totalPrice.toLocaleString()} VND</strong>
+                  Total Amount: <strong>{totalPrice.toLocaleString()} VND</strong>
                 </Text>
                 <Input
-                  placeholder="Nhập số tiền khách đưa"
+                  placeholder="Enter cash amount"
                   type="number"
                   value={cashAmount}
                   onChange={(e) => handleCashPayment(Number(e.target.value))}
@@ -230,7 +274,7 @@ const Payment = ({ removeItem }) => {
                 </HStack>
                 {cashAmount >= totalPrice && (
                   <Text fontSize="2xl" color="blue.600" mt={4} fontWeight="bold">
-                    Tiền thừa: {(cashAmount - totalPrice).toLocaleString()} VND
+                    Change: {(cashAmount - totalPrice).toLocaleString()} VND
                   </Text>
                 )}
               </>
@@ -242,9 +286,9 @@ const Payment = ({ removeItem }) => {
               onClick={handleConfirmPayment}
               isDisabled={paymentMethod === "Cash" && cashAmount < totalPrice}
             >
-              Xác nhận thanh toán
+              Confirm Payment
             </Button>
-            <Button variant="outline" onClick={onClose}>Đóng</Button>
+            <Button variant="outline" onClick={onClose}>Close</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

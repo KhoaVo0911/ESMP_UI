@@ -71,8 +71,8 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({
-        title: "Lỗi",
-        description: "Không thể tải sản phẩm.",
+        title: "Error",
+        description: "Unable to load products.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -91,15 +91,15 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
   const handleAddSelectedProductsToMenu = async () => {
     if (!selectedProducts || selectedProducts.length === 0) {
       toast({
-        title: "Chọn sản phẩm",
-        description: "Vui lòng chọn ít nhất một sản phẩm để thêm.",
+        title: "Select Products",
+        description: "Please select at least one product to add.",
         status: "warning",
         duration: 3000,
         isClosable: true,
       });
       return;
     }
-  
+
     setIsSubmitting(true);
     try {
       const payload = {
@@ -107,7 +107,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
           id: product.productItemId,
         })),
       };
-  
+
       const response = await axios.post(
         `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/menu/${vendorId}/${eventId}`,
         payload,
@@ -118,17 +118,17 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
           },
         }
       );
-  
+
       if (response.data && response.data.message === "Create menuItem success") {
         toast({
-          title: "Thành công",
-          description: "Sản phẩm đã được thêm vào menu.",
+          title: "Success",
+          description: "Products have been added to the menu.",
           status: "success",
           duration: 3000,
           isClosable: true,
         });
-  
-        // Gọi onAdd với thông tin sản phẩm để cập nhật UI
+
+        // Call onAdd to update UI with the added products
         onAdd(selectedProducts);
         setSelectedProducts([]);
         onClose();
@@ -136,8 +136,8 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
     } catch (error) {
       console.error("Error adding products to menu:", error);
       toast({
-        title: "Lỗi",
-        description: "Đã xảy ra lỗi khi thêm sản phẩm vào menu.",
+        title: "Error",
+        description: "An error occurred while adding products to the menu.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -146,13 +146,12 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
       setIsSubmitting(false);
     }
   };
-  
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="5xl">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Thêm sản phẩm vào Menu</ModalHeader>
+        <ModalHeader>Add Products to Menu</ModalHeader>
         <ModalBody>
           {loading ? (
             <Spinner size="xl" color="blue.500" />
@@ -180,9 +179,9 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
                       {productNames[product.productId] || product.name}
                     </Text>
                     <Text fontWeight="bold" fontSize="lg" color="gray.600">
-                      {parseInt(product.price).toLocaleString("vi-VN", {
+                      {parseInt(product.price).toLocaleString("en-US", {
                         style: "currency",
-                        currency: "VND",
+                        currency: "USD",
                       })}
                     </Text>
                     <VStack align="start" spacing={1} mt={2}>
@@ -201,7 +200,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
         </ModalBody>
         <ModalFooter>
           <Button variant="ghost" onClick={onClose}>
-            Đóng
+            Close
           </Button>
           <Button
             colorScheme="blue"
@@ -209,7 +208,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
             isDisabled={selectedProducts.length === 0 || isSubmitting}
             isLoading={isSubmitting}
           >
-            Thêm sản phẩm
+            Add Products
           </Button>
         </ModalFooter>
       </ModalContent>
