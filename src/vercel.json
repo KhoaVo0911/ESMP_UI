@@ -2,7 +2,7 @@
     "rewrites": [
         {
             "source": "/api/:path*",
-            "destination": "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/:path*"
+            "destination": "https://esmpbe.id.vn:2510/api/:path*"
         }
     ]
 }

@@ -13,10 +13,14 @@ import {
   Link,
 } from "@chakra-ui/react";
 
+const BASE_URL =
+  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
+
 const MAPBOX_TOKEN =
   "pk.eyJ1IjoibWluaGRxMjUxMiIsImEiOiJjbTNvcng0Y3MwNmJpMmxxdWl3aDVjYXU0In0.aL5rtwlAjXrvQ_lRfnSXNQ";
 
-const MapboxComponent = ({ onSaveCoordinates }) => {
+const MapboxComponent = ({ eventId, onSaveCoordinates }) => {
   const [viewport, setViewport] = useState({
     latitude: 10.8231,
     longitude: 106.6297,
@@ -24,8 +28,8 @@ const MapboxComponent = ({ onSaveCoordinates }) => {
   });
   const [searchValue, setSearchValue] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [coordinates, setCoordinates] = useState("");
-  const [locationName, setLocationName] = useState("");
 
   const geocoder = MapboxGeocoder({ accessToken: MAPBOX_TOKEN });
 
@@ -33,7 +37,7 @@ const MapboxComponent = ({ onSaveCoordinates }) => {
     const value = e.target.value;
     setSearchValue(value);
 
-    if (value.trim().length < 2) {
+    if (value.trim().length < 3) {
       setSuggestions([]);
       return;
     }
@@ -58,18 +62,45 @@ const MapboxComponent = ({ onSaveCoordinates }) => {
 
     setViewport({ latitude, longitude, zoom: 15 });
     setCoordinates(`${latitude},${longitude}`);
-    setLocationName(place.place_name);
+    setSelectedLocation(place);
     setSuggestions([]);
   };
 
-  const handleSubmitToBackend = () => {
-    if (!coordinates) {
-      alert("No coordinates to save!");
+  const handleSubmitToBackend = async () => {
+    if (!coordinates || !eventId) {
+      alert("Missing required information (coordinates or eventId)!");
       return;
     }
 
-    if (onSaveCoordinates) onSaveCoordinates(coordinates);
-    alert(`Coordinates (${coordinates}) saved temporarily.`);
+    try {
+      const [latitude, longitude] = coordinates.split(",");
+
+      const payload = {
+        coordinates: `${latitude},${longitude}`,
+      };
+
+      console.log("Sending coordinates to backend:", payload);
+
+      const response = await fetch(`${BASE_URL}/${eventId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getAccessToken()}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        alert("Coordinates updated successfully!");
+        if (onSaveCoordinates) onSaveCoordinates(coordinates);
+      } else {
+        console.error("Failed to update coordinates:", await response.text());
+        alert("Failed to update coordinates.");
+      }
+    } catch (error) {
+      console.error("Error updating coordinates:", error);
+      alert("An error occurred while updating coordinates.");
+    }
   };
 
   return (
@@ -103,12 +134,12 @@ const MapboxComponent = ({ onSaveCoordinates }) => {
           )}
         </Box>
 
-        {locationName && (
+        {selectedLocation && (
           <Box>
             <Text fontWeight="bold" mb={2}>
               Selected Location:
             </Text>
-            <Text>{locationName}</Text>
+            <Text>{selectedLocation.place_name}</Text>
             <Text>Coordinates: {coordinates}</Text>
             <Link
               href={`https://www.google.com/maps?q=${coordinates}`}
@@ -134,21 +165,16 @@ const MapboxComponent = ({ onSaveCoordinates }) => {
             }}
             style={{ width: "100%", height: "400px" }}
             mapStyle="mapbox://styles/mapbox/streets-v11"
-            onMove={(evt) => {
-              setViewport(evt.viewState);
-              console.log("Viewport updated:", evt.viewState); // Log giá trị viewport sau mỗi lần di chuyển bản đồ
-            }}
+            onMove={(evt) => setViewport(evt.viewState)}
           >
             {coordinates && (
               <Marker
                 latitude={parseFloat(coordinates.split(",")[0])}
                 longitude={parseFloat(coordinates.split(",")[1])}
-                anchor="center" // Đảm bảo marker ở chính giữa
+                anchor="center"
                 color="red"
               />
             )}
-            {coordinates && console.log("Marker coordinates:", coordinates)}{" "}
-            {/* Log tọa độ của Marker */}
           </Map>
         </Box>
 
@@ -157,7 +183,7 @@ const MapboxComponent = ({ onSaveCoordinates }) => {
           colorScheme="green"
           isDisabled={!coordinates}
         >
-          Create Location
+          Update Event Location
         </Button>
       </VStack>
     </Box>

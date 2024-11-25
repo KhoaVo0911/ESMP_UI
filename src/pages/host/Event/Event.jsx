@@ -515,17 +515,25 @@ const Event = () => {
   const filterEvents = useCallback(() => {
     let filtered = events;
 
+    const now = new Date(); // Lấy thời gian hiện tại
+
     switch (activeTab) {
-      case "0":
-        filtered = events.filter((event) => event.status === "Upcoming");
+      case "0": // Up Coming
+        filtered = events.filter((event) => new Date(event.startDate) > now);
         break;
-      case "1":
-        filtered = events.filter((event) => event.status === "running");
+      case "1": // Running
+        filtered = events.filter(
+          (event) =>
+            new Date(event.startDate) <= now && new Date(event.endDate) >= now
+        );
         break;
-      case "2":
+      case "2": // Cancelled
         filtered = events.filter((event) => event.status === "cancelled");
         break;
-      default:
+      case "3": // Finished
+        filtered = events.filter((event) => new Date(event.endDate) < now);
+        break;
+      default: // All
         filtered = events;
     }
 
@@ -555,9 +563,9 @@ const Event = () => {
   };
 
   const handleCreateEvent = async (values) => {
-    const { name, description, startDate, endDate, file } = values;
+    const { name, description, startDate, endDate, file, profit } = values;
 
-    if (!name || !description || !startDate || !endDate || !file) {
+    if (!name || !description || !startDate || !endDate || !file || !profit) {
       message.error("Please fill in all fields.");
       return;
     }
@@ -568,35 +576,62 @@ const Event = () => {
         hostId,
         themeId: hostId,
         description,
-        startDate: startDate.format("YYYY-MM-DD"),
-        endDate: endDate.format("YYYY-MM-DD"),
-        profit: 10.0,
+        startDate: startDate.toISOString(), // Chuyển đổi sang định dạng ISO
+        endDate: endDate.toISOString(),
+        profit: parseFloat(profit),
         status: "upcoming",
       };
 
+      console.log("Payload being sent:", newEvent);
+
+      // Gửi request tạo sự kiện
       const response = await axios.post(BASE_URL, newEvent, {
         headers: { Authorization: getAccessToken() },
       });
+
       const eventId = response.data.id;
 
+      if (!eventId) {
+        throw new Error("Event ID is missing in the response");
+      }
+
+      // Upload ảnh lên Firebase
       const imageFile = file[0].originFileObj;
       const imageRef = ref(storage, `${hostId}/${eventId}/${imageFile.name}`);
       await uploadBytes(imageRef, imageFile);
       const imageURL = await getDownloadURL(imageRef);
 
+      // Fetch lại danh sách sự kiện
       fetchEvents();
+
+      // Cập nhật thông tin sự kiện trong state
+      const updatedEvent = {
+        ...newEvent,
+        eventId,
+        imageURL,
+      };
+      setEvents((prevEvents) => [updatedEvent, ...prevEvents]);
 
       message.success("Event created successfully!");
       setModalVisible(false);
       form.resetFields();
     } catch (error) {
       console.error("Error creating event:", error);
-      message.error("Error creating event.");
+      if (error.response) {
+        message.error(
+          `Error: ${error.response.data.message || "Server Error"}`
+        );
+      } else {
+        message.error("Error creating event.");
+      }
     }
   };
 
-  const handleEventClick = (event) => {
-    navigate(`/event-detail/${event.eventId}`);
+  const handleEventClick = (event, services) => {
+    // Lưu dữ liệu vào sessionStorage
+    sessionStorage.setItem("selectedEvent", JSON.stringify(event));
+    sessionStorage.setItem("eventServices", JSON.stringify(services || []));
+    navigate(`/event-detail/${event.eventId}`, { state: { event, services } });
   };
 
   const uploadProps = {
@@ -628,7 +663,8 @@ const Event = () => {
         <TabPane tab="Up Coming" key="0" />
         <TabPane tab="Running" key="1" />
         <TabPane tab="Cancelled" key="2" />
-        <TabPane tab="All" key="3" />
+        <TabPane tab="Finished" key="3" />
+        <TabPane tab="All" key="4" />
       </Tabs>
 
       {/* <Row gutter={[16, 16]} style={{ marginTop: "16px" }}>
@@ -760,7 +796,18 @@ const Event = () => {
               </Form.Item>
             </Col>
           </Row>
-
+          <Form.Item
+            name="profit"
+            label="Profit (%)"
+            rules={[
+              {
+                required: true,
+                message: "Please enter the profit percentage!",
+              },
+            ]}
+          >
+            <Input type="number" placeholder="Enter profit percentage" />
+          </Form.Item>
           <Form.Item
             name="file"
             label="Event Thumbnail"
@@ -768,7 +815,7 @@ const Event = () => {
             getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
             rules={[{ required: true, message: "Please upload a file!" }]}
           >
-            <Upload {...uploadProps} listType="picture">
+            <Upload beforeUpload={() => false} listType="picture">
               <Button icon={<PlusOutlined />}>Upload</Button>
             </Upload>
           </Form.Item>

@@ -8,6 +8,7 @@ import { Tooltip } from "antd"; // Tooltip hiển thị tên sự kiện
 import { useLocation } from "react-router-dom";
 import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../../shared/firebase/firebaseConfig";
+import { Text } from "@chakra-ui/react";
 
 const BASE_URL =
   "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
@@ -74,9 +75,14 @@ const CalendarChart = () => {
 
   return (
     <div style={{ margin: "20px" }}>
-      <h2 style={{ textAlign: "center", marginBottom: "20px" }}>
-        Event Calendar
-      </h2>
+      <Text
+        mb={4}
+        fontSize="22px"
+        fontWeight="700"
+        color="var(--chakra-colors-secondaryGray-900)"
+      >
+        Calendar Event
+      </Text>
       <FullCalendar
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"

@@ -80,7 +80,6 @@ const ServiceManagement = ({ eventId }) => {
             },
           }
         );
-        // alert("Cập nhật dịch vụ thành công!");
       } else {
         // Thêm dịch vụ mới
         await axios.post(
@@ -97,14 +96,16 @@ const ServiceManagement = ({ eventId }) => {
             },
           }
         );
-        // alert("Thêm dịch vụ mới thành công!");
       }
-      fetchServices();
+      await fetchServices(); // Fetch lại danh sách dịch vụ sau khi lưu
+
+      // Lưu danh sách dịch vụ mới nhất vào sessionStorage
+      sessionStorage.setItem("eventServices", JSON.stringify(services));
+
       onClose();
       resetForm();
     } catch (error) {
       console.error("Error saving service:", error);
-      // alert("Lỗi khi lưu dịch vụ.");
     }
   };
 
