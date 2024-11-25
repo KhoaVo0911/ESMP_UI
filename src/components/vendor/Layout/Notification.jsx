@@ -54,7 +54,7 @@ const Notification = ({ userId, onNewNotifications, onOpenNotifications }) => {
   const markAsRead = async (notificationId) => {
     try {
       await axios.put(
-        `https://esmpbe.id.vn/api/notification/${userId}/${notificationId}`,
+        `https://esmpbe.id.vn/api/notification/${notificationId}`,
         { status: true }
       );
 
