@@ -33,8 +33,8 @@ const LoginComponent = ({ onLoginSuccess }) => {
       // Log the data being sent to ensure it is correct
       console.log("Logging in with:", { username, password, hostCode, role });
 
-      // const apiUrl = `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api`;
-      const apiUrl = `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/user/login/${role}`;
+      // const apiUrl = `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/user/login/${role}`;
+      const apiUrl = `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com/api/user/login/${role}`;
       // const apiUrl = `https://esmpbe.id.vn:2510/api`;
 
       // Send the login request
