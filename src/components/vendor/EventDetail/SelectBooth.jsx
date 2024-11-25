@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Box, Flex, Heading, useColorModeValue } from "@chakra-ui/react";
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  Button,
+  useDisclosure,
+} from "@chakra-ui/react";
+
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 import BoothDetails from "./BoothDetails";
@@ -7,7 +19,7 @@ import Policy from "./Policy";
 import BoothPayment from "./BoothPayment";
 
 const BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api";
+  "https://esmpbe.id.vn/api";
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const SelectBooth = () => {
@@ -15,7 +27,11 @@ const SelectBooth = () => {
   const eventId = location.state?.eventId;
   const hostId = sessionStorage.getItem("hostId");
 
+  const { isOpen, onOpen, onClose } = useDisclosure(); // Quản lý trạng thái Modal
   const [booths, setBooths] = useState([]);
+  const [shapes, setShapes] = useState([]); // State cho shapes
+  const [textElements, setTextElements] = useState([]); // State cho text elements
+  const [imageElements, setImageElements] = useState([]); // State cho image elements
   const [mainTemplate, setMainTemplate] = useState(null);
   const [selectedBooth, setSelectedBooth] = useState(null);
   const [locationTypes, setLocationTypes] = useState([]);
@@ -24,7 +40,6 @@ const SelectBooth = () => {
   const [view, setView] = useState("details");
   const [isBooking, setIsBooking] = useState(false);
 
-  // Fetch dữ liệu map và loại booth
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -41,6 +56,9 @@ const SelectBooth = () => {
         );
         const mapData = mapResponse.data;
         setBooths(mapData.booths || []);
+        setShapes(mapData.shapes || []); // Lấy shapes
+        setTextElements(mapData.textElements || []); // Lấy text elements
+        setImageElements(mapData.imageElements || []); // Lấy image elements
         setMainTemplate(mapData.mainTemplate || null);
 
         const typesResponse = await axios.get(
@@ -56,28 +74,26 @@ const SelectBooth = () => {
     fetchData();
   }, [eventId, hostId]);
 
-  // Xử lý khi nhấn vào một booth
   const handleBoothClick = (booth) => {
     setSelectedBooth(booth);
-  
+
     const typeDetails = locationTypes.find(
       (type) => type.typeId === booth.location.typeId
     );
-  
+
     setBoothTypeDetails({
       ...typeDetails,
-      locationId: booth.location.locationId, // Thiết lập locationId
+      locationId: booth.location.locationId,
     });
-  
+
     console.log("Selected Booth:", booth);
     console.log("Booth Type Details:", {
       ...typeDetails,
       locationId: booth.location.locationId,
     });
+    onOpen(); // Hiển thị Modal khi nhấn vào Booth
   };
-  
 
-  // Đặt trạng thái booth là "On-hold" khi nhấn Book Booth
   const handleBookBooth = async () => {
     if (!selectedBooth) return;
 
@@ -92,14 +108,13 @@ const SelectBooth = () => {
         { headers: { Authorization: getAccessToken() } }
       );
 
-      setView("policy"); // Chuyển sang Policy
+      setView("policy");
     } catch (error) {
       console.error("Error updating booth status:", error);
       setIsBooking(false);
     }
   };
 
-  // Khi quay lại từ Policy, đặt trạng thái booth về Available
   const handleBackToPolicy = async () => {
     if (!selectedBooth) return;
 
@@ -113,17 +128,15 @@ const SelectBooth = () => {
         { headers: { Authorization: getAccessToken() } }
       );
 
-      setIsBooking(false); // Cho phép chọn booth khác
+      setIsBooking(false);
       setView("details");
     } catch (error) {
       console.error("Error resetting booth status:", error);
     }
   };
 
-  // Khi thanh toán thành công, đổi trạng thái booth thành Booked
   const handleCompletePayment = async () => {
     try {
-      // Cập nhật trạng thái booth thành "Booked"
       await axios.put(
         `${BASE_URL}/map`,
         {
@@ -133,7 +146,6 @@ const SelectBooth = () => {
         { headers: { Authorization: getAccessToken() } }
       );
 
-      // Tạo vendorInEvent
       const vendorInEventResponse = await axios.post(
         `${BASE_URL}/vendorinevent/${sessionStorage.getItem(
           "vendorId"
@@ -143,7 +155,6 @@ const SelectBooth = () => {
       );
       const vendorInEventId = vendorInEventResponse.data.id;
 
-      // Gửi payment data
       await axios.post(
         `${BASE_URL}/eventpayment`,
         {
@@ -156,7 +167,7 @@ const SelectBooth = () => {
 
       setIsBooking(false);
       alert("Payment successful!");
-      setView("details"); // Quay về trang chính
+      setView("details");
     } catch (error) {
       console.error("Error during payment process:", error);
     }
@@ -168,7 +179,7 @@ const SelectBooth = () => {
     <Flex
       direction="column"
       bg={useColorModeValue("gray.50", "gray.900")}
-      minH="90vh"
+      minH="120vh"
       p={6}
     >
       <Heading textAlign="center" mb={4}>
@@ -185,85 +196,219 @@ const SelectBooth = () => {
         overflow="hidden"
         p={4}
       >
-        {/* Hiển thị map */}
         <Box flex="3" p={4}>
           <Heading textAlign="center" color="teal.600">
             {eventName} Map
           </Heading>
           <div id="map-container" style={{ position: "relative" }}>
-            {mainTemplate && booths.length > 0 && (
-              <div>
-                <div
-                  style={{
-                    width: `${mainTemplate.width}px`,
-                    height: `${mainTemplate.height}px`,
-                    position: "absolute",
-                    left: `${mainTemplate.x}px`,
-                    top: `${mainTemplate.y}px`,
-                    backgroundColor: mainTemplate.fillColor || "transparent",
-                    border: "1px solid black",
-                    transform: `rotate(${mainTemplate.rotation || 0}deg)`,
-                  }}
-                ></div>
-                {booths.map((booth) => (
-                  <div
-                    key={booth.location.locationId}
-                    style={{
-                      width: `${booth.location.width}px`,
-                      height: `${booth.location.height}px`,
-                      position: "absolute",
-                      left: `${booth.location.x}px`,
-                      top: `${booth.location.y}px`,
-                      backgroundColor:
-                        booth.location.status === "Booked"
-                          ? "gray"
-                          : booth.location.status === "On-hold"
-                          ? "orange"
-                          : "blue",
-                      color: "white",
-                      textAlign: "center",
-                      lineHeight: `${booth.location.height}px`,
-                      border: "1px solid black",
-                      cursor:
-                        booth.location.status === "Booked" || isBooking
-                          ? "not-allowed"
-                          : "pointer",
-                    }}
-                    onClick={() => handleBoothClick(booth)}
-                  >
-                    {booth.name}
-                  </div>
-                ))}
-              </div>
+            {mainTemplate && (
+              <div
+                style={{
+                  width: `${mainTemplate.width}px`,
+                  height: `${mainTemplate.height}px`,
+                  position: "absolute",
+                  left: `${mainTemplate.x}px`,
+                  top: `${mainTemplate.y}px`,
+                  backgroundColor: mainTemplate.fillColor || "transparent",
+                  border: "1px solid black",
+                  transform: `rotate(${mainTemplate.rotation || 0}deg)`,
+                }}
+              ></div>
             )}
+            {booths.map((booth) => (
+              <div
+                key={booth.location.locationId}
+                style={{
+                  width: `${booth.location.width}px`,
+                  height: `${booth.location.height}px`,
+                  position: "absolute",
+                  left: `${booth.location.x}px`,
+                  top: `${booth.location.y}px`,
+                  backgroundColor:
+                    booth.location.status === "Booked"
+                      ? "gray"
+                      : booth.location.status === "On-hold"
+                      ? "orange"
+                      : "blue",
+                  color: "white",
+                  textAlign: "center",
+                  lineHeight: `${booth.location.height}px`,
+                  border: "1px solid black",
+                  cursor:
+                    booth.location.status === "Booked" || isBooking
+                      ? "not-allowed"
+                      : "pointer",
+                }}
+                onClick={() => handleBoothClick(booth)}
+              >
+                {booth.name}
+              </div>
+            ))}
+            {shapes.map((shape) => (
+              <div
+                key={shape.location.locationId}
+                style={{
+                  width: `${shape.location.width}px`,
+                  height: `${shape.location.height}px`,
+                  position: "absolute",
+                  left: `${shape.location.x}px`,
+                  top: `${shape.location.y}px`,
+                  backgroundColor: "lightgray",
+                  border: "1px solid black",
+                  transform: `rotate(${shape.location.rotation || 0}deg)`,
+                }}
+              >
+                {shape.name}
+              </div>
+            ))}
+            {textElements.map((text) => (
+              <div
+                key={text.location.locationId}
+                style={{
+                  position: "absolute",
+                  left: `${text.location.x}px`,
+                  top: `${text.location.y}px`,
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  color: "black",
+                  transform: `rotate(${text.location.rotation || 0}deg)`,
+                }}
+              >
+                {text.name}
+              </div>
+            ))}
+            {imageElements.map((image) => (
+              <img
+                key={image.location.locationId}
+                src={image.url}
+                alt={image.name}
+                style={{
+                  position: "absolute",
+                  left: `${image.location.x}px`,
+                  top: `${image.location.y}px`,
+                  width: `${image.location.width}px`,
+                  height: `${image.location.height}px`,
+                  transform: `rotate(${image.location.rotation || 0}deg)`,
+                }}
+              />
+            ))}
           </div>
         </Box>
-        {/* Hiển thị chi tiết */}
-        {view === "details" && (
-          <BoothDetails
-            selectedBooth={selectedBooth}
-            boothTypeDetails={boothTypeDetails}
-            onBookBooth={handleBookBooth}
-          />
-        )}
-        {view === "policy" && (
-          <Policy
-            onBack={handleBackToPolicy}
-            onProceedToPayment={() => setView("payment")}
-          />
-        )}
-        {view === "payment" && (
-          <BoothPayment
-            boothTypeDetails={boothTypeDetails}
-            onBackToPolicy={handleBackToPolicy}
-            onPaymentComplete={handleCompletePayment}
-            eventId={eventId}
-            
-          />
-          
-        )}
-       
       </Flex>
+
+      {/* Popup */}
+      <Modal
+  isOpen={isOpen}
+  onClose={async () => {
+    if (selectedBooth) {
+      try {
+        // Cập nhật trạng thái booth thành Available khi tắt popup
+        await axios.put(
+          `${BASE_URL}/map`,
+          {
+            locationId: selectedBooth.location.locationId,
+            status: "Available",
+          },
+          { headers: { Authorization: getAccessToken() } }
+        );
+        console.log("Status updated to Available");
+      } catch (error) {
+        console.error("Error updating status to Available:", error);
+      }
+    }
+    setView("details"); // Reset view về details
+    onClose(); // Đóng popup
+  }}
+  size="xl"
+  isCentered
+  closeOnOverlayClick={false} // Không cho tắt khi click ra ngoài
+>
+  <ModalOverlay />
+  <ModalContent>
+    <ModalHeader>
+      {view === "policy" && "Policy"}
+      {view === "payment" && "Payment"}
+      {view === "details" && "Booth Details"}
+    </ModalHeader>
+    <ModalCloseButton />
+    <ModalBody>
+      {view === "details" && (
+        <BoothDetails
+          selectedBooth={selectedBooth}
+          boothTypeDetails={boothTypeDetails}
+          onBookBooth={() => {
+            setView("policy"); // Chuyển sang view policy
+          }}
+        />
+      )}
+      {view === "policy" && (
+        <Policy
+          onBack={() => setView("details")} // Trở về details khi nhấn Back
+          onProceedToPayment={async () => {
+            // Trước khi chuyển sang Payment, đặt trạng thái thành On-hold
+            if (selectedBooth) {
+              try {
+                await axios.put(
+                  `${BASE_URL}/map`,
+                  {
+                    locationId: selectedBooth.location.locationId,
+                    status: "On-hold",
+                  },
+                  { headers: { Authorization: getAccessToken() } }
+                );
+                console.log("Status updated to On-hold");
+              } catch (error) {
+                console.error("Error updating status to On-hold:", error);
+              }
+            }
+            setView("payment"); // Chuyển sang view payment
+          }}
+        />
+      )}
+      {view === "payment" && (
+        <BoothPayment
+          boothTypeDetails={boothTypeDetails}
+          onBackToPolicy={() => setView("policy")} // Trở về policy khi nhấn Back
+          onPaymentComplete={async () => {
+            await handleCompletePayment(); // Thanh toán thành công
+            setView("details"); // Quay về details
+            onClose(); // Đóng popup
+          }}
+          eventId={eventId}
+        />
+      )}
+    </ModalBody>
+    <ModalFooter>
+      <Button
+        colorScheme="blue"
+        onClick={async () => {
+          // Khi nhấn Close, cập nhật status thành Available
+          if (selectedBooth) {
+            try {
+              await axios.put(
+                `${BASE_URL}/map`,
+                {
+                  locationId: selectedBooth.location.locationId,
+                  status: "Available",
+                },
+                { headers: { Authorization: getAccessToken() } }
+              );
+              console.log("Status updated to Available");
+            } catch (error) {
+              console.error("Error updating status to Available:", error);
+            }
+          }
+          setView("details"); // Reset view về details
+          onClose(); // Đóng popup
+        }}
+      >
+        Close
+      </Button>
+    </ModalFooter>
+  </ModalContent>
+</Modal>
+
+
     </Flex>
   );
 };

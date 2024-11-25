@@ -12,12 +12,14 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
+import { Box, Grid, GridItem, Image } from "@chakra-ui/react";
+import { CalendarIcon, InfoIcon } from "@chakra-ui/icons";
 import "./Event.css";
 
 const { TabPane } = Tabs;
 
 const BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+  "https://esmpbe.id.vn/api/event";
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const EventVendor = () => {
@@ -39,7 +41,7 @@ const EventVendor = () => {
       const response = await axios.get(`${BASE_URL}/host/${hostId}`, {
         headers: { Authorization: getAccessToken() },
       });
-      const fetchedEvents = response.data;
+      const fetchedEvents = response.data.filter((event) => event.onWeb); // Chỉ giữ lại sự kiện onWeb = true
 
       const eventsWithImages = await Promise.all(
         fetchedEvents.map(async (event) => {
@@ -133,41 +135,54 @@ const EventVendor = () => {
         <TabPane tab="All" key="3" />
       </Tabs>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        {filteredEvents.map((event) => (
-          <Col span={8} key={event.eventId}>
-            <Card
-              hoverable
-              cover={
-                <img
-                  alt={event.name}
-                  src={event.imageURL}
-                  style={{ height: 150, objectFit: "cover" }}
-                />
-              }
+      <Grid
+        templateColumns={{
+          base: "repeat(1, 1fr)", // 1 cột trên màn hình nhỏ
+          md: "repeat(2, 1fr)", // 2 cột trên màn hình trung bình
+          lg: "repeat(3, 1fr)", // 3 cột trên màn hình lớn
+        }}
+        gap={6}
+        mt={4}
+      >
+        {filteredEvents.length > 0 ? (
+          filteredEvents.map((event) => (
+            <GridItem
+              key={event.eventId}
               onClick={() => handleEventClick(event)}
+              className="event-card"
             >
-              <Card.Meta
-                title={event.name}
-                description={
-                  <div>
-                    <p>
-                      <CalendarOutlined />{" "}
-                      {`${new Date(event.startDate).toLocaleDateString()} - ${new Date(
-                        event.endDate
-                      ).toLocaleDateString()}`}
-                    </p>
-                    <p>
-                      <InfoCircleOutlined />{" "}
-                      {event.description || "No description provided."}
-                    </p>
-                  </div>
-                }
-              />
-            </Card>
-          </Col>
-        ))}
-      </Row>
+              <Box className="event-card-content">
+                <Box className="event-card-cover">
+                  <Image
+                    src={event.imageURL || "https://via.placeholder.com/150"}
+                    alt={event.name}
+                    className="event-card-image"
+                  />
+                </Box>
+                <Box className="event-info-container">
+                  <Box className="event-title">{event.name}</Box>
+                  <Box className="event-dates">
+                    <Box>
+                      <CalendarIcon /> <strong>Start Date:</strong>{" "}
+                      {new Date(event.startDate).toLocaleDateString()}
+                    </Box>
+                    <Box>
+                      <CalendarIcon /> <strong>End Date:</strong>{" "}
+                      {new Date(event.endDate).toLocaleDateString()}
+                    </Box>
+                  </Box>
+                  <Box className="event-description">
+                    <InfoIcon /> <strong>Description:</strong>{" "}
+                    {event.description || "No description provided."}
+                  </Box>
+                </Box>
+              </Box>
+            </GridItem>
+          ))
+        ) : (
+          <Box>No events found.</Box>
+        )}
+      </Grid>
     </div>
   );
 };

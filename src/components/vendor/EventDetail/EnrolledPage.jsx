@@ -18,7 +18,7 @@ import { storage } from "../../../shared/firebase/firebaseConfig";
 import SelectBooth from "./SelectBooth";
 
 const BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+  "https://esmpbe.id.vn/api/event";
 
 const EventEnrolled = () => {
   const { state } = useLocation(); // Lấy state từ điều hướng

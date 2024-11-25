@@ -6,9 +6,9 @@ import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
 
 const API_EVENTS =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+  "https://esmpbe.id.vn/api/event";
 const API_VENDOR_IN_EVENT =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent";
+  "https://esmpbe.id.vn/api/vendorinevent";
 
 const EventStaff = () => {
   const [events, setEvents] = useState([]);

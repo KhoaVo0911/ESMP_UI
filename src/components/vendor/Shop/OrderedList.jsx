@@ -47,11 +47,12 @@ const OrderedList = () => {
   const [totalRevenue, setTotalRevenue] = useState(0); // Tổng doanh thu
   const itemsPerPage = 10; // Số đơn hàng trên mỗi trang
 
+  // Fetch orders
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const response = await axios.get(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order/event/${eventId}/${vendorId}`,
+          `https://esmpbe.id.vn/api/order/event/${eventId}/${vendorId}`,
           {
             headers: {
               Authorization: `${accessToken}`,
@@ -70,7 +71,7 @@ const OrderedList = () => {
     const fetchProductItems = async () => {
       try {
         const response = await axios.get(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/productitem/${vendorId}`,
+          `https://esmpbe.id.vn/api/productitem/${vendorId}`,
           {
             headers: {
               Authorization: `${accessToken}`,
@@ -88,14 +89,52 @@ const OrderedList = () => {
     fetchProductItems();
   }, [accessToken, vendorId, eventId]);
 
-  // Tính tổng doanh thu từ Order Details
+  // Fetch transactions
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      const transactionMap = {};
+      try {
+        for (const order of orders) {
+          const response = await axios.get(
+            `https://esmpbe.id.vn/api/transaction/order/${order.orderId}`,
+            {
+              headers: {
+                Authorization: `${accessToken}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          if (response.data && response.data.length > 0) {
+            const lastTransaction = response.data[response.data.length - 1];
+            transactionMap[order.orderId] = lastTransaction;
+          }
+        }
+        setTransactions(transactionMap);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+        toast({
+          title: "Error",
+          description: "Unable to fetch transactions.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    };
+
+    if (orders.length > 0) {
+      fetchTransactions();
+    }
+  }, [orders, accessToken]);
+
+  // Tính tổng doanh thu
   useEffect(() => {
     const calculateTotalRevenue = async () => {
       let total = 0;
       try {
         for (const order of orders) {
           const response = await axios.get(
-            `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order/orderDetail/${order.orderId}`,
+            `https://esmpbe.id.vn/api/order/orderDetail/${order.orderId}`,
             {
               headers: {
                 Authorization: `${accessToken}`,
@@ -135,7 +174,7 @@ const OrderedList = () => {
 
     try {
       const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/order/orderDetail/${orderId}`,
+        `https://esmpbe.id.vn/api/order/orderDetail/${orderId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -215,75 +254,100 @@ const OrderedList = () => {
       {loading ? (
         <Spinner size="xl" />
       ) : orders.length > 0 ? (
-        <Box bg="white" p={5} borderRadius="lg" boxShadow="lg" overflowX="auto">
-          <Table variant="simple" size="md">
-            <Thead bg="gray.100">
-              <Tr>
-                <Th textAlign="center">Order ID</Th>
-                <Th textAlign="center">Customer Name</Th>
-                <Th textAlign="center">Created Date</Th>
-                <Th textAlign="center">Quantity</Th>
-                <Th textAlign="center">Status</Th>
-                <Th textAlign="center">Payment</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {currentOrders.map((order) => (
-                <Tr key={order.orderId}>
-                  <Td textAlign="center">
-                    <Tooltip label="Click to view details" hasArrow placement="top">
-                      <Text
-                        as="span"
-                        color="blue.500"
-                        cursor="pointer"
-                        _hover={{ textDecoration: "underline" }}
-                        onClick={() => handleViewDetails(order.orderId)}
-                      >
-                        {order.orderId.slice(0, 6)}
-                      </Text>
-                    </Tooltip>
-                  </Td>
-                  <Td textAlign="center">{order.name}</Td>
-                  <Td textAlign="center">
-                    {new Date(order.createAt).toLocaleDateString("vi-VN")}
-                  </Td>
-                  <Td textAlign="center">{order.totalAmount}</Td>
-                  <Td textAlign="center">
-                    <HStack justify="center">
-                      <Icon
-                        as={
-                          order.status === "Prepared"
-                            ? FaShippingFast
-                            : order.status === "Success"
-                            ? FaCheckCircle
-                            : FaTimesCircle
-                        }
-                        color={
-                          order.status === "Prepared"
-                            ? "orange.500"
-                            : order.status === "Success"
-                            ? "green.500"
-                            : "red.500"
-                        }
-                      />
-                      <Text>
-                        {order.status === "Prepared"
-                          ? "Preparing"
-                          : order.status === "Success"
-                          ? "Successful"
-                          : "Failed"}
-                      </Text>
-                    </HStack>
-                  </Td>
-                  <Td textAlign="center">
-                    {transactions[order.orderId]
-                      ? transactions[order.orderId].transactionType
-                      : "Unpaid"}
-                  </Td>
+        <>
+          <Box bg="white" p={5} borderRadius="lg" boxShadow="lg" overflowX="auto">
+            <Table variant="simple" size="md">
+              <Thead bg="gray.100">
+                <Tr>
+                  <Th textAlign="center">Order ID</Th>
+                  <Th textAlign="center">Customer Name</Th>
+                  <Th textAlign="center">Created Date</Th>
+                  <Th textAlign="center">Quantity</Th>
+                  <Th textAlign="center">Status</Th>
+                  <Th textAlign="center">Payment</Th>
                 </Tr>
-              ))}
-            </Tbody>
-          </Table>
+              </Thead>
+              <Tbody>
+                {currentOrders.map((order) => (
+                  <Tr key={order.orderId}>
+                    <Td textAlign="center">
+                      <Tooltip label="Click to view details" hasArrow placement="top">
+                        <Text
+                          as="span"
+                          color="blue.500"
+                          cursor="pointer"
+                          _hover={{ textDecoration: "underline" }}
+                          onClick={() => handleViewDetails(order.orderId)}
+                        >
+                          {order.orderId.slice(0, 6)}
+                        </Text>
+                      </Tooltip>
+                    </Td>
+                    <Td textAlign="center">{order.name}</Td>
+                    <Td textAlign="center">
+                      {new Date(order.createAt).toLocaleDateString("vi-VN")}
+                    </Td>
+                    <Td textAlign="center">{order.totalAmount}</Td>
+                    <Td textAlign="center">
+                      <HStack justify="center">
+                        <Icon
+                          as={
+                            order.status === "Prepared"
+                              ? FaShippingFast
+                              : order.status === "Success"
+                              ? FaCheckCircle
+                              : FaTimesCircle
+                          }
+                          color={
+                            order.status === "Prepared"
+                              ? "orange.500"
+                              : order.status === "Success"
+                              ? "green.500"
+                              : "red.500"
+                          }
+                        />
+                        <Text>
+                          {order.status === "Prepared"
+                            ? "Preparing"
+                            : order.status === "Success"
+                            ? "Successful"
+                            : "Failed"}
+                        </Text>
+                      </HStack>
+                    </Td>
+                    <Td textAlign="center">
+                      {transactions[order.orderId] ? (
+                        <HStack justify="center">
+                          <Icon
+                            as={FaCheckCircle}
+                            color="green.500"
+                            boxSize={4}
+                            mr={2}
+                          />
+                          <Text>
+                            {transactions[order.orderId].transactionType ===
+                            "Bank Transfer"
+                              ? "QR Payment"
+                              : "Cash Payment"}
+                          </Text>
+                        </HStack>
+                      ) : (
+                        <HStack justify="center">
+                          <Icon
+                            as={FaTimesCircle}
+                            color="red.500"
+                            boxSize={4}
+                            mr={2}
+                          />
+                          <Text>Unpaid</Text>
+                        </HStack>
+                      )}
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
           <HStack mt={5} justify="center">
             {Array.from({ length: Math.ceil(orders.length / itemsPerPage) }).map((_, index) => (
               <Button
@@ -297,7 +361,7 @@ const OrderedList = () => {
               </Button>
             ))}
           </HStack>
-        </Box>
+        </>
       ) : (
         <Text>No orders available.</Text>
       )}

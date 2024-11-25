@@ -7,21 +7,22 @@ const EndEvent = ({
   accessToken,
   hostId,
   vendorId,
-  vendorInEventStatus,
   totalRevenue,
   onStatusUpdate,
 }) => {
   const [vendorInEventId, setVendorInEventId] = useState(null); // ID của vendor in event
+  const [eventStatus, setEventStatus] = useState(null); // Trạng thái của event
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false); // Xử lý trạng thái bấm nút
   const toast = useToast();
 
-  // Fetch VendorInEventId
+  // Fetch VendorInEventId và Event Details
   useEffect(() => {
-    const fetchVendorInEventId = async () => {
+    const fetchEventDetails = async () => {
       try {
-        const response = await axios.get(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent/${vendorId}/${eventId}`,
+        // Lấy thông tin sự kiện từ host
+        const eventResponse = await axios.get(
+          `https://esmpbe.id.vn/api/event/host/${hostId}`,
           {
             headers: {
               Authorization: `${accessToken}`,
@@ -30,8 +31,39 @@ const EndEvent = ({
           }
         );
 
-        if (response.data && response.data.vendorinEventId) {
-          setVendorInEventId(response.data.vendorinEventId);
+        // Lọc sự kiện hiện tại theo eventId
+        const currentEvent = eventResponse.data.find(
+          (event) => event.eventId === eventId
+        );
+
+        if (!currentEvent) {
+          toast({
+            title: "Error",
+            description: "Event not found for the given host.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Cập nhật trạng thái sự kiện
+        setEventStatus(currentEvent.status);
+
+        // Lấy VendorInEventId nếu event tồn tại
+        const vendorResponse = await axios.get(
+          `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (vendorResponse.data && vendorResponse.data.vendorinEventId) {
+          setVendorInEventId(vendorResponse.data.vendorinEventId);
         } else {
           toast({
             title: "Error",
@@ -44,24 +76,25 @@ const EndEvent = ({
       } catch (error) {
         toast({
           title: "Error",
-          description: "Failed to fetch VendorInEventId.",
+          description: "Failed to fetch event or vendor details.",
           status: "error",
           duration: 3000,
           isClosable: true,
         });
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    fetchVendorInEventId();
-  }, [vendorId, eventId, accessToken, toast]);
+    fetchEventDetails();
+  }, [hostId, eventId, vendorId, accessToken, toast]);
 
   // Xử lý bấm nút "End Event"
   const handleEndEventClick = async () => {
-    if (!vendorInEventId || vendorInEventStatus === "finished") {
+    if (!vendorInEventId || eventStatus !== "finished") {
       toast({
         title: "Error",
-        description: "Cannot end event: Event is already finished or invalid ID.",
+        description: "Cannot end event: Event is not finished or invalid ID.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -85,7 +118,7 @@ const EndEvent = ({
     try {
       // Cập nhật trạng thái VendorInEvent
       await axios.put(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendorinevent/${vendorInEventId}`,
+        `https://esmpbe.id.vn/api/vendorinevent/${vendorInEventId}`,
         {
           vendorinEventId: vendorInEventId,
           eventId: eventId,
@@ -102,7 +135,7 @@ const EndEvent = ({
 
       // Gửi tổng doanh thu và trạng thái vào API event payment
       await axios.put(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/eventpayment/${vendorInEventId}`,
+        `https://esmpbe.id.vn/api/eventpayment/${vendorInEventId}`,
         {
           totalrevenue: totalRevenue,
           status: "Refunding Deposit", // Trạng thái thanh toán
@@ -144,17 +177,19 @@ const EndEvent = ({
     return <Spinner size="lg" />;
   }
 
+  // Chỉ hiển thị nút nếu trạng thái sự kiện là "finished"
   return (
     <Box>
-      <Button
-        colorScheme="green"
-        onClick={handleEndEventClick}
-        disabled={vendorInEventStatus === "finished" || actionLoading}
-        cursor={vendorInEventStatus === "finished" ? "not-allowed" : "pointer"}
-        isLoading={actionLoading} // Hiển thị spinner khi đang xử lý
-      >
-        End Event
-      </Button>
+      {eventStatus === "finished" ? (
+        <Button
+          colorScheme="green"
+          onClick={handleEndEventClick}
+          isLoading={actionLoading} // Hiển thị spinner khi đang xử lý
+          disabled={actionLoading}
+        >
+          End Event
+        </Button>
+      ) : null}
     </Box>
   );
 };

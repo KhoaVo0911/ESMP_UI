@@ -15,7 +15,7 @@ const Notification = ({ userId, onNewNotifications, onOpenNotifications }) => {
 
     try {
       const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/notification/${userId}`
+        `https://esmpbe.id.vn/api/notification/${userId}`
       );
 
       const unreadNotifications = response.data.filter((n) => !n.status);
@@ -54,7 +54,7 @@ const Notification = ({ userId, onNewNotifications, onOpenNotifications }) => {
   const markAsRead = async (notificationId) => {
     try {
       await axios.put(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/notification/${userId}/${notificationId}`,
+        `https://esmpbe.id.vn/api/notification/${userId}/${notificationId}`,
         { status: true }
       );
 

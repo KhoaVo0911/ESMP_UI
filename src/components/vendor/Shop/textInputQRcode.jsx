@@ -92,7 +92,7 @@ const TestQRCODE = () => {
     // Cập nhật urlQr vào API
     try {
       const response = await axios.put(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendor/${vendorId}`,
+        `https://esmpbe.id.vn/api/vendor/${vendorId}`,
         { urlQr: newQrUrl },
         {
           headers: {

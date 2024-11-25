@@ -138,21 +138,21 @@ const BoothPayment = ({
 
       // Tạo VendorInEvent bằng POST
       await axios.post(
-        `/vendorinevent/${vendorId}/${eventId}`,
+        `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
         {},
         { headers: { Authorization: accessToken } }
       );
 
       // GET VendorInEvent để lấy `vendorInEventId`
       const vendorInEventResponse = await axios.get(
-        `/vendorinevent/${vendorId}/${eventId}`,
+        `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
         { headers: { Authorization: accessToken } }
       );
       const vendorInEventId = vendorInEventResponse.data.vendorinEventId;
 
       // Cập nhật trạng thái booth thành "Booked"
       await axios.put(
-        `/map`,
+        `https://esmpbe.id.vn/api/map`,
         {
           locationId: boothTypeDetails.locationId,
           status: "Booked",
@@ -162,7 +162,7 @@ const BoothPayment = ({
 
       // Gửi payment data
       await axios.post(
-        `/eventpayment`,
+        `https://esmpbe.id.vn/api/eventpayment`,
         {
           deposit: parseFloat(boothTypeDetails.price),
           locationId: boothTypeDetails.locationId,

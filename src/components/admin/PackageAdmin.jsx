@@ -22,7 +22,7 @@ import {
 import { AddIcon } from "@chakra-ui/icons";
 import axios from "axios";
 
-const API_PACKAGE = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/package";
+const API_PACKAGE = "https://esmpbe.id.vn/api/package";
 
 const PackageAdmin = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();

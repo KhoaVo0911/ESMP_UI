@@ -33,7 +33,7 @@ const VendorHeader = ({ collapsed }) => {
       try {
         const hostId = sessionStorage.getItem("hostId");
         const response = await axios.get(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendor/host/${hostId}`
+          `https://esmpbe.id.vn/api/vendor/host/${hostId}`
         );
 
         const vendor = response.data.find((v) => v.vendorid === vendorId);
