@@ -47,8 +47,7 @@
 
 import axios from "axios";
 
-const BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api";
+const BASE_URL = "https://esmpbe.id.vn/api";
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 // Hàm lấy danh sách payments theo eventId

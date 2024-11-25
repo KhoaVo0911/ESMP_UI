@@ -21,8 +21,7 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 
-const API_BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/service";
+const API_BASE_URL = "https://esmpbe.id.vn/api/service";
 
 const ServiceManagement = ({ eventId }) => {
   const [services, setServices] = useState([]);

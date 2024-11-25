@@ -185,8 +185,7 @@ import { format } from "date-fns";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 import MapboxComponent from "../../../components/MapBox/MapboxComponent";
 
-const BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const BASE_URL = "https://esmpbe.id.vn/api/event";
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const EventDetails = () => {
@@ -342,7 +341,7 @@ const EventDetails = () => {
 
       // Lấy danh sách vendor của host
       const vendorResponse = await fetch(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendor/host/${event.hostId}`,
+        `https://esmpbe.id.vn/api/vendor/host/${event.hostId}`,
         {
           headers: {
             Authorization: `${getAccessToken()}`,
@@ -362,20 +361,17 @@ const EventDetails = () => {
         await Promise.all(
           vendors.map((vendor) => {
             console.log(`Sending notification to vendor: ${vendor.userid}`);
-            return fetch(
-              `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/notification`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `${getAccessToken()}`,
-                },
-                body: JSON.stringify({
-                  userid: vendor.userid,
-                  source: `Sự kiện "${event.name}" đã được khởi động.`,
-                }),
-              }
-            )
+            return fetch(`https://esmpbe.id.vn/api/notification`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `${getAccessToken()}`,
+              },
+              body: JSON.stringify({
+                userid: vendor.userid,
+                source: `Sự kiện "${event.name}" đã được khởi động.`,
+              }),
+            })
               .then((res) => {
                 if (res.ok) {
                   console.log(

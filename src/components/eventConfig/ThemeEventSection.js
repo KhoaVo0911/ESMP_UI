@@ -43,7 +43,7 @@ const ThemeEventSection = () => {
   const fetchThemes = async () => {
     try {
       const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/theme/hostId/${hostId}`,
+        `https://esmpbe.id.vn/api/theme/hostId/${hostId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -88,7 +88,7 @@ const ThemeEventSection = () => {
         if (editingTheme) {
           // Update existing theme
           await axios.put(
-            `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/theme/${editingTheme.themeId}`,
+            `https://esmpbe.id.vn/api/theme/${editingTheme.themeId}`,
             {
               name: newTheme,
               status: status === "true",
@@ -111,7 +111,7 @@ const ThemeEventSection = () => {
         } else {
           // Create a new theme
           await axios.post(
-            "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/theme",
+            "https://esmpbe.id.vn/api/theme",
             {
               name: newTheme,
               status: status === "true", // Convert status to boolean
@@ -152,15 +152,12 @@ const ThemeEventSection = () => {
 
   const handleDeleteTheme = async (themeId) => {
     try {
-      await axios.delete(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/theme/${themeId}`,
-        {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await axios.delete(`https://esmpbe.id.vn/api/theme/${themeId}`, {
+        headers: {
+          Authorization: `${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
       setThemes(themes.filter((theme) => theme.themeId !== themeId));
 
       toast({
@@ -259,9 +256,7 @@ const ThemeEventSection = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
-            {editingTheme ? "Edit Theme" : "Add Theme"}
-          </ModalHeader>
+          <ModalHeader>{editingTheme ? "Edit Theme" : "Add Theme"}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl mb={4}>
@@ -274,7 +269,10 @@ const ThemeEventSection = () => {
             </FormControl>
             <FormControl mb={4}>
               <FormLabel>Status</FormLabel>
-              <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+              <Select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
                 <option value="true">Available</option>
                 <option value="false">Inactive</option>
               </Select>

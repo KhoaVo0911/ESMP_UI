@@ -22,8 +22,7 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 
-const API_BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/map";
+const API_BASE_URL = "https://esmpbe.id.vn/api/map";
 
 const LocationTypeManagement = ({ eventId, hostId }) => {
   const [locationTypes, setLocationTypes] = useState([]);

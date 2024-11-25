@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import "./Event.css";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -26,8 +25,7 @@ import { sendNotification } from "../../../shared/notificationService";
 const { TabPane } = Tabs;
 const { TextArea } = Input;
 
-const BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/event";
+const BASE_URL = "https://esmpbe.id.vn/api/event";
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const Event = () => {

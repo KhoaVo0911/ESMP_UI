@@ -1,7 +1,6 @@
 import axios from "axios";
 
-const BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/notification";
+const BASE_URL = "https://esmpbe.id.vn/api/notification";
 
 // Lấy danh sách thông báo cho Host hoặc Vendor
 export const getNotifications = async (userid) => {

@@ -100,9 +100,7 @@
 import axios from "axios";
 
 // Base URL từ file config hoặc môi trường
-const BASE_URL =
-  process.env.REACT_APP_BASE_URL ||
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api";
+const BASE_URL = process.env.REACT_APP_BASE_URL || "https://esmpbe.id.vn/api";
 
 // Hàm tiện ích để lấy Access Token
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";

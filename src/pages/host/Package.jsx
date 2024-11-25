@@ -20,7 +20,7 @@ import {
   Progress,
 } from "@chakra-ui/react";
 
-const API_PACKAGE = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/package";
+const API_PACKAGE = "https://esmpbe.id.vn/api/package";
 
 const CourseList = () => {
   const [packages, setPackages] = useState([]);
@@ -218,7 +218,11 @@ const CourseList = () => {
             <Text fontSize="lg" mb={2} color="yellow.400">
               Mã QR thanh toán tự động
             </Text>
-            <Flex alignItems="center" justifyContent="space-between" width="100%">
+            <Flex
+              alignItems="center"
+              justifyContent="space-between"
+              width="100%"
+            >
               <Text>Số tiền: {selectedPackage.price.toLocaleString()} VND</Text>
               <Text>Nội dung: {selectedPackage.content}</Text>
             </Flex>

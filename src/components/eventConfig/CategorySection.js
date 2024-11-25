@@ -34,7 +34,7 @@ const CategorySection = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
-  
+
   // Retrieve hostId and accessToken from session storage
   const hostId = sessionStorage.getItem("hostId") || "";
   const accessToken = sessionStorage.getItem("accessToken") || "";
@@ -43,7 +43,7 @@ const CategorySection = () => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category/host/${hostId}`,
+        `https://esmpbe.id.vn/api/category/host/${hostId}`,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -85,7 +85,7 @@ const CategorySection = () => {
         // Update existing category
         console.log("Updating category with hostId:", hostId);
         await axios.put(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category/${selectedCategory.categoryId}`,
+          `https://esmpbe.id.vn/api/category/${selectedCategory.categoryId}`,
           { categoryName: newCategory, status: selectedCategory.status },
           {
             headers: {
@@ -104,7 +104,7 @@ const CategorySection = () => {
         // Create new category
         console.log("Creating category with hostId:", hostId);
         await axios.post(
-          "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category",
+          "https://esmpbe.id.vn/api/category",
           { categoryName: newCategory, hostid: hostId, status: true }, // Ensure hostId is included here
           {
             headers: {
@@ -137,15 +137,12 @@ const CategorySection = () => {
 
   const handleDeleteCategory = async (categoryId) => {
     try {
-      await axios.delete(
-        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/category/${categoryId}`,
-        {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await axios.delete(`https://esmpbe.id.vn/api/category/${categoryId}`, {
+        headers: {
+          Authorization: `${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
       setCategories(categories.filter((cat) => cat.categoryId !== categoryId));
       toast({
         title: "Category deleted",
@@ -179,7 +176,14 @@ const CategorySection = () => {
           Create New Category
         </Button>
       </Flex>
-      <Table variant="simple" colorScheme="gray" size="lg" bg="white" borderRadius="md" shadow="md">
+      <Table
+        variant="simple"
+        colorScheme="gray"
+        size="lg"
+        bg="white"
+        borderRadius="md"
+        shadow="md"
+      >
         <Thead bg="gray.200">
           <Tr>
             <Th>No</Th>

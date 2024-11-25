@@ -24,18 +24,28 @@ import {
   ModalCloseButton,
   useDisclosure,
   Tooltip,
-  Button
+  Button,
 } from "@chakra-ui/react";
-import { AddIcon, EditIcon, EmailIcon, DeleteIcon, InfoIcon } from "@chakra-ui/icons";
+import {
+  AddIcon,
+  EditIcon,
+  EmailIcon,
+  DeleteIcon,
+  InfoIcon,
+} from "@chakra-ui/icons";
 import axios from "axios";
 
-const API_GET_VENDORS = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendor/host";
-const API_VENDOR = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendor";
-const API_SEND_EMAIL = "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/mail/send-email";
+const API_GET_VENDORS = "https://esmpbe.id.vn/api/vendor/host";
+const API_VENDOR = "https://esmpbe.id.vn/api/vendor";
+const API_SEND_EMAIL = "https://esmpbe.id.vn/api/mail/send-email";
 
 const AccountManagement = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { isOpen: isDetailOpen, onOpen: onOpenDetail, onClose: onCloseDetail } = useDisclosure();
+  const {
+    isOpen: isDetailOpen,
+    onOpen: onOpenDetail,
+    onClose: onCloseDetail,
+  } = useDisclosure();
   const [accounts, setAccounts] = useState([]);
   const [formData, setFormData] = useState({
     username: "",
@@ -233,7 +243,7 @@ const AccountManagement = () => {
           </body>
         </html>
       `;
-  
+
       await axios.post(
         API_SEND_EMAIL,
         {
@@ -254,7 +264,6 @@ const AccountManagement = () => {
       alert("Failed to send email.");
     }
   };
-  
 
   const resetForm = () => {
     setFormData({
@@ -316,7 +325,14 @@ const AccountManagement = () => {
   }, [hostId, accessToken]);
 
   return (
-    <Box p={8} bg="gray.100" borderRadius="lg" shadow="lg" maxW="1200px" mx="auto">
+    <Box
+      p={8}
+      bg="gray.100"
+      borderRadius="lg"
+      shadow="lg"
+      maxW="1200px"
+      mx="auto"
+    >
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg" fontWeight="bold" color="teal.600">
           Account Management
@@ -364,7 +380,9 @@ const AccountManagement = () => {
                   <Badge
                     colorScheme={account.status ? "green" : "red"}
                     variant="solid"
-                    onClick={() => handleToggleStatus(account.vendorid, account.status)}
+                    onClick={() =>
+                      handleToggleStatus(account.vendorid, account.status)
+                    }
                     style={{ cursor: "pointer" }}
                   >
                     {account.status ? "Active" : "Inactive"}
@@ -396,9 +414,7 @@ const AccountManagement = () => {
                       size="sm"
                       colorScheme="teal"
                       icon={<EmailIcon />}
-                      onClick={() =>
-                        handleSendEmail(account)
-                      }
+                      onClick={() => handleSendEmail(account)}
                       mr={2}
                       aria-label="Send Email"
                     />
@@ -422,7 +438,9 @@ const AccountManagement = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{isEditing ? "Edit Account" : "Create New Account"}</ModalHeader>
+          <ModalHeader>
+            {isEditing ? "Edit Account" : "Create New Account"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
@@ -509,14 +527,31 @@ const AccountManagement = () => {
           <ModalHeader>Account Details</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <p><strong>Username:</strong> {selectedAccount?.username}</p>
-            <p><strong>Password:</strong> {selectedAccount?.password}</p>
-            <p><strong>Name:</strong> {selectedAccount?.name}</p>
-            <p><strong>Phone:</strong> {selectedAccount?.phone}</p>
-            <p><strong>Email:</strong> {selectedAccount?.email}</p>
-            <p><strong>Address:</strong> {selectedAccount?.address}</p>
-            <p><strong>QR URL:</strong> {selectedAccount?.urlQr}</p>
-            <p><strong>Status:</strong> {selectedAccount?.status ? "Active" : "Inactive"}</p>
+            <p>
+              <strong>Username:</strong> {selectedAccount?.username}
+            </p>
+            <p>
+              <strong>Password:</strong> {selectedAccount?.password}
+            </p>
+            <p>
+              <strong>Name:</strong> {selectedAccount?.name}
+            </p>
+            <p>
+              <strong>Phone:</strong> {selectedAccount?.phone}
+            </p>
+            <p>
+              <strong>Email:</strong> {selectedAccount?.email}
+            </p>
+            <p>
+              <strong>Address:</strong> {selectedAccount?.address}
+            </p>
+            <p>
+              <strong>QR URL:</strong> {selectedAccount?.urlQr}
+            </p>
+            <p>
+              <strong>Status:</strong>{" "}
+              {selectedAccount?.status ? "Active" : "Inactive"}
+            </p>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="teal" onClick={onCloseDetail}>

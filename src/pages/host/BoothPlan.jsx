@@ -34,8 +34,7 @@ import { storage } from "../../shared/firebase/firebaseConfig";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { height } from "@mui/system";
 
-const BASE_URL =
-  "http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api";
+const BASE_URL = "https://esmpbe.id.vn/api";
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const BoothPlan = () => {
