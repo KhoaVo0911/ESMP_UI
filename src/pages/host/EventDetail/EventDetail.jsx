@@ -231,6 +231,73 @@ const EventDetails = () => {
   };
 
   // Toggle event visibility between public and private
+  // const toggleEventVisibility = async () => {
+  //   if (!event || !event.eventId) {
+  //     toast({
+  //       title: "Error",
+  //       description: "Event details are missing.",
+  //       status: "error",
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //     return;
+  //   }
+  //   const newVisibility = !event.onWeb; // Đảo ngược trạng thái hiện tại của onWeb
+  //   const profit = event.profit ? parseFloat(event.profit) : 0;
+
+  //   try {
+  //     const response = await fetch(`${BASE_URL}/${event.eventId}`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `${getAccessToken()}`,
+  //       },
+  //       // Gửi toàn bộ dữ liệu của sự kiện kèm cập nhật onWeb và profit
+  //       body: JSON.stringify({
+  //         ...event, // Gửi tất cả các trường từ event
+  //         onWeb: !event.onWeb, // Chỉ thay đổi trạng thái onWeb
+  //         profit: event.profit ? parseFloat(event.profit) : 0, // Đảm bảo profit là số
+  //       }),
+  //     });
+
+  //     if (response.ok) {
+  //       toast({
+  //         title: `Event ${!event.onWeb ? "Published" : "Privatized"}`,
+  //         description: `The event is now ${
+  //           !event.onWeb ? "public" : "private"
+  //         }.`,
+  //         status: "success",
+  //         duration: 3000,
+  //         isClosable: true,
+  //       });
+
+  //       // Update event state
+  //       setEvent((prevEvent) => ({
+  //         ...prevEvent,
+  //         onWeb: !prevEvent.onWeb,
+  //       }));
+  //     } else {
+  //       const errorText = await response.text();
+  //       console.error("Failed to update event visibility:", errorText);
+  //       toast({
+  //         title: "Error",
+  //         description: "Failed to update the event visibility.",
+  //         status: "error",
+  //         duration: 3000,
+  //         isClosable: true,
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating event visibility:", error);
+  //     toast({
+  //       title: "Error",
+  //       description: "An error occurred while updating the event visibility.",
+  //       status: "error",
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //   }
+  // };
   const toggleEventVisibility = async () => {
     if (!event || !event.eventId) {
       toast({
@@ -242,41 +309,25 @@ const EventDetails = () => {
       });
       return;
     }
+
     const newVisibility = !event.onWeb; // Đảo ngược trạng thái hiện tại của onWeb
-    const profit = event.profit ? parseFloat(event.profit) : 0;
 
     try {
+      // Cập nhật trạng thái onWeb của sự kiện
       const response = await fetch(`${BASE_URL}/${event.eventId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `${getAccessToken()}`,
         },
-        // Gửi toàn bộ dữ liệu của sự kiện kèm cập nhật onWeb và profit
         body: JSON.stringify({
-          ...event, // Gửi tất cả các trường từ event
-          onWeb: !event.onWeb, // Chỉ thay đổi trạng thái onWeb
-          profit: event.profit ? parseFloat(event.profit) : 0, // Đảm bảo profit là số
+          ...event,
+          onWeb: newVisibility,
+          profit: event.profit ? parseFloat(event.profit) : 0,
         }),
       });
 
-      if (response.ok) {
-        toast({
-          title: `Event ${!event.onWeb ? "Published" : "Privatized"}`,
-          description: `The event is now ${
-            !event.onWeb ? "public" : "private"
-          }.`,
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-
-        // Update event state
-        setEvent((prevEvent) => ({
-          ...prevEvent,
-          onWeb: !prevEvent.onWeb,
-        }));
-      } else {
+      if (!response.ok) {
         const errorText = await response.text();
         console.error("Failed to update event visibility:", errorText);
         toast({
@@ -286,7 +337,82 @@ const EventDetails = () => {
           duration: 3000,
           isClosable: true,
         });
+        return;
       }
+
+      // Lấy danh sách vendor của host
+      const vendorResponse = await fetch(
+        `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendor/host/${event.hostId}`,
+        {
+          headers: {
+            Authorization: `${getAccessToken()}`,
+          },
+        }
+      );
+
+      if (!vendorResponse.ok) {
+        console.error("Failed to fetch vendors for host.");
+        return;
+      }
+
+      const vendors = await vendorResponse.json();
+
+      // Gửi thông báo cho các vendor
+      if (newVisibility) {
+        await Promise.all(
+          vendors.map((vendor) => {
+            console.log(`Sending notification to vendor: ${vendor.userid}`);
+            return fetch(
+              `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/notification`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `${getAccessToken()}`,
+                },
+                body: JSON.stringify({
+                  userid: vendor.userid,
+                  source: `Sự kiện "${event.name}" đã được khởi động.`,
+                }),
+              }
+            )
+              .then((res) => {
+                if (res.ok) {
+                  console.log(
+                    `Notification sent successfully to vendor: ${vendor.userid}`
+                  );
+                } else {
+                  console.error(
+                    `Failed to send notification to vendor: ${vendor.userid}`
+                  );
+                }
+              })
+              .catch((err) => {
+                console.error(
+                  `Error sending notification to vendor: ${vendor.userid}`,
+                  err
+                );
+              });
+          })
+        );
+      }
+
+      // Hiển thị thông báo thành công
+      toast({
+        title: `Event ${newVisibility ? "Published" : "Privatized"}`,
+        description: `The event is now ${
+          newVisibility ? "public" : "private"
+        }.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Cập nhật trạng thái sự kiện
+      setEvent((prevEvent) => ({
+        ...prevEvent,
+        onWeb: newVisibility,
+      }));
     } catch (error) {
       console.error("Error updating event visibility:", error);
       toast({

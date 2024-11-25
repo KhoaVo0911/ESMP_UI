@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginComponent from "./Login";
 
@@ -6,6 +6,7 @@ const LoginPage = () => {
   const [accessToken, setAccessToken] = useState("");
   const [vendorId, setVendorId] = useState("");
   const [hostId, setHostId] = useState("");
+  const [hostCode, setHostCode] = useState("default"); // Default hostCode
   const [staffId, setStaffId] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
@@ -15,7 +16,8 @@ const LoginPage = () => {
     setAccessToken(token);
     setIsLoggedIn(true);
 
-    const hostCode = userInfo.hostInfo ? userInfo.hostInfo.hostCode : "";
+    const hostCodeValue = userInfo.hostInfo ? userInfo.hostInfo.hostCode : "";
+    setHostCode(hostCodeValue); // Cập nhật hostCode từ userInfo
     const vendorCode = userInfo.vendorInfo ? userInfo.vendorInfo.vendorId : "";
     const vendorName = userInfo.vendorInfo
       ? userInfo.vendorInfo.vendorName
@@ -50,11 +52,10 @@ const LoginPage = () => {
         state: { accessToken: token, vendorId: vendorCode },
       });
     } else if (userRole === "host") {
-      navigate("/dashboard", {
+      navigate(`/${hostIdValue}/dashboard`, {
         state: {
           accessToken: token,
-          vendorId: vendorCode,
-          hostId: hostIdValue,
+          hostId: hostCodeValue,
         },
       });
     } else if (userRole === "staff") {
@@ -71,6 +72,13 @@ const LoginPage = () => {
       navigate("/", { state: { accessToken: token, vendorId: vendorCode } });
     }
   };
+
+  // Nếu đã đăng nhập, tự động điều hướng đến trang Dashboard
+  useEffect(() => {
+    if (isLoggedIn && hostId) {
+      navigate(`/${hostId}/dashboard`);
+    }
+  }, [isLoggedIn, hostId, navigate]);
 
   return (
     <div>

@@ -81,12 +81,12 @@ const AppRoutes = () => {
           </VendorLayout>
         }
       />
-      
-        <Route
+
+      <Route
         path="/selectbooth"
         element={
           <VendorLayout>
-            <SelectBoothPage/>
+            <SelectBoothPage />
           </VendorLayout>
         }
       />
@@ -99,7 +99,14 @@ const AppRoutes = () => {
           </VendorLayout>
         }
       />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route
+        path="/:hostId/dashboard"
+        element={
+          <HostLayout>
+            <Dashboard />
+          </HostLayout>
+        }
+      />
       <Route path="qrcode" element={<CourseList />} />
       <Route path="qrcodehist" element={<TransactionHistory />} />
       <Route path="testanh" element={<ImageUpload />} />

@@ -23,37 +23,42 @@ const HostHeader = ({ collapsed }) => {
   const location = useLocation();
   const { currentUser, logout } = useAuth(); // Lấy thông tin người dùng từ AuthContext
 
+  const hostId = sessionStorage.getItem("hostId");
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  const userId = currentUser?.id; // Lấy userId từ currentUser
+  const userId = sessionStorage.getItem("userId"); // Lấy userId từ currentUser
 
   useEffect(() => {
-    if (!userId) return; // Nếu không có userId, dừng việc gọi API
+    if (!userId) {
+      console.warn("No userId found, skipping notification polling");
+      return;
+    }
 
-    let isPolling = true;
+    let pollingInterval;
 
     const fetchNotifications = async () => {
       setIsLoading(true);
-      while (isPolling) {
-        try {
-          const data = await pollNotifications(userId);
-          setNotifications(data);
-          setUnreadCount(data.filter((n) => !n.status).length); // Đếm thông báo chưa đọc
-        } catch (error) {
-          console.error("Error fetching notifications:", error);
-        } finally {
-          setIsLoading(false);
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // Chờ 2 giây trước lần gọi tiếp theo
-        }
+      try {
+        const data = await pollNotifications(userId);
+        setNotifications(data);
+        setUnreadCount(data.filter((n) => !n.status).length); // Đếm thông báo chưa đọc
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchNotifications();
+    // Bắt đầu polling với setInterval
+    pollingInterval = setInterval(() => {
+      fetchNotifications();
+    }, 2000); // 2 giây mỗi lần
 
+    // Cleanup khi unmount
     return () => {
-      isPolling = false; // Dừng polling khi component bị unmount
+      clearInterval(pollingInterval);
     };
   }, [userId]);
 
@@ -66,7 +71,7 @@ const HostHeader = ({ collapsed }) => {
   };
 
   const getPageTitle = () => {
-    if (location.pathname.startsWith("/dashboard")) {
+    if (location.pathname.startsWith(`/${hostId}/dashboard`)) {
       return "Dashboard";
     } else if (location.pathname.startsWith("/events")) {
       return "Event Management";
@@ -118,7 +123,6 @@ const HostHeader = ({ collapsed }) => {
       </Flex>
 
       <Flex alignItems="center">
-        {/* Nút thông báo */}
         <Menu>
           <MenuButton
             as={IconButton}
@@ -129,29 +133,42 @@ const HostHeader = ({ collapsed }) => {
             color="gray.600"
             mr={4}
             position="relative"
-          />
-          {/* Badge hiển thị số lượng thông báo chưa đọc */}
-          {unreadCount > 0 && (
-            <Badge
-              colorScheme="red"
-              borderRadius="full"
-              position="absolute"
-              top="8px"
-              right="8px"
-            >
-              {unreadCount}
-            </Badge>
-          )}
+          >
+            {unreadCount > 0 && (
+              <Badge
+                colorScheme="red"
+                borderRadius="full"
+                position="absolute"
+                top="-3px"
+                right="-3px"
+                fontSize="10px"
+                px={2}
+                py={1}
+              >
+                {unreadCount}
+              </Badge>
+            )}
+          </MenuButton>
+
           <MenuList maxW="400px" maxH="300px" overflowY="auto">
+            {/* Kiểm tra trạng thái tải dữ liệu */}
             {isLoading ? (
               <Flex justifyContent="center" alignItems="center" p={4}>
-                <Spinner size="sm" />
+                <Spinner size="md" color="blue.500" />
               </Flex>
-            ) : (
+            ) : notifications && notifications.length > 0 ? (
+              /* Hiển thị danh sách thông báo */
               <NotificationList
                 notifications={notifications}
                 onMarkAsRead={markAsRead}
               />
+            ) : (
+              /* Thông báo khi không có dữ liệu */
+              <Flex justifyContent="center" alignItems="center" p={4}>
+                <Text fontSize="sm" color="gray.500">
+                  No new notifications
+                </Text>
+              </Flex>
             )}
           </MenuList>
         </Menu>

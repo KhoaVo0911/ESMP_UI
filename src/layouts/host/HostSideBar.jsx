@@ -25,7 +25,7 @@ const HostSideBar = ({ collapsed }) => {
 
   useEffect(() => {
     console.log("Current eventId:", eventId);
-    if (location.pathname.startsWith("/dashboard")) {
+    if (location.pathname.startsWith(`/${hostId}/dashboard`)) {
       setSelectedMenuItem("1");
     } else if (location.pathname.startsWith("/events")) {
       setSelectedMenuItem("2");
@@ -137,7 +137,7 @@ const HostSideBar = ({ collapsed }) => {
               Dashboard
             </span>
           ),
-          onClick: () => navigate("/dashboard"),
+          onClick: () => navigate(`/${hostId}/dashboard`),
         },
         {
           key: "2",
@@ -246,7 +246,7 @@ const HostSideBar = ({ collapsed }) => {
             setSelectedMenuItem(e.key);
             switch (e.key) {
               case "1":
-                navigate("/dashboard");
+                navigate(`/${hostId}/dashboard`);
                 break;
               case "2":
                 navigate(`/events/host/${hostId}`);
@@ -266,7 +266,7 @@ const HostSideBar = ({ collapsed }) => {
               case "8":
                 navigate(`/event/${eventId}/booth-plan`);
                 break;
-                
+
               case "9":
                 navigate(`/event/${eventId}/extensionEvent`);
                 break;
@@ -280,7 +280,7 @@ const HostSideBar = ({ collapsed }) => {
                 navigate(`/eventconfig`);
                 break;
               default:
-                navigate("/dashboard");
+                navigate(`/${hostId}/dashboard`);
             }
           }}
           items={

@@ -454,6 +454,7 @@ import { ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
 import { Box, Grid, GridItem, Image } from "@chakra-ui/react";
 import { CalendarIcon, InfoIcon } from "@chakra-ui/icons";
+import { sendNotification } from "../../../shared/notificationService";
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -562,6 +563,90 @@ const Event = () => {
     setActiveTab(key);
   };
 
+  // const handleCreateEvent = async (values) => {
+  //   const { name, description, startDate, endDate, file, profit } = values;
+
+  //   if (!name || !description || !startDate || !endDate || !file || !profit) {
+  //     message.error("Please fill in all fields.");
+  //     return;
+  //   }
+
+  //   try {
+  //     const newEvent = {
+  //       name,
+  //       hostId,
+  //       themeId: hostId,
+  //       description,
+  //       startDate: startDate.toISOString(), // Chuyển đổi sang định dạng ISO
+  //       endDate: endDate.toISOString(),
+  //       profit: parseFloat(profit),
+  //       status: "upcoming",
+  //     };
+
+  //     console.log("Payload being sent:", newEvent);
+
+  //     // Gửi request tạo sự kiện
+  //     const response = await axios.post(BASE_URL, newEvent, {
+  //       headers: { Authorization: getAccessToken() },
+  //     });
+
+  //     const eventId = response.data.id;
+
+  //     if (!eventId) {
+  //       throw new Error("Event ID is missing in the response");
+  //     }
+
+  //     // Upload ảnh lên Firebase
+  //     const imageFile = file[0].originFileObj;
+  //     const imageRef = ref(storage, `${hostId}/${eventId}/${imageFile.name}`);
+  //     await uploadBytes(imageRef, imageFile);
+  //     const imageURL = await getDownloadURL(imageRef);
+
+  //     // Fetch lại danh sách sự kiện
+  //     fetchEvents();
+
+  //     // Cập nhật thông tin sự kiện trong state
+  //     const updatedEvent = {
+  //       ...newEvent,
+  //       eventId,
+  //       imageURL,
+  //     };
+  //     setEvents((prevEvents) => [updatedEvent, ...prevEvents]);
+
+  //     message.success("Event created successfully!");
+  //     setModalVisible(false);
+  //     form.resetFields();
+
+  //     // Lấy danh sách Vendor của Host
+  //     const vendorResponse = await axios.get(
+  //       `${BASE_URL}/vendor/host/${hostId}`,
+  //       {
+  //         headers: { Authorization: getAccessToken() },
+  //       }
+  //     );
+
+  //     const vendors = vendorResponse.data;
+
+  //     // Gửi thông báo đến tất cả Vendor
+  //     await Promise.all(
+  //       vendors.map((vendor) =>
+  //         axios.post(
+  //           `${BASE_URL}/notification`,
+  //           {
+  //             userid: vendor.userid,
+  //             source: `Sự kiện "${name}" đã được khởi động.`,
+  //           },
+  //           { headers: { Authorization: getAccessToken() } }
+  //         )
+  //       )
+  //     );
+
+  //     message.success("Event created and notifications sent to vendors!");
+  //   } catch (error) {
+  //     console.error("Error creating event or sending notifications:", error);
+  //     message.error("Error creating event or sending notifications.");
+  //   }
+  // };
   const handleCreateEvent = async (values) => {
     const { name, description, startDate, endDate, file, profit } = values;
 
@@ -571,12 +656,13 @@ const Event = () => {
     }
 
     try {
+      // Chuẩn bị dữ liệu sự kiện
       const newEvent = {
         name,
         hostId,
         themeId: hostId,
         description,
-        startDate: startDate.toISOString(), // Chuyển đổi sang định dạng ISO
+        startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         profit: parseFloat(profit),
         status: "upcoming",
@@ -612,18 +698,18 @@ const Event = () => {
       };
       setEvents((prevEvents) => [updatedEvent, ...prevEvents]);
 
+      // Hiển thị thông báo thành công cho sự kiện
       message.success("Event created successfully!");
+
+      // Đóng modal và reset form sau khi mọi thứ hoàn thành
       setModalVisible(false);
       form.resetFields();
     } catch (error) {
+      // Xử lý lỗi
       console.error("Error creating event:", error);
-      if (error.response) {
-        message.error(
-          `Error: ${error.response.data.message || "Server Error"}`
-        );
-      } else {
-        message.error("Error creating event.");
-      }
+      message.error(
+        `Error: ${error.response?.data?.message || "Something went wrong"}`
+      );
     }
   };
 
