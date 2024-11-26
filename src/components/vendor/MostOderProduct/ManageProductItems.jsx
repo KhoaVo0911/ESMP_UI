@@ -133,7 +133,7 @@ const ManageProducts = () => {
     const quantity = Math.max(1, selectedQuantity);
     const selectedProduct = products.find((p) => p.productId === selectedProductId);
     if (selectedProduct && !details.find((d) => d.productId === selectedProduct.productId)) {
-      setDetails([...details, { productId: selectedProduct.productId, quantity, unit: "kg" }]);
+      setDetails([...details, { productId: selectedProduct.productId, quantity, unit: "" }]);
       setValue("productName", selectedProduct.productName);
       setValue("productPrice", "");
     }

@@ -100,12 +100,16 @@ const ProductList = () => {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+  
+      // Chuyển các giá trị cần thiết sang kiểu số
       const payload = {
         ...values,
         categoryId: values.categoryId,
         status: true,
+        quantity: Number(values.quantity),  // Chuyển quantity thành số
+        count: Number(values.count),        // Chuyển count thành số
       };
-
+  
       if (editingProduct) {
         await axios.put(
           `https://esmpbe.id.vn/api/product/${vendorId}/${editingProduct.productId}`,
@@ -131,7 +135,7 @@ const ProductList = () => {
         );
         message.success("New product added successfully!");
       }
-
+  
       fetchData();
       setIsModalOpen(false);
       form.resetFields();
@@ -139,6 +143,7 @@ const ProductList = () => {
       message.error("An error occurred!");
     }
   };
+  
 
   const handleDelete = async (id) => {
     try {
