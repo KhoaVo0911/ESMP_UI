@@ -12,6 +12,7 @@ import {
   Upload,
   message,
   DatePicker,
+  Select,
 } from "antd";
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -38,6 +39,7 @@ const Event = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("0");
   const [modalVisible, setModalVisible] = useState(false);
+  const [themes, setThemes] = useState([]);
   const [form] = Form.useForm();
 
   const fetchEvents = useCallback(async () => {
@@ -213,9 +215,18 @@ const Event = () => {
   //   }
   // };
   const handleCreateEvent = async (values) => {
-    const { name, description, startDate, endDate, file, profit } = values;
+    const { name, description, startDate, endDate, file, profit, themeId } =
+      values;
 
-    if (!name || !description || !startDate || !endDate || !file || !profit) {
+    if (
+      !name ||
+      !description ||
+      !startDate ||
+      !endDate ||
+      !file ||
+      !profit ||
+      !themeId
+    ) {
       message.error("Please fill in all fields.");
       return;
     }
@@ -225,7 +236,7 @@ const Event = () => {
       const newEvent = {
         name,
         hostId,
-        themeId: hostId,
+        themeId,
         description,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
@@ -288,6 +299,25 @@ const Event = () => {
   const uploadProps = {
     beforeUpload: () => false,
   };
+
+  useEffect(() => {
+    const fetchThemes = async () => {
+      try {
+        const response = await axios.get(
+          `https://esmpbe.id.vn/api/theme/hostId/${hostId}`,
+          {
+            headers: { Authorization: getAccessToken() },
+          }
+        );
+        setThemes(response.data); // Cập nhật themes từ API
+      } catch (error) {
+        console.error("Error fetching themes:", error);
+        message.error("Error fetching themes.");
+      }
+    };
+
+    fetchThemes(); // Gọi API themes khi component load
+  }, [hostId]);
 
   return (
     <div>
@@ -429,6 +459,24 @@ const Event = () => {
             ]}
           >
             <Input type="number" placeholder="Enter profit percentage" />
+          </Form.Item>
+          <Form.Item
+            name="themeId"
+            label="Theme of Event"
+            rules={[
+              {
+                required: true,
+                message: "Please select a theme for the event!",
+              },
+            ]}
+          >
+            <Select placeholder="Select Theme">
+              {themes.map((theme) => (
+                <Select.Option key={theme.themeId} value={theme.themeId}>
+                  {theme.name}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item
             name="file"

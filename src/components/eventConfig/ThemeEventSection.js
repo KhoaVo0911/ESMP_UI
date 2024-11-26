@@ -65,7 +65,7 @@ const ThemeEventSection = () => {
 
   useEffect(() => {
     fetchThemes();
-  }, []);
+  }, [themes]);
 
   // Open the modal to add or edit a theme
   const openModal = (theme = null) => {

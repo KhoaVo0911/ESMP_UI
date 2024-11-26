@@ -195,6 +195,7 @@ const EventDetails = () => {
 
   const [event, setEvent] = useState(null);
   const [services, setServices] = useState([]);
+  const [theme, setTheme] = useState(null);
 
   // Load event data from location state or sessionStorage
   useEffect(() => {
@@ -421,6 +422,33 @@ const EventDetails = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchTheme = async () => {
+      if (event?.themeId) {
+        try {
+          const response = await fetch(
+            `https://esmpbe.id.vn/api/theme/${event.themeId}`,
+            {
+              headers: {
+                Authorization: `${getAccessToken()}`,
+              },
+            }
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setTheme(data); // Lưu thông tin theme vào state
+          } else {
+            console.error("Failed to fetch theme:", await response.text());
+          }
+        } catch (error) {
+          console.error("Error fetching theme:", error);
+        }
+      }
+    };
+
+    fetchTheme();
+  }, [event?.themeId]);
+
   return (
     <Box p={6} bg="white" borderRadius="md" boxShadow="md">
       <Flex align="center" justify="space-between" mb={6}>
@@ -488,6 +516,19 @@ const EventDetails = () => {
         <Text>
           {event?.profit ? `${event.profit}%` : "No profit specified."}
         </Text>
+      </Box>
+      <Box mb={6}>
+        <Text fontWeight="bold" color="purple.900">
+          Theme:
+        </Text>
+        {theme ? (
+          <Box>
+            <Text>Name: {theme.name}</Text>
+            {/* <Text>Status: {theme.status ? "Active" : "Inactive"}</Text> */}
+          </Box>
+        ) : (
+          <Text>Loading theme information...</Text>
+        )}
       </Box>
 
       <Box mb={6}>

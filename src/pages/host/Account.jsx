@@ -258,10 +258,10 @@ const AccountManagement = () => {
           },
         }
       );
-      alert("Email sent successfully!");
+      // alert("Email sent successfully!");
     } catch (error) {
       console.error("Error sending email:", error);
-      alert("Failed to send email.");
+      // alert("Failed to send email.");
     }
   };
 

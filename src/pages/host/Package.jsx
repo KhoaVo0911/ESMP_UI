@@ -39,15 +39,14 @@ const CourseList = () => {
     // Lấy danh sách gói từ API
     const fetchPackages = async () => {
       try {
-        const accessToken = localStorage.getItem("accessToken"); // Lấy accessToken từ localStorage
+        const accessToken = sessionStorage.getItem("accessToken");
         if (!accessToken) {
           throw new Error("Access token không tồn tại");
         }
 
         const response = await axios.get(API_PACKAGE, {
           headers: {
-            Authorization: `Bearer ${accessToken}`, // Truyền accessToken vào header
-            "Content-Type": "application/json",
+            "Content-Type": "application/json", // Không sử dụng Bearer
           },
         });
 
@@ -171,16 +170,6 @@ const CourseList = () => {
             transition="0.3s ease-in-out"
             border="1px solid #d4af37"
           >
-            {/* <Image
-              src="https://via.placeholder.com/180"
-              alt={item.name}
-              borderRadius="md"
-              boxShadow="lg"
-              width="100%"
-              height="180px"
-              objectFit="cover"
-              mb={4}
-            /> */}
             <Heading size="md" color="#6b4226" mb={2}>
               {item.name}
             </Heading>
