@@ -43,14 +43,15 @@ const AdminSideBar = ({ collapsed }) => {
         {
           key: "2",
           icon: <FormatListBulletedIcon />,
-          label: <span style={{ fontWeight: "bold" }}>Transaction History</span>,
+          label: (
+            <span style={{ fontWeight: "bold" }}>Transaction History</span>
+          ),
         },
         {
           key: "3",
           icon: <FormatListBulletedIcon />,
           label: <span style={{ fontWeight: "bold" }}>Package</span>,
-        }
-        
+        },
       ],
     },
   ];

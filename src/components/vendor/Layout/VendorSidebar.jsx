@@ -28,11 +28,9 @@ const VendorSideBar = ({ collapsed }) => {
       setSelectedMenuItem("3");
     } else if (location.pathname.startsWith("/eventsVendor")) {
       setSelectedMenuItem("4");
-    } 
-    else if (location.pathname.startsWith("/staff-account-manager")) {
+    } else if (location.pathname.startsWith("/staff-account-manager")) {
       setSelectedMenuItem("5");
-    } 
-    
+    }
   }, [location.pathname]);
 
   const defaultItems = [
@@ -53,7 +51,9 @@ const VendorSideBar = ({ collapsed }) => {
         {
           key: "3",
           icon: <FastfoodIcon />,
-          label: <span style={{ fontWeight: "bold" }}>Manage Product Items</span>,
+          label: (
+            <span style={{ fontWeight: "bold" }}>Manage Product Items</span>
+          ),
         },
         {
           key: "4",
@@ -63,9 +63,10 @@ const VendorSideBar = ({ collapsed }) => {
         {
           key: "5",
           icon: <EventIcon />,
-          label: <span style={{ fontWeight: "bold" }}>Manage Staff Account </span>,
+          label: (
+            <span style={{ fontWeight: "bold" }}>Manage Staff Account </span>
+          ),
         },
-        
       ],
     },
   ];
@@ -86,7 +87,9 @@ const VendorSideBar = ({ collapsed }) => {
         navigate("/eventsVendor", { state: { accessToken, vendorId } });
         break;
       case "5":
-        navigate("/staff-account-manager", { state: { accessToken, vendorId } });
+        navigate("/staff-account-manager", {
+          state: { accessToken, vendorId },
+        });
         break;
       default:
         navigate("/dashboardVendor", { state: { accessToken, vendorId } });

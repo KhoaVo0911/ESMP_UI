@@ -26,20 +26,19 @@ import {
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
+import { AddIcon } from "@chakra-ui/icons";
 
 const ThemeEventSection = () => {
   const [themes, setThemes] = useState([]);
   const [newTheme, setNewTheme] = useState("");
-  const [status, setStatus] = useState("true"); // Default to active status (boolean true)
-  const [editingTheme, setEditingTheme] = useState(null); // Holds the theme to edit
+  const [status, setStatus] = useState("true");
+  const [editingTheme, setEditingTheme] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
-  // Retrieve hostId and accessToken from session storage
   const hostId = sessionStorage.getItem("hostId") || "";
   const accessToken = sessionStorage.getItem("accessToken") || "";
 
-  // Fetch themes from API
   const fetchThemes = async () => {
     try {
       const response = await axios.get(
@@ -81,7 +80,6 @@ const ThemeEventSection = () => {
     onOpen();
   };
 
-  // Add or Edit Theme
   const handleSaveTheme = async () => {
     if (newTheme.trim()) {
       try {
@@ -114,7 +112,7 @@ const ThemeEventSection = () => {
             "https://esmpbe.id.vn/api/theme",
             {
               name: newTheme,
-              status: status === "true", // Convert status to boolean
+              status: status === "true",
               hostid: hostId,
             },
             {
@@ -183,26 +181,18 @@ const ThemeEventSection = () => {
       <Heading size="lg" fontWeight="bold" color="blue.600" mb={6}>
         Theme Event
       </Heading>
-      <Box mb={8} bg="white" p={6} borderRadius="md" shadow="md">
-        <FormControl mb={4}>
-          <FormLabel>Theme Name</FormLabel>
-          <Input
-            placeholder="Enter theme name"
-            value={newTheme}
-            onChange={(e) => setNewTheme(e.target.value)}
-          />
-        </FormControl>
-        <FormControl mb={4}>
-          <FormLabel>Status</FormLabel>
-          <Select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="true">Available</option>
-            <option value="false">Inactive</option>
-          </Select>
-        </FormControl>
-        <Button colorScheme="teal" onClick={() => openModal()}>
-          Add Theme
-        </Button>
-      </Box>
+
+      <Button
+        colorScheme="blue"
+        onClick={() => openModal()}
+        size="md"
+        mb={4}
+        float="right"
+        mr={4}
+        leftIcon={<AddIcon />}
+      >
+        Add Theme
+      </Button>
 
       <Table
         variant="simple"
