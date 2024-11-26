@@ -18,25 +18,25 @@ import { useState, useEffect } from "react";
 const HeroSection = () => {
   const slides = [
     {
-      image: backgroundImage, // Thay thế bằng đường dẫn hình ảnh sự kiện phù hợp
-      title: "Sự Kiện Theo Cách Của Bạn",
-      subtitle: "Dịch Vụ Tổ Chức Sự Kiện Chuyên Nghiệp",
+      image: backgroundImage, // Replace with the path to the event image
+      title: "Events Your Way",
+      subtitle: "Professional Event Management Services",
       description:
-        "Chúng tôi cung cấp dịch vụ tổ chức sự kiện cá nhân hóa giúp bạn tạo nên những trải nghiệm đáng nhớ, từ sự kiện doanh nghiệp đến ra mắt sản phẩm.",
+        "We provide personalized event management services to help you create memorable experiences, from corporate events to product launches.",
     },
     {
-      image: backgroundImage1, // Thay thế bằng đường dẫn hình ảnh sự kiện khác
-      title: "Tăng Doanh Số Bán Hàng",
-      subtitle: "Giải Pháp Kinh Doanh & Marketing",
+      image: backgroundImage1, // Replace with the path to another event image
+      title: "Boost Sales",
+      subtitle: "Business & Marketing Solutions",
       description:
-        "Tối ưu hóa sự thành công của sự kiện với các giải pháp bán hàng và tiếp thị tùy chỉnh, giúp tăng cường sự tương tác và doanh thu.",
+        "Optimize the success of your event with customized sales and marketing solutions to enhance engagement and revenue.",
     },
     {
-      image: backgroundImage11, // Thay thế bằng đường dẫn hình ảnh sự kiện khác
-      title: "Trải Nghiệm Trực Tuyến Mượt Mà",
-      subtitle: "Quản Lý Sự Kiện Đơn Giản",
+      image: backgroundImage11, // Replace with the path to another event image
+      title: "Seamless Online Experience",
+      subtitle: "Simple Event Management",
       description:
-        "Quản lý sự kiện của bạn dễ dàng với nền tảng trực tuyến của chúng tôi. Từ đặt vé đến lịch trình, chúng tôi cung cấp mọi công cụ cần thiết.",
+        "Easily manage your events with our online platform. From ticket booking to scheduling, we provide all the tools you need.",
     },
   ];
 
@@ -126,7 +126,7 @@ const HeroSection = () => {
               </HStack>
             </Box>
           </Box>
-        ))}{" "}
+        ))} 
       </Flex>
 
       {/* Navigation buttons */}

@@ -12,15 +12,23 @@ const Notification = ({ userId, onNewNotifications, onOpenNotifications }) => {
 
   const fetchNotifications = async () => {
     if (stopPolling) return; // Nếu dừng polling, thoát khỏi hàm
-
+  
     try {
       const response = await axios.get(
         `https://esmpbe.id.vn/api/notification/${userId}`
       );
-
+  
+      const sortedNotifications = response.data.sort((a, b) => {
+        // Thông báo chưa đọc ở trên cùng, sắp xếp theo thời gian giảm dần
+        if (!a.status && b.status) return -1;
+        if (a.status && !b.status) return 1;
+        return new Date(b.timestamp) - new Date(a.timestamp);
+      });
+  
+      setNotifications(sortedNotifications);
+  
       const unreadNotifications = response.data.filter((n) => !n.status);
-      setNotifications(response.data);
-
+  
       // Nếu có thông báo mới
       if (unreadNotifications.length > 0) {
         onNewNotifications(unreadNotifications.length);
@@ -28,11 +36,11 @@ const Notification = ({ userId, onNewNotifications, onOpenNotifications }) => {
       } else {
         setPollingInterval(120000); // Gọi chậm lại (2 phút) khi không có thông báo mới
       }
-
+  
       setLoading(false);
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
-
+  
       // Tăng thời gian polling khi có lỗi
       setPollingInterval(180000); // 3 phút nếu có lỗi
     } finally {
@@ -40,6 +48,7 @@ const Notification = ({ userId, onNewNotifications, onOpenNotifications }) => {
       setTimeout(fetchNotifications, pollingInterval);
     }
   };
+  
 
   useEffect(() => {
     if (userId) {

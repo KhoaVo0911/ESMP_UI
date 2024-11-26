@@ -14,14 +14,16 @@ import backgroundImage from "../../../assets/images/download.jfif";
 import HeroSection from "./HeroSection";
 import AboutUs from "./AboutUs";
 import EventGrid from "./EventGrid";
+import RegisterForm from "./RegisterForm"; // Import RegisterForm
 
 const LandingPage = () => {
   const [activeLink, setActiveLink] = useState("#about");
 
-  // Hàm để cập nhật link đang chọn
+  // Function to update the selected link
   const handleLinkClick = (link) => {
     setActiveLink(link);
   };
+
   return (
     <Box bg="#f5f1e0" color="brown" fontFamily="serif">
       {/* Header */}
@@ -29,58 +31,41 @@ const LandingPage = () => {
         bg="brown"
         color="white"
         p={4}
-        position="fixed" // Đảm bảo thanh điều hướng luôn cố định ở đầu trang
+        position="fixed" // Ensure the navigation bar stays fixed at the top
         top={0}
         left={0}
         right={0}
-        zIndex={1000} // Đảm bảo nó luôn nằm trên các thành phần khác
+        zIndex={1000} // Ensure it stays on top of other elements
         boxShadow="lg"
       >
         <Flex justifyContent="space-between" alignItems="center">
           <Heading fontSize="xl">EVENT SALES MANAGEMENT PLATFORM</Heading>
           <HStack spacing={8}>
-            {/* Link 'Về Chúng Tôi' */}
+            {/* 'About Us' Link */}
             <Link
               href="#about"
               onClick={() => handleLinkClick("#about")}
-              borderBottom={
-                activeLink === "#about" ? "2px solid orange" : "none"
-              } // Gạch chân nếu được chọn
+              borderBottom={activeLink === "#about" ? "2px solid orange" : "none"} // Underline if selected
             >
-              Về Chúng Tôi
+              About Us
             </Link>
 
-            {/* Link 'Hình ảnh' */}
+            {/* 'Images' Link */}
             <Link
               href="#image"
               onClick={() => handleLinkClick("#image")}
-              borderBottom={
-                activeLink === "#image" ? "2px solid orange" : "none"
-              } // Gạch chân nếu được chọn
+              borderBottom={activeLink === "#image" ? "2px solid orange" : "none"} // Underline if selected
             >
-              Hình ảnh
+              Images
             </Link>
 
-            {/* Link 'Liên Hệ' */}
-            {/* <Link
-              href="#contact"
-              onClick={() => handleLinkClick("#contact")}
-              borderBottom={
-                activeLink === "#contact" ? "2px solid orange" : "none"
-              } // Gạch chân nếu được chọn
-            >
-              Liên Hệ
-            </Link> */}
-
-            {/* Link 'Đăng Nhập' */}
+            {/* 'Login' Link */}
             <Link
               href="/login"
               onClick={() => handleLinkClick("/login")}
-              borderBottom={
-                activeLink === "/login" ? "2px solid orange" : "none"
-              } // Gạch chân nếu được chọn
+              borderBottom={activeLink === "/login" ? "2px solid orange" : "none"} // Underline if selected
             >
-              Đăng Nhập
+              Login
             </Link>
           </HStack>
         </Flex>
@@ -94,38 +79,46 @@ const LandingPage = () => {
 
       {/* Body - Event Images */}
       <Box id="image" p={8} bg="gray.200" textAlign="center">
-        <Heading fontSize="2xl">Hình Ảnh Sự Kiện</Heading>
+        <Heading fontSize="2xl">Event Images</Heading>
         <HStack spacing={8} justify="center" mt={8}>
           <VStack>
             <Image
               src="https://th.bing.com/th/id/OIP.1m9NOSWoXPKpgpL4e9VUTQAAAA?rs=1&pid=ImgDetMain"
               boxSize="200px"
             />
-            <Text>Món Ăn Hấp Dẫn</Text>
+            <Text>Delicious Food</Text>
           </VStack>
           <VStack>
             <Image
               src="https://www.wikidanang.com/tin-tuc/images/Wiki/nha-hang/truc-lam-vien-com-nieu/truc-lam-vien-8.jpg"
               boxSize="200px"
             />
-            <Text>Gian Hàng Đa Dạng</Text>
+            <Text>Diverse Stalls</Text>
           </VStack>
           <VStack>
             <Image
               src="https://static.salekit.com/image/shop/2/source/thanh-toan-qr-code-la-gi.jpg"
               boxSize="200px"
             />
-            <Text>Thanh Toán Nhanh Chóng</Text>
+            <Text>Fast Payment</Text>
           </VStack>
         </HStack>
       </Box>
 
+      {/* Body - Register Form */}
+      
+
       {/* Body - Fast Payment */}
       <EventGrid />
-
+      <Box p={8} bg="#f0f4ff" id="register">
+        <Heading as="h2" size="xl" textAlign="center" mb={8}>
+          Register Your Account
+        </Heading>
+        <RegisterForm /> {/* Add the RegisterForm component here */}
+      </Box>
       {/* Footer */}
       <Box bg="brown" color="white" p={4} textAlign="center">
-        <Text>© 2024 Event Sale Manager. Bản quyền thuộc về chúng tôi.</Text>
+        <Text>© 2024 Event Sale Manager. All rights reserved.</Text>
       </Box>
     </Box>
   );

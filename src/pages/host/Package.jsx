@@ -39,14 +39,14 @@ const CourseList = () => {
     // Lấy danh sách gói từ API
     const fetchPackages = async () => {
       try {
-        const accessToken = localStorage.getItem("accessToken"); // Lấy accessToken từ localStorage
+        const accessToken = sessionStorage.getItem("accessToken"); // Lấy accessToken từ localStorage
         if (!accessToken) {
           throw new Error("Access token không tồn tại");
         }
 
         const response = await axios.get(API_PACKAGE, {
           headers: {
-            Authorization: `Bearer ${accessToken}`, // Truyền accessToken vào header
+            Authorization: `${accessToken}`, // Truyền accessToken vào header
             "Content-Type": "application/json",
           },
         });

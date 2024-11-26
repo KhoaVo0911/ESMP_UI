@@ -18,13 +18,13 @@ const AboutUs = () => {
         direction={["column", "row"]}
         align="center"
       >
-        {/* Phần văn bản */}
+        {/* Text Section */}
         <VStack align="flex-start" spacing={6} w={["100%", "60%"]} px={6}>
           <Text fontSize="xl" fontWeight="bold" color="orange.500">
-            Về chúng tôi
+            About Us
           </Text>
           <Heading as="h2" size="xl" fontFamily="serif">
-            Chào mừng tới với ESMP
+            Welcome to ESMP
           </Heading>
           <Text fontSize="lg" color="gray.600">
             Lorem ipsum dolor sit amet elit, consectetur adipiscing, sed eiusmod
@@ -34,7 +34,7 @@ const AboutUs = () => {
             sed eiusmod tempor sit amet elit.
           </Text>
 
-          {/* Các khối thông tin */}
+          {/* Info Blocks */}
           <HStack spacing={6} mt={6} align="stretch">
             <VStack
               p={4}
@@ -42,14 +42,14 @@ const AboutUs = () => {
               shadow="md"
               borderRadius="md"
               align="center"
-              justify="center" // Đảm bảo căn giữa theo chiều dọc
+              justify="center" // Ensure vertical centering
               w="full"
-              minHeight="150px" // Đặt chiều cao tối thiểu để các khối đều nhau
+              minHeight="150px" // Set a minimum height for equal-sized blocks
               flex="1"
             >
               <FaPizzaSlice size="40px" color="orange" />
               <Text fontWeight="bold" fontSize="20" textAlign="center">
-                Đánh giá chuẩn
+                Standard Ratings
               </Text>
             </VStack>
             <VStack
@@ -58,14 +58,14 @@ const AboutUs = () => {
               shadow="md"
               borderRadius="md"
               align="center"
-              justify="center" // Đảm bảo căn giữa theo chiều dọc
+              justify="center" // Ensure vertical centering
               w="full"
-              minHeight="150px" // Đặt chiều cao tối thiểu để các khối đều nhau
+              minHeight="150px" // Set a minimum height for equal-sized blocks
               flex="1"
             >
               <FaHamburger size="50px" color="orange" />
               <Text fontWeight="bold" fontSize="20" textAlign="center">
-                Đồ ăn ngon
+                Delicious Food
               </Text>
             </VStack>
             <VStack
@@ -74,23 +74,23 @@ const AboutUs = () => {
               shadow="md"
               borderRadius="md"
               align="center"
-              justify="center" // Đảm bảo căn giữa theo chiều dọc
+              justify="center" // Ensure vertical centering
               w="full"
-              minHeight="150px" // Đặt chiều cao tối thiểu để các khối đều nhau
+              minHeight="150px" // Set a minimum height for equal-sized blocks
               flex="1"
             >
               <FaHeadset size="50px" color="orange" />
               <Text fontWeight="bold" fontSize="20" textAlign="center">
-                Liên tục hỗ trợ
+                Continuous Support
               </Text>
             </VStack>
           </HStack>
         </VStack>
 
-        {/* Phần hình ảnh */}
+        {/* Image Section */}
         <Box w={["120%", "45%"]} mt={[8, 0]} px={6}>
           <Image
-            src="https://mir-s3-cdn-cf.behance.net/project_modules/1400/fefe8899722199.5ef9694612dcc.jpg" // Thay bằng đường dẫn thực tế
+            src="https://mir-s3-cdn-cf.behance.net/project_modules/1400/fefe8899722199.5ef9694612dcc.jpg" // Replace with actual image path
             borderRadius="md"
             shadow="lg"
             alt="Delivery Man"
