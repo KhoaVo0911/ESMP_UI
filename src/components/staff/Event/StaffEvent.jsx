@@ -1,18 +1,17 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Row, Col } from "antd";
+import { Card, Row, Col, Spin, Empty } from "antd";
 import axios from "axios";
 import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
 
-const API_EVENTS =
-  "https://esmpbe.id.vn/api/event";
-const API_VENDOR_IN_EVENT =
-  "https://esmpbe.id.vn/api/vendorinevent";
+const API_EVENTS = "https://esmpbe.id.vn/api/event";
+const API_VENDOR_IN_EVENT = "https://esmpbe.id.vn/api/vendorinevent";
 
 const EventStaff = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const navigate = useNavigate();
   const accessToken = sessionStorage.getItem("accessToken") || "";
@@ -22,6 +21,7 @@ const EventStaff = () => {
   // Fetch events and check vendor participation
   const fetchEvents = useCallback(async () => {
     setLoading(true);
+    setError(null);
 
     try {
       // Fetch events for the host
@@ -30,42 +30,46 @@ const EventStaff = () => {
       });
       const allEvents = response.data;
 
-      // Check vendor participation and fetch images
+      // Filter events to only include those with `onWeb: true`
       const eventsWithImages = await Promise.all(
-        allEvents.map(async (event) => {
-          try {
-            const checkUrl = `${API_VENDOR_IN_EVENT}/${vendorId}/${event.eventId}`;
-            const checkResponse = await axios.get(checkUrl, {
-              headers: { Authorization: accessToken },
-            });
+        allEvents
+          .filter(event => event.onWeb) // Filter events with onWeb: true
+          .map(async (event) => {
+            try {
+              const checkUrl = `${API_VENDOR_IN_EVENT}/${vendorId}/${event.eventId}`;
+              const checkResponse = await axios.get(checkUrl, {
+                headers: { Authorization: accessToken },
+              });
 
-            if (checkResponse.data.status === "accept") {
-              // Fetch image from Firebase
-              const imagesRef = ref(storage, `${hostId}/${event.eventId}`);
-              try {
-                const imagesList = await listAll(imagesRef);
-                if (imagesList.items.length > 0) {
-                  const mainImageRef = imagesList.items[0]; // Lấy hình ảnh đầu tiên
-                  event.logo = await getDownloadURL(mainImageRef);
-                } else {
+              if (checkResponse.data.status === "accept") {
+                // Fetch image from Firebase
+                const imagesRef = ref(storage, `${hostId}/${event.eventId}`);
+                try {
+                  const imagesList = await listAll(imagesRef);
+                  if (imagesList.items.length > 0) {
+                    const mainImageRef = imagesList.items[0]; // Lấy hình ảnh đầu tiên
+                    event.logo = await getDownloadURL(mainImageRef);
+                  } else {
+                    event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu không có ảnh
+                  }
+                } catch {
                   event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu không có ảnh
                 }
-              } catch {
-                event.logo = "https://via.placeholder.com/150"; // URL mặc định nếu không có ảnh
+                return event; // Return valid event if vendor has accepted the event
               }
-              return event; // Return valid event
+              return null; // Exclude events where vendor has not accepted
+            } catch (error) {
+              console.error("Error checking vendor status:", error);
+              return null; // Exclude events on error
             }
-            return null; // Exclude events not accepted
-          } catch {
-            return null; // Exclude events on error
-          }
-        })
+          })
       );
 
       const validEvents = eventsWithImages.filter((event) => event !== null);
-      setEvents(validEvents);
+      setEvents(validEvents); // Set valid events
     } catch (error) {
       console.error("Error fetching events:", error);
+      setError("Failed to load events. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -87,7 +91,11 @@ const EventStaff = () => {
         Your Events
       </h1>
       {loading ? (
-        <div style={{ textAlign: "center", padding: "20px" }}>Loading events...</div>
+        <Spin size="large" style={{ display: "block", margin: "auto", padding: "20px" }} />
+      ) : error ? (
+        <Empty description={error} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+      ) : events.length === 0 ? (
+        <Empty description="No events found for your vendor." image={Empty.PRESENTED_IMAGE_SIMPLE} />
       ) : (
         <Row gutter={[40, 20]}>
           {events.map((event) => (

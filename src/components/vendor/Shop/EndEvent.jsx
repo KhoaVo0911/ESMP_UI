@@ -12,6 +12,7 @@ const EndEvent = ({
 }) => {
   const [vendorInEventId, setVendorInEventId] = useState(null); // ID của vendor in event
   const [eventStatus, setEventStatus] = useState(null); // Trạng thái của event
+  const [vendorInEventStatus, setVendorInEventStatus] = useState(null); // Trạng thái của vendor in event
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false); // Xử lý trạng thái bấm nút
   const toast = useToast();
@@ -64,6 +65,21 @@ const EndEvent = ({
 
         if (vendorResponse.data && vendorResponse.data.vendorinEventId) {
           setVendorInEventId(vendorResponse.data.vendorinEventId);
+          
+          // Kiểm tra trạng thái vendorInEvent và cập nhật
+          const vendorStatus = vendorResponse.data.status;
+          setVendorInEventStatus(vendorStatus);
+
+          // if (eventStatus !== "finished" && vendorStatus !== "active") {            toast({
+          //     title: "Error",
+          //     description: `Vendor status is not active. Current status: ${vendorStatus}`,
+          //     status: "error",
+          //     duration: 3000,
+          //     isClosable: true,
+          //   });
+          //   setLoading(false); // Dừng tải dữ liệu nếu trạng thái không hợp lệ
+          //   return;
+          // }
         } else {
           toast({
             title: "Error",
@@ -180,17 +196,24 @@ const EndEvent = ({
   // Chỉ hiển thị nút nếu trạng thái sự kiện là "finished"
   return (
     <Box>
-      {eventStatus === "finished" ? (
-        <Button
-          colorScheme="green"
-          onClick={handleEndEventClick}
-          isLoading={actionLoading} // Hiển thị spinner khi đang xử lý
-          disabled={actionLoading}
-        >
-          End Event
-        </Button>
-      ) : null}
-    </Box>
+    {eventStatus === "finished" ? (
+      <Button
+        colorScheme="green"
+        onClick={(e) => {
+          if (vendorInEventStatus !== "finished" && !actionLoading) {
+            handleEndEventClick(e); // Chỉ gọi handleEndEventClick khi nút không bị vô hiệu hóa
+          }
+        }}
+        isLoading={actionLoading} // Hiển thị spinner khi đang xử lý
+        disabled={vendorInEventStatus === "finished" || actionLoading} // Vô hiệu hóa nút nếu trạng thái là "finished" hoặc đang xử lý
+        cursor={vendorInEventStatus === "finished" || actionLoading ? "not-allowed" : "pointer"} // Đổi con trỏ thành "not-allowed" khi nút bị vô hiệu hóa
+      >
+        End Event
+      </Button>
+    ) : null}
+  </Box>
+  
+  
   );
 };
 

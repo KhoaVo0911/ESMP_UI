@@ -46,7 +46,7 @@ const StaffShop = () => {
       );
       setProductItems(response.data);
     } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu sản phẩm", error);
+      console.error("Error fetching product items", error);
     }
   };
 
@@ -63,7 +63,7 @@ const StaffShop = () => {
       );
       setProducts(response.data);
     } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu sản phẩm", error);
+      console.error("Error fetching products", error);
     }
   };
 
@@ -96,7 +96,7 @@ const StaffShop = () => {
         });
       setAllProducts(enrichedProductItems);
     } catch (error) {
-      console.error("Lỗi khi lấy menu sản phẩm", error);
+      console.error("Error fetching menu items", error);
     }
   };
 
@@ -145,14 +145,14 @@ const StaffShop = () => {
   return (
     <Box p={5} bgGradient="linear(to-r, blue.100, pink.100)" minH="100vh" textAlign="center">
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={5}>
-        <Text fontSize="3xl" fontWeight="bold">Danh Sách Sản Phẩm</Text>
+        <Text fontSize="3xl" fontWeight="bold">Product List</Text>
 
         <Box display="flex" alignItems="center">
-          <Button mr={4} colorScheme="blue" onClick={handleGoToOrderedList}>Lịch sử đơn hàng</Button>
+          <Button mr={4} colorScheme="blue" onClick={handleGoToOrderedList}>Order History</Button>
           <IconButton
             icon={<ShoppingCartIcon />}
             onClick={onOpenCartWithSessionData}
-            aria-label="Xem giỏ hàng"
+            aria-label="View Cart"
           />
         </Box>
       </Box>
@@ -166,13 +166,13 @@ const StaffShop = () => {
           </SimpleGrid>
         </Box>
       ) : (
-        <Text>Không có sản phẩm nào để hiển thị</Text>
+        <Text>No products available</Text>
       )}
 
       <Drawer isOpen={isCartOpen} placement="right" onClose={onCloseCart}>
-        <DrawerOverlay>
+      <DrawerOverlay>
           <DrawerContent maxWidth="700px">
-            <DrawerHeader>Giỏ Hàng</DrawerHeader>
+            <DrawerHeader>Cart</DrawerHeader>
             <DrawerBody>
               <Cart
                 cartItems={cart}
@@ -189,11 +189,10 @@ const StaffShop = () => {
               />
             </DrawerBody>
             <DrawerFooter>
-              <Button colorScheme="teal" onClick={onCloseCart}>Đóng Giỏ Hàng</Button>
+              <Button colorScheme="teal" onClick={onCloseCart}>Close Cart</Button>
             </DrawerFooter>
           </DrawerContent>
-        </DrawerOverlay>
-      </Drawer>
+        </DrawerOverlay>      </Drawer>
     </Box>
   );
 };

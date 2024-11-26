@@ -155,13 +155,24 @@ const CourseList = () => {
   };
 
   return (
-    <VStack spacing={8} align="center" padding={4} bg="#f5f5dc" minH="100vh">
+    <Box p={4}>
+    {/* Header Section */}
+   
+    <VStack spacing={8} align="center" padding={4} bg="white" minH="90vh">
+    <Box mb={6}>
+      <Heading as="h1" size="xl" textAlign="center">
+      List of Service Packages      </Heading>
+      <Text fontSize="lg" textAlign="center" color="gray.500">
+      Select the plan you want to pay for      </Text>
+    </Box>
       <Flex wrap="wrap" justify="center" gap={6}>
         {packages.map((item) => (
           <Box
             key={item.id}
             position="relative"
-            maxW="280px"
+            maxW="400px"
+            width="250px"
+            height="250px"
             textAlign="center"
             bg="white"
             borderRadius="lg"
@@ -171,9 +182,15 @@ const CourseList = () => {
             transition="0.3s ease-in-out"
             border="1px solid #d4af37"
           >
-            <Heading size="md" color="#6b4226" mb={2}>
+            <Heading size="xl" color="#6b4226" mb={2}>
               {item.name}
             </Heading>
+            <Text fontSize="lg" fontWeight="bold" color="#8b4513" mb={4}>
+              {item.description}
+            </Text>
+            <Text fontSize="lg"  color="#8b4513" mb={4}>
+            This package is valid for {item.eventstoragetime}
+            </Text>
             <Text fontSize="lg" fontWeight="bold" color="#8b4513" mb={4}>
               {parseInt(item.price).toLocaleString()} VND
             </Text>
@@ -247,6 +264,7 @@ const CourseList = () => {
         </ModalContent>
       </Modal>
     </VStack>
+    </Box>
   );
 };
 

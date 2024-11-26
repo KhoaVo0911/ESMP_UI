@@ -70,8 +70,8 @@ const RegisterForm = () => {
   };
 
   return (
-    <Box maxW="500px" mx="auto" p={6} bg="white" borderRadius="md" boxShadow="lg">
-      <Heading as="h2" size="xl" textAlign="center" mb={6}>
+    <Box maxW="500px" mx="auto" p={6} bg="white" borderRadius="md" color="#003366" boxShadow="lg">
+      <Heading as="h2" size="xl" textAlign="center" color="#003366" mb={6}>
         Register Account
       </Heading>
       <form onSubmit={handleSubmit}>

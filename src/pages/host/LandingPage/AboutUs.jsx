@@ -11,7 +11,7 @@ import { FaPizzaSlice, FaHamburger, FaHeadset } from "react-icons/fa";
 
 const AboutUs = () => {
   return (
-    <Box id="about" bg="#f0f4ff" py={12}>
+    <Box id="about" color="#003366" bg="#f0f4ff" py={12}>
       <Flex
         maxW="1200px"
         mx="auto"
@@ -27,11 +27,9 @@ const AboutUs = () => {
             Welcome to ESMP
           </Heading>
           <Text fontSize="lg" color="gray.600">
-            Lorem ipsum dolor sit amet elit, consectetur adipiscing, sed eiusmod
-            tempor sit amet elit dolor sit amet elit. Lorem ipsum dolor sit amet
-            elit, consectetur adipiscing, sed eiusmod tempor sit amet elit sit
-            amet elit. Lorem ipsum dolor sit amet elit, consectetur adipiscing,
-            sed eiusmod tempor sit amet elit.
+          At ESMP, we’re dedicated to building the software that powers your business, helping you focus on what truly matters. We’ve been committed to creating comprehensive, cloud-based tools that streamline operations, foster collaboration, and enhance productivity for organizations of all sizes.
+
+With apps for sales, marketing, and accounting. We deliver a unified platform to meet your business needs. Whether you’re a startup or an enterprise, our solutions are tailored to drive growth and innovation.
           </Text>
 
           {/* Info Blocks */}

@@ -108,7 +108,7 @@ const HeroSection = () => {
                   left="5%"
                   top="50%"
                   transform="translateY(-50%)"
-                  colorScheme="orange"
+                  colorScheme="#003366"
                   variant="solid"
                   onClick={prevSlide}
                 />
@@ -119,7 +119,7 @@ const HeroSection = () => {
                   right="5%"
                   top="50%"
                   transform="translateY(-50%)"
-                  colorScheme="orange"
+                  colorScheme="#003366"
                   variant="solid"
                   onClick={nextSlide}
                 />
