@@ -25,10 +25,10 @@ const LandingPage = () => {
   };
 
   return (
-    <Box bg="#f5f1e0" color="brown" fontFamily="serif">
+    <Box bg="#003366" color="white" fontFamily="serif">
       {/* Header */}
       <Box
-        bg="brown"
+        bg="#001f33"
         color="white"
         p={4}
         position="fixed" // Ensure the navigation bar stays fixed at the top
@@ -78,46 +78,44 @@ const LandingPage = () => {
       <AboutUs id="about" />
 
       {/* Body - Event Images */}
-      <Box id="image" p={8} bg="gray.200" textAlign="center">
-        <Heading fontSize="2xl">Event Images</Heading>
+      <Box id="image" p={8} bg="#004080" textAlign="center">
+        <Heading fontSize="2xl" color="white">Event Images</Heading>
         <HStack spacing={8} justify="center" mt={8}>
           <VStack>
             <Image
               src="https://th.bing.com/th/id/OIP.1m9NOSWoXPKpgpL4e9VUTQAAAA?rs=1&pid=ImgDetMain"
               boxSize="200px"
             />
-            <Text>Delicious Food</Text>
+            <Text color="white">Delicious Food</Text>
           </VStack>
           <VStack>
             <Image
               src="https://www.wikidanang.com/tin-tuc/images/Wiki/nha-hang/truc-lam-vien-com-nieu/truc-lam-vien-8.jpg"
               boxSize="200px"
             />
-            <Text>Diverse Stalls</Text>
+            <Text color="white">Diverse Stalls</Text>
           </VStack>
           <VStack>
             <Image
               src="https://static.salekit.com/image/shop/2/source/thanh-toan-qr-code-la-gi.jpg"
               boxSize="200px"
             />
-            <Text>Fast Payment</Text>
+            <Text color="white">Fast Payment</Text>
           </VStack>
         </HStack>
       </Box>
 
       {/* Body - Register Form */}
-      
-
-      {/* Body - Fast Payment */}
       <EventGrid />
-      <Box p={8} bg="#f0f4ff" id="register">
-        <Heading as="h2" size="xl" textAlign="center" mb={8}>
+      <Box p={8} bg="white" id="register">
+        <Heading as="h2" size="xl" textAlign="center" mb={8} color="#003366">
           Register Your Account
         </Heading>
         <RegisterForm /> {/* Add the RegisterForm component here */}
       </Box>
+
       {/* Footer */}
-      <Box bg="brown" color="white" p={4} textAlign="center">
+      <Box bg="#001f33" color="white" p={4} textAlign="center">
         <Text>© 2024 Event Sale Manager. All rights reserved.</Text>
       </Box>
     </Box>
