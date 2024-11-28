@@ -5,8 +5,9 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import EventIcon from "@mui/icons-material/Event";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import FastfoodIcon from "@mui/icons-material/Fastfood";
-import PaidIcon from "@mui/icons-material/Paid";
-import logo from "../../../assets/images/logo_EIPS.png";
+import PeopleIcon from "@mui/icons-material/People";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import logo from "../../../assets/images/logo_EIPS.png"; // Path to your logo
 
 const { Sider } = Layout;
 
@@ -15,9 +16,8 @@ const VendorSideBar = ({ collapsed }) => {
   const location = useLocation();
   const [selectedMenuItem, setSelectedMenuItem] = useState("1");
 
-  // Kiểm tra nếu location.state tồn tại, nếu không thì đặt giá trị mặc định
-  const accessToken = location.state?.accessToken || ""; // Nếu không có state thì dùng chuỗi rỗng
-  const vendorId = location.state?.vendorId || ""; // Nếu không có state thì dùng chuỗi rỗng
+  const accessToken = location.state?.accessToken || "";
+  const vendorId = location.state?.vendorId || "";
 
   useEffect(() => {
     if (location.pathname.startsWith("/dashboardVendor")) {
@@ -30,6 +30,8 @@ const VendorSideBar = ({ collapsed }) => {
       setSelectedMenuItem("4");
     } else if (location.pathname.startsWith("/staff-account-manager")) {
       setSelectedMenuItem("5");
+    } else if (location.pathname.startsWith("/ListEventEnrolled")) {
+      setSelectedMenuItem("6");
     }
   }, [location.pathname]);
 
@@ -51,9 +53,7 @@ const VendorSideBar = ({ collapsed }) => {
         {
           key: "3",
           icon: <FastfoodIcon />,
-          label: (
-            <span style={{ fontWeight: "bold" }}>Manage Product Items</span>
-          ),
+          label: <span style={{ fontWeight: "bold" }}>Manage Product Items</span>,
         },
         {
           key: "4",
@@ -62,10 +62,13 @@ const VendorSideBar = ({ collapsed }) => {
         },
         {
           key: "5",
-          icon: <EventIcon />,
-          label: (
-            <span style={{ fontWeight: "bold" }}>Manage Staff Account </span>
-          ),
+          icon: <PeopleIcon />,
+          label: <span style={{ fontWeight: "bold" }}>Manage Staff Account</span>,
+        },
+        {
+          key: "6",
+          icon: <CheckCircleIcon />,
+          label: <span style={{ fontWeight: "bold" }}>List Event Enrolled</span>,
         },
       ],
     },
@@ -87,9 +90,10 @@ const VendorSideBar = ({ collapsed }) => {
         navigate("/eventsVendor", { state: { accessToken, vendorId } });
         break;
       case "5":
-        navigate("/staff-account-manager", {
-          state: { accessToken, vendorId },
-        });
+        navigate("/staff-account-manager", { state: { accessToken, vendorId } });
+        break;
+      case "6":
+        navigate("/ListEventEnrolled", { state: { accessToken, vendorId } });
         break;
       default:
         navigate("/dashboardVendor", { state: { accessToken, vendorId } });

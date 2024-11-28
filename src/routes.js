@@ -47,6 +47,9 @@ import ExtensionEvent from "./pages/host/ExtensionEvent.jsx";
 import BoothPlanView from "./pages/host/BoothPlanView.jsx";
 import SelectBoothPage from "./components/vendor/EventDetail/SelectBooth.jsx";
 import StaffAccountManager from "./components/vendor/StaffAccount/ManageStaffAccount.jsx";
+import HostPackageInfo from "./pages/host/HostPackageInfo.jsx";
+import PackageTransactionHistory from "./pages/host/PackageHistoryTransaction.jsx";
+import ListEventEnrolled from "./components/vendor/ListEventEnrolled.jsx";
 
 const AppRoutes = () => {
   return (
@@ -70,6 +73,14 @@ const AppRoutes = () => {
         element={
           <VendorLayout>
             <BoothPlanView />
+          </VendorLayout>
+        }
+      />
+      <Route
+        path="/listEventEnrolled"
+        element={
+          <VendorLayout>
+            <ListEventEnrolled />
           </VendorLayout>
         }
       />
@@ -248,6 +259,7 @@ const AppRoutes = () => {
           </AdminLayout>
         }
       />
+       <Route path="/host-package-info" component={HostPackageInfo} />
       <Route
         path="/ordered-list"
         element={
@@ -271,7 +283,14 @@ const AppRoutes = () => {
             <Transaction />
           </HostLayout>
         }
-      />
+      /><Route
+      path="/package-trans"
+      element={
+        <HostLayout>
+          <PackageTransactionHistory/>
+        </HostLayout>
+      }
+    />
       <Route
         path="/manage-product"
         element={

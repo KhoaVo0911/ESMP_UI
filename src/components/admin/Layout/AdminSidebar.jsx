@@ -2,81 +2,63 @@ import React, { useEffect, useState } from "react";
 import { Layout, Menu } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import EventIcon from "@mui/icons-material/Event";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
-import FastfoodIcon from "@mui/icons-material/Fastfood";
-import PaidIcon from "@mui/icons-material/Paid";
 import logo from "../../../assets/images/logo_EIPS.png";
+import BackpackIcon from '@mui/icons-material/Backpack';
+import AdminAccountManagement from "../AccountManagement";
+import TransactionDetails from "../TransHistory";
+import PackageAdmin from "../PackageAdmin";
 
 const { Sider } = Layout;
 
 const AdminSideBar = ({ collapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedMenuItem, setSelectedMenuItem] = useState("1");
+  const [selectedMenuItem, setSelectedMenuItem] = useState("");
 
-  // Update selectedMenuItem based on current URL
   useEffect(() => {
-    if (location.pathname.startsWith("/admin")) {
-      setSelectedMenuItem("1");
-    } else if (location.pathname.startsWith("/adtransaction")) {
-      setSelectedMenuItem("2");
-    } else if (location.pathname.startsWith("/ManageProductItems")) {
-      setSelectedMenuItem("3");
-    } else if (location.pathname.startsWith("/eventsVendor")) {
-      setSelectedMenuItem("4");
-    } else if (location.pathname.startsWith("/transaction")) {
-      setSelectedMenuItem("5");
-    }
-  }, [location.pathname]);
+    const pathToKeyMap = {
+      "/admin": "1",
+      "/adtransaction": "2",
+      "/admin-package": "3", // Ensure this path exactly matches the route
+    };
 
-  const defaultItems = [
+    const selectedKey = Object.keys(pathToKeyMap).find((path) =>
+      location.pathname.startsWith(path)
+    );
+    const currentSelectedMenu = pathToKeyMap[selectedKey] || "1";
+    if (selectedMenuItem !== currentSelectedMenu) {
+      setSelectedMenuItem(currentSelectedMenu);
+    }
+  }, [location.pathname, selectedMenuItem]);
+
+  const menuItems = [
     {
-      type: "group",
-      label: <h3 style={{ fontWeight: "bold", color: "#A0AEC0" }}>MENU</h3>, // Adjusting group title style
-      children: [
-        {
-          key: "1",
-          icon: <DashboardIcon />,
-          label: <span style={{ fontWeight: "bold" }}>Admin</span>,
-        },
-        {
-          key: "2",
-          icon: <FormatListBulletedIcon />,
-          label: (
-            <span style={{ fontWeight: "bold" }}>Transaction History</span>
-          ),
-        },
-        {
-          key: "3",
-          icon: <FormatListBulletedIcon />,
-          label: <span style={{ fontWeight: "bold" }}>Package</span>,
-        },
-      ],
+      key: "1",
+      icon: <DashboardIcon />,
+      label: "Host Accounts List",
+    },
+    {
+      key: "2",
+      icon: <FormatListBulletedIcon />,
+      label: "Transaction History",
+    },
+    {
+      key: "3",
+      icon: <BackpackIcon />,
+      label: "Package Management",
     },
   ];
 
   const handleMenuClick = (e) => {
+    const keyToPathMap = {
+      "1": "/admin",
+      "2": "/adtransaction",
+      "3": "/admin-package",  // Ensure this is exactly the route
+    };
+
     setSelectedMenuItem(e.key);
-    switch (e.key) {
-      case "1":
-        navigate("/admin");
-        break;
-      case "2":
-        navigate("/adtransaction");
-        break;
-      case "3":
-        navigate("/admin-package");
-        break;
-      case "4":
-        navigate("/eventsVendor");
-        break;
-      case "5":
-        navigate("/Transaction");
-        break;
-      default:
-        navigate("/dashboardVendor");
-    }
+    navigate(keyToPathMap[e.key]);
   };
 
   return (
@@ -93,9 +75,10 @@ const AdminSideBar = ({ collapsed }) => {
           top: 0,
           boxShadow: "2px 0 12px rgba(0, 0, 0, 0.1)",
           overflow: "auto",
+    fontWeight: "bold"
         }}
-        width={250} // Adjusted the width for more space
-        collapsedWidth={80} // Adjusted collapsed width
+        width={250}
+        collapsedWidth={80}
       >
         <img
           src={logo}
@@ -111,22 +94,23 @@ const AdminSideBar = ({ collapsed }) => {
           style={{
             backgroundColor: "#F7FAFC",
             color: "#4A5568",
-            fontSize: "16px", // Increased font size
+            fontSize: "16px",
+            fontFamily:"bold"
           }}
           mode="inline"
           selectedKeys={[selectedMenuItem]}
           onClick={handleMenuClick}
-          items={defaultItems}
+          items={menuItems}
         />
       </Sider>
       <div
         style={{
-          marginLeft: collapsed ? "80px" : "250px", // Adjusted margin based on the width of the Sider
+          marginLeft: collapsed ? "80px" : "250px",
           transition: "margin-left 0.3s ease",
           padding: "12px",
         }}
       >
-        {/* Content will be displayed here */}
+        {/* Content rendering will occur here */}
       </div>
     </>
   );
