@@ -21,6 +21,7 @@ import {
   ModalFooter,
   Input,
   Tooltip,
+  useToast,
 } from "@chakra-ui/react";
 import ProductCard from "./ProductCard";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -49,8 +50,11 @@ const Shop = () => {
   const [productItems, setProductItems] = useState([]);
   const [products, setProducts] = useState([]);
   const [menuName, setMenuName] = useState("");
+  const [productItem, setProductItem] = useState([]);
   const [vendorInEventStatus, setVendorInEventStatus] = useState(null);
   const [showCreateMenuModal, setShowCreateMenuModal] = useState(false);
+  const toast = useToast(); // Toast instance for notifications
+
 
   const {
     isOpen: isCartOpen,
@@ -218,7 +222,7 @@ const Shop = () => {
     try {
       await axios.post(
         `https://esmpbe.id.vn/api/menu/${vendorId}/${eventId}`,
-        { menuName },
+        { menuName, productItem },
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -226,10 +230,24 @@ const Shop = () => {
           },
         }
       );
-      setShowCreateMenuModal(false);
-      fetchMenuItems();
+      setShowCreateMenuModal(false); // Close modal after success
+      toast({
+        title: "Menu Created!",
+        description: "Your new menu has been created successfully.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+      fetchMenuItems(); // Fetch updated menu items
     } catch (error) {
       console.error("Error creating new menu", error);
+      toast({
+        title: "Error",
+        description: "There was an issue creating the menu. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
 
