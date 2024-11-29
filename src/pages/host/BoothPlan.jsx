@@ -685,8 +685,12 @@ const BoothPlan = () => {
   const handleAddBooth = (newBoothDetails) => {
     // Lấy typeId từ locationTypes hoặc đặt giá trị mặc định
     const defaultTypeId =
-      locationTypes.length > 0 ? locationTypes[0].typeId : "defaultTypeId";
+      locationTypes.length > 0 ? locationTypes[0].typeId : null; // Không nên sử dụng 'defaultTypeId' nếu không có booth nào
 
+    if (!defaultTypeId) {
+      console.error("No available booth types in locationTypes.");
+      return; // Nếu không có loại booth, không thêm booth mới
+    }
     const newBooth = {
       ...newBoothDetails,
       location: uuidv4(),
