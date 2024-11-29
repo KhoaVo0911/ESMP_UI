@@ -372,6 +372,7 @@ const BoothPlan = () => {
 
   const handleSave = async () => {
     try {
+      console.log(textElements, "papapa");
       const payload = {
         booths: booths.map((booth) => {
           // Log toàn bộ booth trước khi chuyển đổi
@@ -428,6 +429,11 @@ const BoothPlan = () => {
           return shape.location; // Trả về locationId để xóa
         }
       });
+      const deletetextIds = textElements.map((text) => {
+        // Log toàn bộ text trước khi chuyển đổi
+        console.log("text Data:", text);
+        return text.location; // Trả về locationId để xóa
+      });
       // Thực hiện xóa từng locationId
       for (const locationId of deleteboothIds) {
         if (locationId) {
@@ -443,6 +449,15 @@ const BoothPlan = () => {
           console.log(`Deleted location map for locationId: ${locationId}`);
         } else {
           console.log("No locationId found for this shape.");
+        }
+      }
+      for (const locationId of deletetextIds) {
+        console.log(locationId, "656");
+        if (locationId) {
+          await deleteLocationMap(locationId);
+          console.log(`Deleted location text for locationId: ${locationId}`);
+        } else {
+          console.log("No locationId found for this text.");
         }
       }
       // Gửi dữ liệu lên server
@@ -639,6 +654,7 @@ const BoothPlan = () => {
           : text
       )
     );
+
     console.log("Adding to Modified Elements:", updatedText);
     addModifiedElement(updatedText);
   };
@@ -880,7 +896,7 @@ const BoothPlan = () => {
     // )),
     ...textElements.map((text) => (
       <Rnd
-        key={text.locationId}
+        key={text.location?.locationId}
         size={{ width: text.width, height: text.height }}
         position={{ x: text.x || 0, y: text.y || 0 }}
         onDragStop={(e, d) => {
