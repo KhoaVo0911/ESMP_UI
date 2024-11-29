@@ -47,6 +47,10 @@ const HostSideBar = ({ collapsed }) => {
       location.pathname.startsWith(`/event/${eventId}/location-type`)
     ) {
       setSelectedMenuItem("11");
+    }else if (
+      location.pathname.startsWith(`/package-trans`)
+    ) {
+      setSelectedMenuItem("12");
     }
   }, [location.pathname]);
 
@@ -208,6 +212,17 @@ const HostSideBar = ({ collapsed }) => {
             </span>
           ),
           onClick: () => navigate("/packages"),
+        },{
+          key: "12",
+          icon: <MonetizationOnIcon />,
+          label: (
+            <span
+              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
+            >
+              Package Transaction History
+            </span>
+          ),
+          onClick: () => navigate("/package-trans"),
         },
       ],
     },
@@ -275,6 +290,9 @@ const HostSideBar = ({ collapsed }) => {
                 break;
               case "11":
                 navigate(`/event/${eventId}/location-type`);
+                break;
+                case "12":
+                navigate(`/package-trans`);
                 break;
               case "categories":
                 navigate(`/eventconfig`);

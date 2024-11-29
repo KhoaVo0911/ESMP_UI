@@ -125,12 +125,14 @@ import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../../shared/firebase/firebaseConfig";
 import { Text } from "@chakra-ui/react";
 import "./CalendarChart.css"; // File CSS cho lịch
+import { Spinner, Text, VStack } from "@chakra-ui/react";
 
 const BASE_URL = "https://esmpbe.id.vn/api/event";
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const fetchEventImage = async (hostId, eventId) => {
   const imagesRef = ref(storage, `${hostId}/${eventId}`);
+
   try {
     const imagesList = await listAll(imagesRef);
     if (imagesList.items.length > 0) {
@@ -149,6 +151,7 @@ const fetchEventImage = async (hostId, eventId) => {
 const CalendarChart = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const hostId =
     location.state?.hostId || sessionStorage.getItem("hostId") || "";
   const [events, setEvents] = useState([]);
@@ -157,6 +160,7 @@ const CalendarChart = () => {
     const fetchEvents = async () => {
       if (!hostId) {
         console.error("Host ID is missing!");
+        setLoading(false); // Make sure to stop loading if hostId is missing
         return;
       }
 
@@ -182,8 +186,10 @@ const CalendarChart = () => {
         );
 
         setEvents(fetchedEvents);
+        setLoading(false); // Set loading to false once events are fetched
       } catch (error) {
         console.error("Error fetching events:", error);
+        setLoading(false); // Make sure to stop loading on error
       }
     };
 
@@ -196,6 +202,15 @@ const CalendarChart = () => {
     sessionStorage.setItem("selectedEvent", JSON.stringify(event));
     navigate(`/event-detail/${event.eventId}`, { state: { event } });
   };
+  if (loading) {
+    return (
+      <VStack spacing={4} align="center" p={6}>
+        <Spinner size="xl" color="blue.500" />
+        <Text>Loading...</Text>
+      </VStack>
+    );
+  }
+
   return (
     <div className="calendar-container">
       <Text

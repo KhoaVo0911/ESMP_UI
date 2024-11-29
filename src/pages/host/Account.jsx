@@ -25,6 +25,7 @@ import {
   useDisclosure,
   Tooltip,
   Button,
+  Spinner,
 } from "@chakra-ui/react";
 import {
   AddIcon,
@@ -46,6 +47,7 @@ const AccountManagement = () => {
     onOpen: onOpenDetail,
     onClose: onCloseDetail,
   } = useDisclosure();
+  
   const [accounts, setAccounts] = useState([]);
   const [formData, setFormData] = useState({
     username: "",
@@ -57,14 +59,21 @@ const AccountManagement = () => {
     urlQr: "",
     status: true,
   });
+  
   const [isEditing, setIsEditing] = useState(false);
   const [editVendorId, setEditVendorId] = useState(null);
   const [selectedAccount, setSelectedAccount] = useState(null);
-
+  
+  const [loading, setLoading] = useState(false); // For loading vendors
+  const [formSubmitting, setFormSubmitting] = useState(false); // For form submission
+  const [deleting, setDeleting] = useState(false); // For deleting accounts
+  const [sendingEmail, setSendingEmail] = useState(false); // For sending email
+  
   const hostId = sessionStorage.getItem("hostId") || "";
   const accessToken = sessionStorage.getItem("accessToken") || "";
 
   const fetchVendors = async () => {
+    setLoading(true); // Show loading spinner
     try {
       const response = await axios.get(`${API_GET_VENDORS}/${hostId}`, {
         headers: {
@@ -75,6 +84,8 @@ const AccountManagement = () => {
       setAccounts(response.data);
     } catch (error) {
       console.error("Error fetching vendors:", error);
+    } finally {
+      setLoading(false); // Hide loading spinner
     }
   };
 
@@ -87,6 +98,7 @@ const AccountManagement = () => {
   };
 
   const handleCreateAccount = async () => {
+    setFormSubmitting(true); // Show loading spinner for form submission
     try {
       await axios.post(`${API_VENDOR}/${hostId}`, formData, {
         headers: {
@@ -99,10 +111,13 @@ const AccountManagement = () => {
       resetForm();
     } catch (error) {
       console.error("Error creating account:", error);
+    } finally {
+      setFormSubmitting(false); // Hide form submission spinner
     }
   };
 
   const handleEditAccount = async () => {
+    setFormSubmitting(true); // Show loading spinner for form submission
     try {
       await axios.put(`${API_VENDOR}/${editVendorId}`, formData, {
         headers: {
@@ -117,10 +132,13 @@ const AccountManagement = () => {
       setEditVendorId(null);
     } catch (error) {
       console.error("Error updating account:", error);
+    } finally {
+      setFormSubmitting(false); // Hide form submission spinner
     }
   };
 
   const handleDeleteAccount = async (vendorId) => {
+    setDeleting(true); // Show loading spinner for delete action
     try {
       await axios.delete(`${API_VENDOR}/${vendorId}`, {
         headers: {
@@ -131,109 +149,40 @@ const AccountManagement = () => {
       fetchVendors();
     } catch (error) {
       console.error("Error deleting account:", error);
+    } finally {
+      setDeleting(false); // Hide delete action spinner
     }
   };
 
   const handleSendEmail = async (account) => {
+    setSendingEmail(true); // Show loading spinner for email sending
     try {
       const emailBody = `
         <html>
           <head>
             <style>
-              body {
-                font-family: Arial, sans-serif;
-                background-color: #f9f9f9;
-                color: #333;
-                margin: 0;
-                padding: 0;
-              }
-              .container {
-                width: 100%;
-                max-width: 600px;
-                margin: 20px auto;
-                padding: 20px;
-                background-color: #ffffff;
-                border-radius: 10px;
-                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-              }
-              .header {
-                background-color: #4caf50;
-                color: white;
-                padding: 10px;
-                text-align: center;
-                border-radius: 10px 10px 0 0;
-              }
-              .content {
-                padding: 20px;
-              }
-              .content p {
-                font-size: 16px;
-                line-height: 1.6;
-              }
-              .table {
-                width: 100%;
-                border-collapse: collapse;
-                margin: 20px 0;
-              }
-              .table th, .table td {
-                padding: 12px;
-                border: 1px solid #ddd;
-                text-align: left;
-              }
-              .table th {
-                background-color: #f4f4f9;
-                font-weight: bold;
-              }
-              .footer {
-                text-align: center;
-                font-size: 12px;
-                color: #888;
-                margin-top: 20px;
-              }
-              .footer a {
-                color: #4caf50;
-              }
+              body { font-family: Arial, sans-serif; background-color: #f9f9f9; color: #333; }
+              .container { width: 100%; max-width: 600px; margin: 20px auto; padding: 20px; background-color: #ffffff; border-radius: 10px; }
+              .header { background-color: #4caf50; color: white; padding: 10px; text-align: center; }
+              .content { padding: 20px; }
+              .footer { text-align: center; font-size: 12px; color: #888; }
             </style>
           </head>
           <body>
             <div class="container">
-              <div class="header">
-                <h1>Your Account Details</h1>
-              </div>
+              <div class="header"><h1>Your Account Details</h1></div>
               <div class="content">
                 <p>Dear <strong>${account.name}</strong>,</p>
                 <p>Your account has been successfully created! Below are your account details:</p>
-                <table class="table">
-                  <tr>
-                    <th>Username</th>
-                    <td>${account.username}</td>
-                  </tr>
-                  <tr>
-                    <th>Password</th>
-                    <td>${account.password}</td>
-                  </tr>
-                  <tr>
-                    <th>Name</th>
-                    <td>${account.name}</td>
-                  </tr>
-                  <tr>
-                    <th>Phone</th>
-                    <td>${account.phone}</td>
-                  </tr>
-                  <tr>
-                    <th>Email</th>
-                    <td>${account.email}</td>
-                  </tr>
-                  <tr>
-                    <th>Address</th>
-                    <td>${account.address}</td>
-                  </tr>
-                  <tr>
-                    <th>QR URL</th>
-                    <td>${account.urlQr}</td>
-                  </tr>
+                <table>
+                  <tr><th>Username</th><td>${account.username}</td></tr>
+                  <tr><th>Password</th><td>${account.password}</td></tr>
+                  <tr><th>Name</th><td>${account.name}</td></tr>
+                  <tr><th>Phone</th><td>${account.phone}</td></tr>
+                  <tr><th>Email</th><td>${account.email}</td></tr>
+                  <tr><th>Address</th><td>${account.address}</td></tr>
+                  <tr><th>QR URL</th><td>${account.urlQr}</td></tr>
                 </table>
-                <p>Thank you for being with us!</p>
               </div>
               <div class="footer">
                 <p>If you have any issues, feel free to contact our support team.</p>
@@ -258,10 +207,10 @@ const AccountManagement = () => {
           },
         }
       );
-      // alert("Email sent successfully!");
     } catch (error) {
       console.error("Error sending email:", error);
-      // alert("Failed to send email.");
+    } finally {
+      setSendingEmail(false); // Hide email sending spinner
     }
   };
 
@@ -325,14 +274,7 @@ const AccountManagement = () => {
   }, [hostId, accessToken]);
 
   return (
-    <Box
-      p={8}
-      bg="gray.100"
-      borderRadius="lg"
-      shadow="lg"
-      maxW="1200px"
-      mx="auto"
-    >
+    <Box p={8} bg="gray.100" borderRadius="lg" shadow="lg" maxW="1200px" mx="auto">
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg" fontWeight="bold" color="teal.600">
           Account Management
@@ -355,82 +297,84 @@ const AccountManagement = () => {
             <Tr>
               <Th color="white">No</Th>
               <Th color="white">Username</Th>
-              {/* <Th color="white">Password</Th> */}
               <Th color="white">Name</Th>
-              {/* <Th color="white">Phone</Th> */}
               <Th color="white">Email</Th>
-              {/* <Th color="white">Address</Th> */}
               <Th color="white">QR URL</Th>
               <Th color="white">Status</Th>
               <Th color="white">Actions</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {accounts.map((account, index) => (
-              <Tr key={account.vendorid}>
-                <Td>{index + 1}</Td>
-                <Td>{account.username}</Td>
-                {/* <Td>****</Td> */}
-                <Td>{account.name}</Td>
-                {/* <Td>{account.phone}</Td> */}
-                <Td>{account.email}</Td>
-                {/* <Td>{account.address}</Td> */}
-                <Td>{account.urlQr}</Td>
-                <Td>
-                  <Badge
-                    colorScheme={account.status ? "green" : "red"}
-                    variant="solid"
-                    onClick={() =>
-                      handleToggleStatus(account.vendorid, account.status)
-                    }
-                    style={{ cursor: "pointer" }}
-                  >
-                    {account.status ? "Active" : "Inactive"}
-                  </Badge>
-                </Td>
-                <Td>
-                  <Tooltip label="Details">
-                    <IconButton
-                      size="sm"
-                      colorScheme="blue"
-                      icon={<InfoIcon />}
-                      onClick={() => openDetailModal(account)}
-                      mr={2}
-                      aria-label="View Details"
-                    />
-                  </Tooltip>
-                  <Tooltip label="Edit">
-                    <IconButton
-                      size="sm"
-                      colorScheme="yellow"
-                      icon={<EditIcon />}
-                      onClick={() => openEditModal(account)}
-                      mr={2}
-                      aria-label="Edit Account"
-                    />
-                  </Tooltip>
-                  <Tooltip label="Send Email">
-                    <IconButton
-                      size="sm"
-                      colorScheme="teal"
-                      icon={<EmailIcon />}
-                      onClick={() => handleSendEmail(account)}
-                      mr={2}
-                      aria-label="Send Email"
-                    />
-                  </Tooltip>
-                  <Tooltip label="Delete">
-                    <IconButton
-                      size="sm"
-                      colorScheme="red"
-                      icon={<DeleteIcon />}
-                      onClick={() => handleDeleteAccount(account.vendorid)}
-                      aria-label="Delete Account"
-                    />
-                  </Tooltip>
+            {loading ? (
+              <Tr>
+                <Td colSpan={7} textAlign="center">
+                  <Spinner color="teal" />
                 </Td>
               </Tr>
-            ))}
+            ) : (
+              accounts.map((account, index) => (
+                <Tr key={account.vendorid}>
+                  <Td>{index + 1}</Td>
+                  <Td>{account.username}</Td>
+                  <Td>{account.name}</Td>
+                  <Td>{account.email}</Td>
+                  <Td>{account.urlQr}</Td>
+                  <Td>
+                    <Badge
+                      colorScheme={account.status ? "green" : "red"}
+                      variant="solid"
+                      onClick={() =>
+                        handleToggleStatus(account.vendorid, account.status)
+                      }
+                      style={{ cursor: "pointer" }}
+                    >
+                      {account.status ? "Active" : "Inactive"}
+                    </Badge>
+                  </Td>
+                  <Td>
+                    <Tooltip label="Details">
+                      <IconButton
+                        size="sm"
+                        colorScheme="blue"
+                        icon={<InfoIcon />}
+                        onClick={() => openDetailModal(account)}
+                        mr={2}
+                        aria-label="View Details"
+                      />
+                    </Tooltip>
+                    <Tooltip label="Edit">
+                      <IconButton
+                        size="sm"
+                        colorScheme="yellow"
+                        icon={<EditIcon />}
+                        onClick={() => openEditModal(account)}
+                        mr={2}
+                        aria-label="Edit Account"
+                      />
+                    </Tooltip>
+                    <Tooltip label="Send Email">
+                      <IconButton
+                        size="sm"
+                        colorScheme="teal"
+                        icon={<EmailIcon />}
+                        onClick={() => handleSendEmail(account)}
+                        mr={2}
+                        aria-label="Send Email"
+                      />
+                    </Tooltip>
+                    <Tooltip label="Delete">
+                      <IconButton
+                        size="sm"
+                        colorScheme="red"
+                        icon={<DeleteIcon />}
+                        onClick={() => handleDeleteAccount(account.vendorid)}
+                        aria-label="Delete Account"
+                      />
+                    </Tooltip>
+                  </Td>
+                </Tr>
+              ))
+            )}
           </Tbody>
         </Table>
       </TableContainer>
@@ -513,6 +457,8 @@ const AccountManagement = () => {
               colorScheme="teal"
               mr={3}
               onClick={isEditing ? handleEditAccount : handleCreateAccount}
+              isLoading={formSubmitting} // Disable button when form is submitting
+              loadingText={isEditing ? "Updating" : "Creating"}
             >
               {isEditing ? "Update" : "Create"}
             </Button>
@@ -549,8 +495,7 @@ const AccountManagement = () => {
               <strong>QR URL:</strong> {selectedAccount?.urlQr}
             </p>
             <p>
-              <strong>Status:</strong>{" "}
-              {selectedAccount?.status ? "Active" : "Inactive"}
+              <strong>Status:</strong> {selectedAccount?.status ? "Active" : "Inactive"}
             </p>
           </ModalBody>
           <ModalFooter>

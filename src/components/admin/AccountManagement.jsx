@@ -107,7 +107,7 @@ const AdminAccountManagement = () => {
             {accounts.map((account) => (
               <Tr key={account.account.id}>
                 <Td>{account.account.username}</Td>
-                <Td>{account.account.password}</Td>
+                <Td>*******</Td>
                 <Td>{account.account.name}</Td>
                 <Td>{account.account.role}</Td>
                 <Td textAlign="center">
@@ -184,54 +184,63 @@ const AdminAccountManagement = () => {
       </Modal>
 
       {/* Modal for editing account */}
-      <Modal isOpen={isEditOpen} onClose={onEditClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Edit Account</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl>
-              <FormLabel>Phone</FormLabel>
-              <Input
-                value={selectedAccount?.phone}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, phone: e.target.value })}
-              />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Email</FormLabel>
-              <Input
-                value={selectedAccount?.email}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, email: e.target.value })}
-              />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Expire Time</FormLabel>
-              <Input
-                value={selectedAccount?.expiretime}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, expiretime: e.target.value })}
-              />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Event Storage Time</FormLabel>
-              <Input
-                value={selectedAccount?.eventstoragetime}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, eventstoragetime: e.target.value })}
-              />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Banking Account</FormLabel>
-              <Input
-                value={selectedAccount?.bankingaccount}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, bankingaccount: e.target.value })}
-              />
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" onClick={onEditClose}>Cancel</Button>
-            <Button colorScheme="teal" onClick={updateAccount}>Save Changes</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+     {/* Modal for editing account */}
+<Modal isOpen={isEditOpen} onClose={onEditClose}>
+  <ModalOverlay />
+  <ModalContent>
+    <ModalHeader>Edit Account</ModalHeader>
+    <ModalCloseButton />
+    <ModalBody>
+      <FormControl>
+        <FormLabel>Phone</FormLabel>
+        <Input
+          value={selectedAccount?.phone}
+          onChange={(e) => setSelectedAccount({ ...selectedAccount, phone: e.target.value })}
+        />
+      </FormControl>
+      <FormControl mt={4}>
+        <FormLabel>Email</FormLabel>
+        <Input
+          value={selectedAccount?.email}
+          onChange={(e) => setSelectedAccount({ ...selectedAccount, email: e.target.value })}
+        />
+      </FormControl>
+      <FormControl mt={4}>
+        <FormLabel>Expire Time</FormLabel>
+        <Input
+          value={selectedAccount?.expiretime}
+          onChange={(e) => setSelectedAccount({ ...selectedAccount, expiretime: e.target.value })}
+        />
+      </FormControl>
+      <FormControl mt={4}>
+        <FormLabel>Event Storage Time</FormLabel>
+        <Input
+          value={selectedAccount?.eventstoragetime}
+          onChange={(e) => setSelectedAccount({ ...selectedAccount, eventstoragetime: e.target.value })}
+        />
+      </FormControl>
+      <FormControl mt={4}>
+        <FormLabel>Banking Account</FormLabel>
+        <Input
+          value={selectedAccount?.bankingaccount}
+          onChange={(e) => setSelectedAccount({ ...selectedAccount, bankingaccount: e.target.value })}
+        />
+      </FormControl>
+      <FormControl mt={4}>
+        <FormLabel>Password</FormLabel>
+        <Input
+          type="password"
+          value={selectedAccount?.account?.password}
+          onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, password: e.target.value } })}
+        />
+      </FormControl>
+    </ModalBody>
+    <ModalFooter>
+      <Button variant="ghost" onClick={onEditClose}>Cancel</Button>
+      <Button colorScheme="teal" onClick={updateAccount}>Save Changes</Button>
+    </ModalFooter>
+  </ModalContent>
+</Modal>
     </Stack>
   );
 };

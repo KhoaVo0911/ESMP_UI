@@ -21,14 +21,14 @@ const AdminHeader = ({ collapsed }) => {
   const { logout } = useAuth();
 
   const getPageTitle = () => {
-    if (location.pathname.startsWith("/admin")) {
+    if (location.pathname.startsWith("/bunbo")) {
       return "Account Management";
-    } else if (location.pathname.startsWith("/productsList")) {
-      return "Producst List";
+    } else if (location.pathname.startsWith("/admin")) {
+      return "Account Management";
     } else if (location.pathname.startsWith("/adtransaction")) {
       return "Transaction History";
-    } else if (location.pathname.startsWith("/Transaction")) {
-      return "Transaction";
+    } else if (location.pathname.startsWith("/admin-package")) {
+      return "Package ";
     } else if (location.pathname.startsWith("/eventsVendor")) {
       return "Events List";
     } else if (location.pathname.startsWith("/shop")) {

@@ -81,6 +81,9 @@ const VendorHeader = ({ collapsed }) => {
     else if (location.pathname.startsWith("/staff-account-manager")) {
       return "Staff Accounts";
     }
+    else if (location.pathname.startsWith("/ListEventEnrolled")) {
+      return "List Event Enrolled";
+    }
     return "Event Information";
   };
 

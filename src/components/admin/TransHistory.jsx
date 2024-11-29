@@ -1,94 +1,249 @@
-import React, { useState } from "react";
-import {
-  Table, Thead, Tbody, Tr, Th, Td, Stack, ButtonGroup, Button, Select, Box, Text,
-} from "@chakra-ui/react";
+import React, { useEffect, useState } from 'react';
+import { 
+  Box, 
+  Spinner, 
+  Text, 
+  Table, 
+  Thead, 
+  Tbody, 
+  Tr, 
+  Th, 
+  Td, 
+  Alert, 
+  AlertIcon, 
+  Container, 
+  VStack, 
+  Heading, 
+  HStack, 
+  Button, 
+  IconButton, 
+  Select 
+} from '@chakra-ui/react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
-const AdminTransactionHistory = () => {
-  const [filterStatus, setFilterStatus] = useState("All");
+const TransactionDetails = () => {
+  const [transactionData, setTransactionData] = useState([]);
+  const [hostData, setHostData] = useState(null);
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  // Dữ liệu cứng
-  const transactions = [
-    { id: 1, orderId: "#15267", date: "2023-03-01", email: "abc123@gmail.com", username: "user123", plan: "Gold Plan", amount: 400000, status: "Success" },
-    { id: 2, orderId: "#153587", date: "2023-01-26", email: "vdk123@gmail.com", username: "user456", plan: "Gold Plan", amount: 400000, status: "Success" },
-    { id: 3, orderId: "#12436", date: "2033-02-12", email: "maiminhxa@gmail.com", username: "user789", plan: "Gold Plan", amount: 400000, status: "Success" },
-    { id: 4, orderId: "#16879", date: "2033-02-12", email: "FEV_Sales@gmail.com", username: "fevsales", plan: "Gold Plan", amount: 400000, status: "Success" },
-    { id: 5, orderId: "#16378", date: "2033-02-28", email: "FEV_SHOP@gmail.com", username: "fevshop", plan: "Premiere Plan", amount: 750000, status: "Rejected" },
-    { id: 6, orderId: "#16609", date: "2033-03-13", email: "FEV_SHOP@gmail.com", username: "fevshop", plan: "Premiere Plan", amount: 750000, status: "Success" },
-    { id: 7, orderId: "#16907", date: "2033-03-18", email: "FEV_SHOP@gmail.com", username: "fevshop", plan: "Premiere Plan", amount: 750000, status: "Pending" },
-  ];
+  const [filteredHost, setFilteredHost] = useState('');
+  const [filteredPackage, setFilteredPackage] = useState('');
 
-  const filterTransactions = (status) => {
-    setFilterStatus(status);
-  };
+  useEffect(() => {
+    const accessToken = sessionStorage.getItem('accessToken');
 
-  const filteredTransactions = transactions.filter((transaction) => {
-    if (filterStatus === "All") return true;
-    return transaction.status === filterStatus;
-  });
+    if (accessToken) {
+      // Fetch host data
+      fetch('https://esmpbe.id.vn/api/host', {
+        method: 'GET',
+        headers: {
+          'Authorization': `${accessToken}`,
+        },
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Unable to fetch host information.');
+        }
+        return response.json();
+      })
+      .then(hostList => {
+        if (hostList && hostList.length > 0) {
+          setHostData(hostList);
+          return fetch('https://esmpbe.id.vn/api/transactionpackage', {
+            method: 'GET',
+            headers: {
+              'Authorization': `${accessToken}`,
+            },
+          });
+        } else {
+          throw new Error('No hosts found.');
+        }
+      })
+      .then(response => response.json())
+      .then(transactions => {
+        setTransactionData(transactions);
+        return fetch('https://esmpbe.id.vn/api/package', {
+          method: 'GET',
+          headers: {
+            'Authorization': `${accessToken}`,
+          },
+        });
+      })
+      .then(response => response.json())
+      .then(packages => {
+        setPackages(packages);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+    } else {
+      setError('No access token found.');
+      setLoading(false);
+    }
+  }, []);
+
+  if (loading) {
+    return (
+      <Container centerContent>
+        <Spinner size="xl" />
+        <Text mt={4}>Loading data...</Text>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container centerContent>
+        <Alert status="error" borderRadius="md" mt={4}>
+          <AlertIcon />
+          {error}
+        </Alert>
+      </Container>
+    );
+  }
+
+  // Compile data for the table
+  const compiledData = transactionData
+    .map(transaction => {
+      const hostInfo = hostData.find(host => host.hostid === transaction.hostid);
+      const packageInfo = packages.find(pkg => pkg.id === transaction.packageid);
+      const createdAtDate = new Date(transaction.createdat);
+
+      const storageMonths = packageInfo ? parseInt(packageInfo.eventstoragetime) : 0;
+
+      const expirationDate = new Date(createdAtDate);
+      expirationDate.setMonth(expirationDate.getMonth() + storageMonths);
+
+      return {
+        transactionId: transaction.id,
+        hostName: hostInfo ? hostInfo.account.name : 'Unknown',
+        packageName: packageInfo ? packageInfo.name : 'Unknown',
+        createdAt: createdAtDate.toLocaleString(),
+        status: transaction.status,
+        price: packageInfo ? packageInfo.price : 'N/A',
+        expiration: expirationDate.toLocaleString(),
+      };
+    })
+    .filter(transaction => {
+      // Filter based on selected filters
+      const hostMatch = filteredHost ? transaction.hostName.includes(filteredHost) : true;
+      const packageMatch = filteredPackage ? transaction.packageName.includes(filteredPackage) : true;
+      return hostMatch && packageMatch;
+    });
+
+  // Calculate total pages
+  const totalPages = Math.ceil(compiledData.length / itemsPerPage);
+  
+  // Get current items
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = compiledData.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
-    <Stack spacing={4} p={4}>
-      <Box display="flex" justifyContent="space-between" mb={4}>
-        <Box>
-          <Text>Total Revenue: <Text as="span" color="green.500">2.350.000 ₫</Text></Text>
-          <Text>Rejected Payments: <Text as="span" color="red.500">750.000 ₫</Text></Text>
+    <Container maxW="100%" backgroundColor="white" borderRadius="md" boxShadow="lg"  p={5}>
+      <VStack spacing={4} width="100%">
+        <Heading as="h1" size="lg">Transaction List</Heading>
+        <Text fontSize="lg" color="gray.600">Overview of all transactions</Text>
+
+        {/* Filter Section */}
+        <HStack spacing={4} width="100%" mb={4}>
+          <Select
+            placeholder="Select Host"
+            value={filteredHost}
+            onChange={(e) => setFilteredHost(e.target.value)}
+            width="auto"
+          >
+            <option value="">All Hosts</option>
+            {hostData && hostData.map(host => (
+              <option key={host.hostid} value={host.account.name}>
+                {host.account.name}
+              </option>
+            ))}
+          </Select>
+
+          <Select
+            placeholder="Select Package"
+            value={filteredPackage}
+            onChange={(e) => setFilteredPackage(e.target.value)}
+            width="auto"
+          >
+            <option value="">All Packages</option>
+            {packages && packages.map(pkg => (
+              <option key={pkg.id} value={pkg.name}>
+                {pkg.name}
+              </option>
+            ))}
+          </Select>
+        </HStack>
+
+        {/* Table Section */}
+        <Box overflowX="auto" width="100%">
+          <Table variant="striped" width="100%">
+            <Thead>
+              <Tr>
+                <Th>Transaction ID</Th>
+                <Th>Host Name</Th>
+                <Th>Package Name</Th>
+                <Th>Creation Date</Th>
+                <Th>Status</Th>
+                <Th>Price</Th>
+                <Th>Expiration Date</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {currentItems.map(transaction => (
+                <Tr key={transaction.transactionId}>
+                  <Td>{transaction.transactionId}</Td>
+                  <Td>{transaction.hostName}</Td>
+                  <Td>{transaction.packageName}</Td>
+                  <Td>
+                    <Text fontWeight="bold" color="blue.500">
+                      {transaction.createdAt}
+                    </Text>
+                  </Td>
+                  <Td>{transaction.status}</Td>
+                  <Td>{transaction.price}</Td>
+                  <Td>
+                    <Text fontWeight="bold" color="red.500">
+                      {transaction.expiration}
+                    </Text>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
         </Box>
-      </Box>
 
-      {/* Filter Buttons */}
-      <ButtonGroup spacing={2}>
-        <Button colorScheme="teal" onClick={() => filterTransactions("All")}>All</Button>
-        <Button colorScheme="green" onClick={() => filterTransactions("Success")}>Success</Button>
-        <Button colorScheme="yellow" onClick={() => filterTransactions("Pending")}>Pending</Button>
-        <Button colorScheme="red" onClick={() => filterTransactions("Rejected")}>Rejected</Button>
-      </ButtonGroup>
-
-      {/* Transaction Table */}
-      <Table variant="simple" size="md" mt={4}>
-        <Thead>
-          <Tr>
-            <Th>No</Th>
-            <Th>Order ID</Th>
-            <Th>Date</Th>
-            <Th>Email</Th>
-            <Th>Username</Th>
-            <Th>Type Plan</Th>
-            <Th>Total Amount</Th>
-            <Th>Status</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {filteredTransactions.map((transaction, index) => (
-            <Tr key={transaction.id}>
-              <Td>{index + 1}</Td>
-              <Td>{transaction.orderId}</Td>
-              <Td>{new Date(transaction.date).toLocaleDateString()}</Td>
-              <Td>{transaction.email}</Td>
-              <Td>{transaction.username}</Td> {/* Username field */}
-              <Td>{transaction.plan}</Td>
-              <Td>{transaction.amount.toLocaleString()} ₫</Td>
-              <Td color={transaction.status === "Success" ? "green.500" : transaction.status === "Rejected" ? "red.500" : "yellow.500"}>
-                {transaction.status}
-              </Td>
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
-
-      {/* Pagination (Optional) */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mt={4}>
-        <Select size="sm" width="auto">
-          <option value="10">10 per page</option>
-          <option value="20">20 per page</option>
-        </Select>
-        <Box>
-          <Text as="span">1 of 1 pages</Text>
-          <Button size="sm" ml={4}>&lt;</Button>
-          <Button size="sm" ml={2}>&gt;</Button>
-        </Box>
-      </Box>
-    </Stack>
+        {/* Pagination Controls */}
+        <HStack spacing={4} mt={4} justify="center">
+          <IconButton 
+            aria-label="Previous page"
+            icon={<ChevronLeftIcon />}
+            isDisabled={currentPage === 1}
+            onClick={() => setCurrentPage(prev => prev - 1)}
+            colorScheme="teal"
+            variant="outline"
+          />
+          <Text fontWeight="bold">Page {currentPage} of {totalPages}</Text>
+          <IconButton 
+            aria-label="Next page"
+            icon={<ChevronRightIcon />}
+            isDisabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(prev => prev + 1)}
+            colorScheme="teal"
+            variant="outline"
+          />
+        </HStack>
+      </VStack>
+    </Container>
   );
 };
 
-export default AdminTransactionHistory;
+export default TransactionDetails;

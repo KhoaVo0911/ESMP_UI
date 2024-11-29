@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import "./Event.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -13,6 +13,7 @@ import {
   message,
   DatePicker,
   Select,
+  Spin,
 } from "antd";
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -21,7 +22,6 @@ import { ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
 import { Box, Grid, GridItem, Image } from "@chakra-ui/react";
 import { CalendarIcon, InfoIcon } from "@chakra-ui/icons";
-import { sendNotification } from "../../../shared/notificationService";
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -40,6 +40,7 @@ const Event = () => {
   const [activeTab, setActiveTab] = useState("0");
   const [modalVisible, setModalVisible] = useState(false);
   const [themes, setThemes] = useState([]);
+  const [loading, setLoading] = useState(false); // Thêm loading ở đây
   const [form] = Form.useForm();
 
   const fetchEvents = useCallback(async () => {
@@ -47,6 +48,8 @@ const Event = () => {
       console.error("Host ID is missing!");
       return;
     }
+
+    setLoading(true); // Bật loading khi bắt đầu fetch dữ liệu
 
     try {
       const response = await axios.get(`${BASE_URL}/host/${hostId}`, {
@@ -77,6 +80,8 @@ const Event = () => {
     } catch (error) {
       console.error("Error fetching events:", error);
       message.error("Error fetching events.");
+    } finally {
+      setLoading(false); // Tắt loading khi dữ liệu đã được fetch xong
     }
   }, [hostId]);
 
@@ -110,7 +115,7 @@ const Event = () => {
         event.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    console.log(filtered, "filter");
+
     setFilteredEvents(filtered);
   }, [events, activeTab, searchTerm]);
 
@@ -130,91 +135,8 @@ const Event = () => {
     setActiveTab(key);
   };
 
-  // const handleCreateEvent = async (values) => {
-  //   const { name, description, startDate, endDate, file, profit } = values;
-
-  //   if (!name || !description || !startDate || !endDate || !file || !profit) {
-  //     message.error("Please fill in all fields.");
-  //     return;
-  //   }
-
-  //   try {
-  //     const newEvent = {
-  //       name,
-  //       hostId,
-  //       themeId: hostId,
-  //       description,
-  //       startDate: startDate.toISOString(), // Chuyển đổi sang định dạng ISO
-  //       endDate: endDate.toISOString(),
-  //       profit: parseFloat(profit),
-  //       status: "upcoming",
-  //     };
-
-  //     console.log("Payload being sent:", newEvent);
-
-  //     // Gửi request tạo sự kiện
-  //     const response = await axios.post(BASE_URL, newEvent, {
-  //       headers: { Authorization: getAccessToken() },
-  //     });
-
-  //     const eventId = response.data.id;
-
-  //     if (!eventId) {
-  //       throw new Error("Event ID is missing in the response");
-  //     }
-
-  //     // Upload ảnh lên Firebase
-  //     const imageFile = file[0].originFileObj;
-  //     const imageRef = ref(storage, `${hostId}/${eventId}/${imageFile.name}`);
-  //     await uploadBytes(imageRef, imageFile);
-  //     const imageURL = await getDownloadURL(imageRef);
-
-  //     // Fetch lại danh sách sự kiện
-  //     fetchEvents();
-
-  //     // Cập nhật thông tin sự kiện trong state
-  //     const updatedEvent = {
-  //       ...newEvent,
-  //       eventId,
-  //       imageURL,
-  //     };
-  //     setEvents((prevEvents) => [updatedEvent, ...prevEvents]);
-
-  //     message.success("Event created successfully!");
-  //     setModalVisible(false);
-  //     form.resetFields();
-
-  //     // Lấy danh sách Vendor của Host
-  //     const vendorResponse = await axios.get(
-  //       `${BASE_URL}/vendor/host/${hostId}`,
-  //       {
-  //         headers: { Authorization: getAccessToken() },
-  //       }
-  //     );
-
-  //     const vendors = vendorResponse.data;
-
-  //     // Gửi thông báo đến tất cả Vendor
-  //     await Promise.all(
-  //       vendors.map((vendor) =>
-  //         axios.post(
-  //           `${BASE_URL}/notification`,
-  //           {
-  //             userid: vendor.userid,
-  //             source: `Sự kiện "${name}" đã được khởi động.`,
-  //           },
-  //           { headers: { Authorization: getAccessToken() } }
-  //         )
-  //       )
-  //     );
-
-  //     message.success("Event created and notifications sent to vendors!");
-  //   } catch (error) {
-  //     console.error("Error creating event or sending notifications:", error);
-  //     message.error("Error creating event or sending notifications.");
-  //   }
-  // };
   const handleCreateEvent = async (values) => {
+    setLoading(true); // Bật loading khi tạo sự kiện
     const { name, description, startDate, endDate, file, profit, themeId } =
       values;
 
@@ -228,6 +150,7 @@ const Event = () => {
       !themeId
     ) {
       message.error("Please fill in all fields.");
+      setLoading(false); // Tắt loading nếu không đủ dữ liệu
       return;
     }
 
@@ -243,8 +166,6 @@ const Event = () => {
         profit: parseFloat(profit),
         status: "upcoming",
       };
-
-      console.log("Payload being sent:", newEvent);
 
       // Gửi request tạo sự kiện
       const response = await axios.post(BASE_URL, newEvent, {
@@ -286,6 +207,8 @@ const Event = () => {
       message.error(
         `Error: ${error.response?.data?.message || "Something went wrong"}`
       );
+    } finally {
+      setLoading(false); // Tắt loading sau khi hoàn tất
     }
   };
 
@@ -347,55 +270,59 @@ const Event = () => {
         <TabPane tab="Finished" key="3" />
         <TabPane tab="All" key="4" />
       </Tabs>
-      <Grid
-        templateColumns={{
-          base: "repeat(1, 1fr)", // 1 cột trên màn hình nhỏ
-          md: "repeat(2, 1fr)", // 2 cột trên màn hình trung bình
-          lg: "repeat(3, 1fr)", // 3 cột trên màn hình lớn
-        }}
-        gap={6}
-        mt={4}
-      >
-        {filteredEvents.length > 0 ? (
-          filteredEvents.map((event) => (
-            <GridItem
-              key={event.eventId}
-              onClick={() => handleEventClick(event)}
-              className="event-card"
-            >
-              <Box className="event-card-content">
-                <Box className="event-card-cover">
-                  <Image
-                    src={event.imageURL || "https://via.placeholder.com/150"}
-                    alt={event.name}
-                    className="event-card-image"
-                  />
-                </Box>
-                <Box className="event-info-container">
-                  <Box className="event-title">{event.name}</Box>
-                  <Box className="event-dates">
-                    <Box>
-                      <CalendarIcon /> <strong>Start Date:</strong>{" "}
-                      {format(new Date(event.startDate), "yyyy-MM-dd")}
-                    </Box>
-                    <Box style={{ marginLeft: "60px" }}>
-                      <CalendarIcon /> <strong>End Date:</strong>{" "}
-                      {format(new Date(event.endDate), "yyyy-MM-dd")}
-                    </Box>
-                  </Box>
-                  <Box className="event-description">
-                    <InfoIcon /> <strong>Description:</strong>{" "}
-                    {event.description || "No description provided."}
-                  </Box>
-                </Box>
-              </Box>
-            </GridItem>
-          ))
-        ) : (
-          <Box>No events found.</Box>
-        )}
-      </Grid>
 
+      <Spin spinning={loading} tip="Loading events...">
+        <Grid
+          templateColumns={{
+            base: "repeat(1, 1fr)", // 1 cột trên màn hình nhỏ
+            md: "repeat(2, 1fr)", // 2 cột trên màn hình trung bình
+            lg: "repeat(3, 1fr)", // 3 cột trên màn hình lớn
+          }}
+          gap={6}
+          mt={4}
+        >
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map((event) => (
+              <GridItem
+                key={event.eventId}
+                onClick={() => handleEventClick(event)}
+                className="event-card"
+              >
+                <Box className="event-card-content">
+                  <Box className="event-card-cover">
+                    <Image
+                      src={event.imageURL || "https://via.placeholder.com/150"}
+                      alt={event.name}
+                      className="event-card-image"
+                    />
+                  </Box>
+                  <Box className="event-info-container">
+                    <Box className="event-title">{event.name}</Box>
+                    <Box className="event-dates">
+                      <Box>
+                        <CalendarIcon /> <strong>Start Date:</strong>{" "}
+                        {format(new Date(event.startDate), "yyyy-MM-dd")}
+                      </Box>
+                      <Box style={{ marginLeft: "60px" }}>
+                        <CalendarIcon /> <strong>End Date:</strong>{" "}
+                        {format(new Date(event.endDate), "yyyy-MM-dd")}
+                      </Box>
+                    </Box>
+                    <Box className="event-description">
+                      <InfoIcon /> <strong>Description:</strong>{" "}
+                      {event.description || "No description provided."}
+                    </Box>
+                  </Box>
+                </Box>
+              </GridItem>
+            ))
+          ) : (
+            <Box>No events found.</Box>
+          )}
+        </Grid>
+      </Spin>
+
+      {/* Modal tạo sự kiện */}
       <Modal
         title="Create Event"
         visible={modalVisible}
@@ -404,93 +331,71 @@ const Event = () => {
       >
         <Form form={form} layout="vertical" onFinish={handleCreateEvent}>
           <Form.Item
-            name="name"
             label="Event Name"
-            rules={[
-              { required: true, message: "Please enter the event name!" },
-            ]}
+            name="name"
+            rules={[{ required: true, message: "Please input the event name!" }]}
           >
             <Input />
           </Form.Item>
+
           <Form.Item
-            name="description"
             label="Description"
-            rules={[
-              {
-                required: true,
-                message: "Please enter the event description!",
-              },
-            ]}
+            name="description"
+            rules={[{ required: true, message: "Please input the description!" }]}
           >
             <TextArea rows={4} />
           </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="startDate"
-                label="Start Date"
-                rules={[
-                  { required: true, message: "Please select the start date!" },
-                ]}
-              >
-                <DatePicker style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="endDate"
-                label="End Date"
-                rules={[
-                  { required: true, message: "Please select the end date!" },
-                ]}
-              >
-                <DatePicker style={{ width: "100%" }} />
-              </Form.Item>
-            </Col>
-          </Row>
+
           <Form.Item
-            name="profit"
-            label="Profit (%)"
-            rules={[
-              {
-                required: true,
-                message: "Please enter the profit percentage!",
-              },
-            ]}
+            label="Start Date"
+            name="startDate"
+            rules={[{ required: true, message: "Please select the start date!" }]}
           >
-            <Input type="number" placeholder="Enter profit percentage" />
+            <DatePicker showTime format="YYYY-MM-DD HH:mm:ss" />
           </Form.Item>
+
           <Form.Item
-            name="themeId"
-            label="Theme of Event"
-            rules={[
-              {
-                required: true,
-                message: "Please select a theme for the event!",
-              },
-            ]}
+            label="End Date"
+            name="endDate"
+            rules={[{ required: true, message: "Please select the end date!" }]}
           >
-            <Select placeholder="Select Theme">
+            <DatePicker showTime format="YYYY-MM-DD HH:mm:ss" />
+          </Form.Item>
+
+          <Form.Item
+            label="Event Theme"
+            name="themeId"
+            rules={[{ required: true, message: "Please select the theme!" }]}
+          >
+            <Select>
               {themes.map((theme) => (
-                <Select.Option key={theme.themeId} value={theme.themeId}>
+                <Select.Option key={theme.id} value={theme.id}>
                   {theme.name}
                 </Select.Option>
               ))}
             </Select>
           </Form.Item>
+
           <Form.Item
+            label="Upload Image"
             name="file"
-            label="Event Thumbnail"
-            valuePropName="fileList"
-            getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
-            rules={[{ required: true, message: "Please upload a file!" }]}
+            rules={[{ required: true, message: "Please upload an image!" }]}
           >
-            <Upload beforeUpload={() => false} listType="picture">
-              <Button icon={<PlusOutlined />}>Upload</Button>
+            <Upload {...uploadProps}>
+              <Button>Click to Upload</Button>
             </Upload>
           </Form.Item>
+
+          <Form.Item
+            label="Profit"
+            name="profit"
+            rules={[{ required: true, message: "Please input the profit!" }]}
+          >
+            <Input type="number" />
+          </Form.Item>
+
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
+            <Button type="primary" htmlType="submit" block loading={loading}>
               Create Event
             </Button>
           </Form.Item>
