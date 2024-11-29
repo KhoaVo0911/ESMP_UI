@@ -123,7 +123,6 @@ import { Tooltip } from "antd";
 import { useLocation, useNavigate } from "react-router-dom"; // Thêm useHistory để điều hướng
 import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../../shared/firebase/firebaseConfig";
-import { Text } from "@chakra-ui/react";
 import "./CalendarChart.css"; // File CSS cho lịch
 import { Spinner, Text, VStack } from "@chakra-ui/react";
 
