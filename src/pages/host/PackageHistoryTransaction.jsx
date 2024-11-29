@@ -111,6 +111,7 @@ const TransactionHistory = () => {
                 <Th>Description</Th>
                 <Th>Purchase Date</Th>
                 <Th>Expiration Date</Th>
+                <Th>Storage Date</Th>
                 <Th>Price</Th> {/* Changed status to price */}
               </Tr>
             </Thead>
@@ -138,11 +139,20 @@ const TransactionHistory = () => {
                         color="red.600"  // Red color for expiration date text
                         fontWeight="bold"
                       >
-                        {calculateExpirationDate(transaction.createdat, packageDetails.eventstoragetime)}
+                        {calculateExpirationDate(transaction.createdat, packageDetails.expiretime)}
                       </Box>
                     </Td>
                     <Td border="1px" borderColor="gray.200">
-                      <Text fontWeight="bold" color="green.600">
+                      <Box
+                        color="blue.600"  // Red color for expiration date text
+                        fontWeight="bold"
+                      >
+                       
+                       {packageDetails.eventstoragetime} {packageDetails.eventstoragetime > 1 ? "Months" : "Month"}
+                      </Box>
+                    </Td>
+                    <Td border="1px" borderColor="gray.200">
+                      <Text fontWeight="bold" color="yellow.600">
                         {packageDetails.price} VND
                       </Text>
                     </Td>

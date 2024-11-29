@@ -81,7 +81,7 @@ const HostPackageInfo = () => {
     if (transaction && packageInfo) {
       const createdAt = new Date(transaction.createdat);
       const calculatedExpirationTime = new Date(createdAt);
-      calculatedExpirationTime.setMonth(calculatedExpirationTime.getMonth() + packageInfo.eventstoragetime);
+      calculatedExpirationTime.setMonth(calculatedExpirationTime.getMonth() + packageInfo.expiretime);
 
       setExpirationTime(calculatedExpirationTime);
 

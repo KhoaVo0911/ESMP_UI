@@ -32,6 +32,7 @@ const PackageAdmin = () => {
     eventstoragetime: "",
     price: "",
     description: "",
+    expiretime: "",  // Added expiretime field
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -67,6 +68,7 @@ const PackageAdmin = () => {
         price: formData.price,
         eventstoragetime: parseInt(formData.eventstoragetime, 10),
         description: formData.description,
+        expiretime: parseInt(formData.expiretime, 10),  // Added expiretime to payload
       };
 
       await axios.post(API_PACKAGE, payload, {
@@ -82,6 +84,7 @@ const PackageAdmin = () => {
         eventstoragetime: "",
         price: "",
         description: "",
+        expiretime: "", // Reset expiretime
       });
     } catch (error) {
       console.error("Error creating package:", error);
@@ -96,6 +99,7 @@ const PackageAdmin = () => {
         price: formData.price,
         eventstoragetime: parseInt(formData.eventstoragetime, 10),
         description: formData.description,
+        expiretime: parseInt(formData.expiretime, 10),  // Added expiretime to payload
       };
 
       await axios.put(`${API_PACKAGE}/${editId}`, payload, {
@@ -111,6 +115,7 @@ const PackageAdmin = () => {
         eventstoragetime: "",
         price: "",
         description: "",
+        expiretime: "", // Reset expiretime
       });
       setIsEditing(false);
       setEditId(null);
@@ -146,6 +151,7 @@ const PackageAdmin = () => {
       eventstoragetime: pkg.eventstoragetime,
       price: pkg.price,
       description: pkg.description || "",
+      expiretime: pkg.expiretime, // Set expiretime for editing
     });
     onOpen();
   };
@@ -172,6 +178,7 @@ const PackageAdmin = () => {
               eventstoragetime: "",
               price: "",
               description: "",
+              expiretime: "",  // Reset expiretime
             });
             onOpen();
           }}
@@ -197,6 +204,9 @@ const PackageAdmin = () => {
               <Text fontSize="2xl" fontWeight="bold" color="teal.700">
                 {pkg.name}
               </Text>
+              <Text fontSize="sm" color="gray.600">
+                Expiry Time: <strong>{pkg.expiretime} Month{pkg.expiretime > 1 ? "s" : ""}</strong>
+              </Text>
               <Text>
                 Storage Time:{" "}
                 <strong>
@@ -207,6 +217,7 @@ const PackageAdmin = () => {
               <Text fontSize="lg" fontWeight="bold" color="teal.800">
                 {pkg.price} VND
               </Text>
+             
               <Badge
                 colorScheme={pkg.status ? "green" : "red"}
                 variant="solid"
@@ -280,6 +291,17 @@ const PackageAdmin = () => {
                 name="description"
                 placeholder="Enter package description"
                 value={formData.description}
+                onChange={handleInputChange}
+              />
+            </FormControl>
+
+            <FormControl mt={4}>
+              <FormLabel>Expire Time (Months)</FormLabel>
+              <Input
+                name="expiretime"
+                type="number"
+                placeholder="Enter expiration time in months"
+                value={formData.expiretime}
                 onChange={handleInputChange}
               />
             </FormControl>

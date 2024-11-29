@@ -239,8 +239,8 @@ const CourseList = () => {
                   key={item.id}
                   position="relative"
                   maxW="400px"
-                  width="250px"
-                  height="250px"
+                  width="300px"
+                  height="300px"
                   textAlign="center"
                   bg="white"
                   borderRadius="lg"
@@ -257,9 +257,13 @@ const CourseList = () => {
                     {item.description}
                   </Text>
                   <Text fontSize="lg" color="#8b4513" mb={4}>
-                    This package is valid for {item.eventstoragetime}
+                  Expiry Time: <strong>{item.expiretime} Month{item.expiretime > 1 ? "s" : ""}</strong>
                   </Text>
-                  <Text fontSize="lg" fontWeight="bold" color="#8b4513" mb={4}>
+                  <Text fontSize="lg" color="#8b4513" mb={4}>
+                  Storage Data: <strong>{item.eventstoragetime} Month{item.eventstoragetime> 1 ? "s" : ""}</strong>
+                  </Text>
+
+                  <Text fontSize="x-large" fontWeight="bold" color="#8b4513" mb={4}>
                     {parseInt(item.price).toLocaleString()} VND
                   </Text>
                   <Button
