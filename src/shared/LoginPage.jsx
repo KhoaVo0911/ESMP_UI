@@ -22,7 +22,8 @@ const LoginPage = () => {
     const vendorName = userInfo.vendorInfo
       ? userInfo.vendorInfo.vendorName
       : "";
-    const urlQr = userInfo.vendorInfo ? userInfo.vendorInfo.urlQr : "";
+    const urlQrVendor = userInfo.vendorInfo ? userInfo.vendorInfo.urlQr : "";
+    const urlQrHost = userInfo.hostInfo ? userInfo.hostInfo.urlQr : "";
     const hostIdValue = userInfo.hostInfo ? userInfo.hostInfo.hostId : "";
     const staffIdValue = userInfo.staffInfo ? userInfo.staffInfo.staffId : "";
     const staffName = userInfo.staffInfo ? userInfo.staffInfo.staffName : "";
@@ -32,12 +33,14 @@ const LoginPage = () => {
     setHostId(hostIdValue);
     setStaffId(staffIdValue);
 
-    // Lưu thông tin vào sessionStorage
+    // Lưu thông tin vào sessionStorage cho cả Vendor và Host
     sessionStorage.setItem("accessToken", token);
+    sessionStorage.setItem("hostId", hostIdValue); // Thêm thông tin hostId
+    sessionStorage.setItem("hostName", userInfo.hostInfo?.hostName || ""); // Thêm thông tin tên host
     sessionStorage.setItem("vendorId", vendorCode);
     sessionStorage.setItem("vendorName", vendorName);
-    sessionStorage.setItem("urlQr", urlQr);
-    sessionStorage.setItem("hostId", hostIdValue);
+    sessionStorage.setItem("urlQrVendor", urlQrVendor); // Lưu URL QR của Vendor
+    sessionStorage.setItem("urlQrHost", urlQrHost); // Lưu URL QR của Host
     sessionStorage.setItem("staffId", staffIdValue);
     sessionStorage.setItem("staffName", staffName);
     sessionStorage.setItem("role", userRole);

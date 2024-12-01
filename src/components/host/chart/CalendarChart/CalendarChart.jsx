@@ -120,11 +120,11 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import axios from "axios";
 import { Tooltip } from "antd";
-import { useLocation, useNavigate } from "react-router-dom"; // Thêm useHistory để điều hướng
+import { useLocation, useNavigate } from "react-router-dom";
 import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../../shared/firebase/firebaseConfig";
-import "./CalendarChart.css"; // File CSS cho lịch
 import { Spinner, Text, VStack } from "@chakra-ui/react";
+import "./CalendarChart.css"; // File CSS cho lịch
 
 const BASE_URL = "https://esmpbe.id.vn/api/event";
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
@@ -149,11 +149,34 @@ const fetchEventImage = async (hostId, eventId) => {
 
 const CalendarChart = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // Sử dụng useNavigate
   const hostId =
     location.state?.hostId || sessionStorage.getItem("hostId") || "";
+
+  const [loading, setLoading] = useState(true);
+  const [event, setEvent] = useState(null);
+  const [services, setServices] = useState([]);
+  const [loadingEvent, setLoadingEvent] = useState(true);
+
   const [events, setEvents] = useState([]);
+
+  // Fetch sự kiện từ sessionStorage và set vào state
+  useEffect(() => {
+    const storedEvent = sessionStorage.getItem("selectedEvent");
+    const storedServices = sessionStorage.getItem("eventServices");
+
+    console.log("Stored Event:", storedEvent); // Kiểm tra dữ liệu trong sessionStorage
+    console.log("Stored Services:", storedServices);
+
+    if (storedEvent && storedServices) {
+      setEvent(JSON.parse(storedEvent));
+      setServices(JSON.parse(storedServices));
+      setLoadingEvent(false);
+    } else {
+      setLoadingEvent(false);
+      console.error("No event data found in sessionStorage.");
+    }
+  }, []);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -196,12 +219,16 @@ const CalendarChart = () => {
   }, [hostId]);
 
   // Hàm điều hướng khi click vào sự kiện
-  const handleEventClick = (event) => {
+  const handleEventClick = (event, services) => {
     // Lưu dữ liệu vào sessionStorage
     sessionStorage.setItem("selectedEvent", JSON.stringify(event));
-    navigate(`/event-detail/${event.eventId}`, { state: { event } });
+    sessionStorage.setItem("eventServices", JSON.stringify(services || []));
+
+    // Điều hướng đến trang chi tiết sự kiện với state chứa event và services
+    navigate(`/event-detail/${event.eventId}`, { state: { event, services } });
   };
-  if (loading) {
+
+  if (loading || loadingEvent) {
     return (
       <VStack spacing={4} align="center" p={6}>
         <Spinner size="xl" color="blue.500" />
@@ -237,7 +264,7 @@ const CalendarChart = () => {
             </Tooltip>
           );
         }}
-        eventClick={handleEventClick} // Sự kiện khi click vào một sự kiện
+        eventClick={handleEventClick}
       />
     </div>
   );
