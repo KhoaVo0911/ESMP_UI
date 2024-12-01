@@ -50,13 +50,14 @@ import StaffAccountManager from "./components/vendor/StaffAccount/ManageStaffAcc
 import HostPackageInfo from "./pages/host/HostPackageInfo.jsx";
 import PackageTransactionHistory from "./pages/host/PackageHistoryTransaction.jsx";
 import ListEventEnrolled from "./components/vendor/ListEventEnrolled.jsx";
+import OwenrPage from "./components/owner/OwnerPage";
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Redirect base URL to login page */}
       <Route path="/" element={<Navigate to="/home" />} />
-      <Route path="/home" element={<LandingPage />} />
+      <Route path="/home" element={<OwenrPage />} />
       {/* <Route path="/eventss" element={<EventList />} />
       <Route path="/events/:eventId" element={<EventDetail />} /> */}
       <Route path="/login" element={<LoginPage />} />
