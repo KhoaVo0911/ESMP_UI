@@ -484,6 +484,7 @@ import axios from "axios"; // Đảm bảo bạn đã cài axios
 import logoLogin from "../assets/images/login.png"; // Đường dẫn đến logo login
 import projectLogo from "../assets/images/logo.png"; // Đường dẫn đến logo của project
 import tree from "../assets/images/tree.png"; // Đường dẫn đến hình ảnh ở góc dưới trái
+import { useNavigate } from "react-router-dom";
 
 const LoginComponent = ({ onLoginSuccess }) => {
   const [role, setRole] = useState(""); // Role only for adjusting API link
@@ -493,6 +494,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
   const [error, setError] = useState(null);
   const toast = useToast();
   const hostCode = "default"; // HostCode is set to 'default'
+  const navigate = useNavigate();
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -641,6 +643,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
               textAlign="right"
               cursor="pointer"
               mb={2} // Đặt khoảng cách dưới của Forgot Password
+              onClick={() => navigate("/forgot-password")}
             >
               Forgot Password?
             </Text>
@@ -660,7 +663,12 @@ const LoginComponent = ({ onLoginSuccess }) => {
 
           <Text fontSize="sm" color="gray.500" textAlign="center" mt={4}>
             Do you want to host an event?{" "}
-            <Text as="span" color="blue.500" cursor="pointer">
+            <Text
+              as="span"
+              color="blue.500"
+              cursor="pointer"
+              onClick={() => navigate("/register-host")}
+            >
               Create Account for Host
             </Text>
           </Text>
