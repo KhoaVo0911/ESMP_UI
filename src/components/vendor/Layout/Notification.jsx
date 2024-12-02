@@ -14,8 +14,6 @@ const Notification = ({ userId, onNewNotifications, onOpenNotifications }) => {
     if (stopPolling) return; // Nếu dừng polling, thoát khỏi hàm
   
     try {
-
-      console.log(userId)
       const response = await axios.get(
         `https://esmpbe.id.vn/api/notification/${userId}`
       );

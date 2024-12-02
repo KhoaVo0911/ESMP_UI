@@ -12,8 +12,7 @@ import {
   Button,
   Badge,
 } from "@chakra-ui/react";
-import { BellIcon } from "@chakra-ui/icons";
-import { ChevronDownIcon } from "@chakra-ui/icons";
+import { BellIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../shared/auth/AuthContext";
 import axios from "axios";
@@ -28,36 +27,46 @@ const VendorHeader = ({ collapsed }) => {
   const [userId, setUserId] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Fetch userId based on vendorId directly
   useEffect(() => {
     const fetchUserId = async () => {
       try {
-        const hostId = sessionStorage.getItem("hostId");
-        const response = await axios.get(
-          `https://esmpbe.id.vn/api/vendor/host/${hostId}`
-        );
+        if (!vendorId) {
+          console.error("Vendor ID is missing in session storage.");
+          return;
+        }
 
-        const vendor = response.data.find((v) => v.vendorid === vendorId);
-        if (vendor) {
-          setUserId(vendor.userid);
+        const response = await axios.get(
+          `https://esmpbe.id.vn/api/vendor/${vendorId}`
+        );
+        
+        console.log("API Response:", response.data); // Log full response to verify data
+
+        if (response.data && response.data.userid) {
+          setUserId(response.data.userid);
+          console.log("User ID found:", response.data.userid);
+        } else {
+          console.warn("No user ID found for vendorId:", vendorId);
         }
       } catch (error) {
-        console.error("Failed to fetch vendor info:", error);
+        console.error("Error fetching user ID:", error);
       }
     };
 
-    if (vendorId) {
-      fetchUserId();
-    }
+    fetchUserId();
   }, [vendorId]);
 
+  // Handle unread notifications count
   const handleNewNotifications = (newCount) => {
     setUnreadCount(newCount);
   };
 
+  // Handle opening notifications (mark them as read)
   const handleOpenNotifications = () => {
-    setUnreadCount(0); // Reset số thông báo chưa đọc
+    setUnreadCount(0); // Reset unread count
   };
 
+  // Dynamically set the page title based on the current route
   const getPageTitle = () => {
     if (location.pathname.startsWith("/dashboard")) {
       return "Dashboard";
@@ -77,11 +86,9 @@ const VendorHeader = ({ collapsed }) => {
       return "Shop";
     } else if (location.pathname.startsWith("/qrcodecodecode")) {
       return "Setting QR Code";
-    }
-    else if (location.pathname.startsWith("/staff-account-manager")) {
+    } else if (location.pathname.startsWith("/staff-account-manager")) {
       return "Staff Accounts";
-    }
-    else if (location.pathname.startsWith("/ListEventEnrolled")) {
+    } else if (location.pathname.startsWith("/ListEventEnrolled")) {
       return "List Event Enrolled";
     }
     return "Event Information";
@@ -115,10 +122,7 @@ const VendorHeader = ({ collapsed }) => {
       </Flex>
 
       <Flex alignItems="center" position="relative">
-
-      
-      </Flex>
-      <Flex alignItems="center" position="relative">  <Menu>
+        <Menu>
           <MenuButton
             as={Button}
             rightIcon={<ChevronDownIcon />}
@@ -153,54 +157,55 @@ const VendorHeader = ({ collapsed }) => {
             </MenuItem>
           </MenuList>
         </Menu>
-  <Menu>
-    <MenuButton
-      as={IconButton}
-      aria-label="Notifications"
-      icon={<BellIcon />}
-      variant="ghost"
-      fontSize="24px"
-      color="gray.600"
-      position="relative"
-    />
-    {unreadCount > 0 && (
-      <Badge
-        colorScheme="red"
-        borderRadius="full"
-        fontSize="12px"
-        position="absolute"
-        top="0" // Đẩy badge lên góc trên
-        right="-5px" // Đẩy badge sang phải
-        width="20px"
-        height="20px"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-        fontWeight="bold"
-        backgroundColor="red.500"
-        color="white"
-      >
-        {unreadCount}
-      </Badge>
-    )}
-    <MenuList boxShadow="lg" borderRadius="lg" p={0}>
-      {userId ? (
-        <Notification
-          userId={userId}
-          onNewNotifications={handleNewNotifications}
-          onOpenNotifications={handleOpenNotifications}
-        />
-      ) : (
-        <Box p={4}>
-          <Text fontSize="sm" color="gray.500">
-            Loading notifications...
-          </Text>
-        </Box>
-      )}
-    </MenuList>
-  </Menu>
-</Flex>
 
+        {/* Notifications Menu */}
+        <Menu>
+          <MenuButton
+            as={IconButton}
+            aria-label="Notifications"
+            icon={<BellIcon />}
+            variant="ghost"
+            fontSize="24px"
+            color="gray.600"
+            position="relative"
+          />
+          {unreadCount > 0 && (
+            <Badge
+              colorScheme="red"
+              borderRadius="full"
+              fontSize="12px"
+              position="absolute"
+              top="0"
+              right="-5px"
+              width="20px"
+              height="20px"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              fontWeight="bold"
+              backgroundColor="red.500"
+              color="white"
+            >
+              {unreadCount}
+            </Badge>
+          )}
+          <MenuList boxShadow="lg" borderRadius="lg" p={0}>
+            {userId ? (
+              <Notification
+                userId={userId}
+                onNewNotifications={handleNewNotifications}
+                onOpenNotifications={handleOpenNotifications}
+              />
+            ) : (
+              <Box p={4}>
+                <Text fontSize="sm" color="gray.500">
+                  Loading notifications...
+                </Text>
+              </Box>
+            )}
+          </MenuList>
+        </Menu>
+      </Flex>
     </Box>
   );
 };
