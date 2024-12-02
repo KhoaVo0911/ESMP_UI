@@ -47,7 +47,7 @@ const LoginPage = () => {
 
     // Điều hướng dựa trên vai trò của người dùng
     if (userRole === "admin") {
-      navigate("/admin", {
+      navigate("/dashboard-admin", {
         state: { accessToken: token, vendorId: vendorCode },
       });
     } else if (userRole === "manager") {

@@ -2,18 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Layout, Menu } from "antd";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import EventIcon from "@mui/icons-material/Event";
-import SettingsIcon from "@mui/icons-material/Settings";
-import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
-import CategoryIcon from "@mui/icons-material/Category";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import InfoIcon from "@mui/icons-material/Info";
-import StorefrontIcon from "@mui/icons-material/Storefront";
-import ExtensionIcon from "@mui/icons-material/Extension";
-import LocalGroceryStoreIcon from "@mui/icons-material/LocalGroceryStore";
-import logo from "../../../assets/images/logo_EIPS.png";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
-import BackpackIcon from '@mui/icons-material/Backpack';
+import BackpackIcon from "@mui/icons-material/Backpack";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import logo from "../../../assets/images/logo_EIPS.png";
 
 const { Sider } = Layout;
 
@@ -22,87 +14,19 @@ const HostSideBar = ({ collapsed }) => {
   const location = useLocation();
   const eventId = useParams().eventId || sessionStorage.getItem("eventId");
   const [selectedMenuItem, setSelectedMenuItem] = useState("1");
-  const hostId =
-    location.state?.hostId || sessionStorage.getItem("hostId") || "";
 
+  // Update selected menu item based on the location
   useEffect(() => {
-    console.log("Current eventId:", eventId);
-    if (location.pathname.startsWith(`/admin`)) {
+    if (location.pathname.startsWith(`/dashboard-admin`)) {
       setSelectedMenuItem("1");
     } else if (location.pathname.startsWith("/adtransaction")) {
       setSelectedMenuItem("2");
     } else if (location.pathname.startsWith("/admin-package")) {
       setSelectedMenuItem("3");
-    } 
+    } else if (location.pathname.startsWith("/accountList")) {
+      setSelectedMenuItem("4");
+    }
   }, [location.pathname]);
-
-  const eventDetailItems = [
-    {
-      type: "group",
-      children: [
-        {
-          key: "10",
-          icon: <InfoIcon />,
-          label: (
-            <span
-              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
-            >
-              Event Info
-            </span>
-          ),
-          onClick: () => navigate(`/event-detail/${eventId}`),
-        },
-        {
-          key: "7",
-          icon: <LocalGroceryStoreIcon />,
-          label: (
-            <span
-              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
-            >
-              Payment List
-            </span>
-          ),
-          onClick: () => navigate(`/eventpayment/${eventId}`),
-        },
-        {
-          key: "8",
-          icon: <StorefrontIcon />,
-          label: (
-            <span
-              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
-            >
-              Booth Plan
-            </span>
-          ),
-          onClick: () => navigate(`/event/${eventId}/booth-plan`),
-        },
-        // {
-        //   key: "11",
-        //   icon: <StorefrontIcon />,
-        //   label: (
-        //     <span
-        //       style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
-        //     >
-        //       Location Type
-        //     </span>
-        //   ),
-        //   onClick: () => navigate(`/event/${eventId}/location-type`),
-        // },
-        {
-          key: "9",
-          icon: <ExtensionIcon />,
-          label: (
-            <span
-              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
-            >
-              Extension Event
-            </span>
-          ),
-          onClick: () => navigate(`/event/${eventId}/extensionEvent`),
-        },
-      ],
-    },
-  ];
 
   const defaultItems = [
     {
@@ -120,9 +44,10 @@ const HostSideBar = ({ collapsed }) => {
             <span
               style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
             >
-            Host Accounts List
+              Dashboard Admin
             </span>
           ),
+          onClick: () => navigate(`/dashboard-admin`),
         },
         {
           key: "2",
@@ -134,6 +59,7 @@ const HostSideBar = ({ collapsed }) => {
               Transaction History
             </span>
           ),
+          onClick: () => navigate(`/adtransaction`),
         },
         {
           key: "3",
@@ -145,11 +71,22 @@ const HostSideBar = ({ collapsed }) => {
               Package
             </span>
           ),
+          onClick: () => navigate("/admin-package"),
         },
-        
+        {
+          key: "4",
+          icon: <AccountCircleIcon />,
+          label: (
+            <span
+              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
+            >
+              Host Account List
+            </span>
+          ),
+          onClick: () => navigate("/accountList"),
+        },
       ],
     },
-    
   ];
 
   return (
@@ -185,7 +122,7 @@ const HostSideBar = ({ collapsed }) => {
             setSelectedMenuItem(e.key);
             switch (e.key) {
               case "1":
-                navigate(`/admin`);
+                navigate(`/dashboard-admin`);
                 break;
               case "2":
                 navigate(`/adtransaction`);
@@ -193,21 +130,14 @@ const HostSideBar = ({ collapsed }) => {
               case "3":
                 navigate("/admin-package");
                 break;
-             
+              case "4":
+                navigate("/accountList");
+                break;
               default:
-                navigate(`/admin`);
+                navigate(`/dashboard-admin`);
             }
           }}
-          items={
-            location.pathname.startsWith("/event-detail") ||
-            location.pathname.startsWith(`/eventpayment/${eventId}`) ||
-            location.pathname.startsWith(`/event/${eventId}/booth-plan`) ||
-            location.pathname.startsWith(`/event/${eventId}/booth-plan-view`) ||
-            location.pathname.startsWith(`/event/${eventId}/location-type`) ||
-            location.pathname.startsWith(`/event/${eventId}/extensionEvent`)
-              ? eventDetailItems
-              : defaultItems
-          }
+          items={defaultItems}
         />
       </Sider>
       <div
