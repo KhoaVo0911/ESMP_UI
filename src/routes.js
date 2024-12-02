@@ -51,6 +51,9 @@ import HostPackageInfo from "./pages/host/HostPackageInfo.jsx";
 import PackageTransactionHistory from "./pages/host/PackageHistoryTransaction.jsx";
 import ListEventEnrolled from "./components/vendor/ListEventEnrolled.jsx";
 import OwenrPage from "./components/owner/OwnerPage";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
+import RegisterHostComponent from "./pages/RegisterHost.jsx";
 
 const AppRoutes = () => {
   return (
@@ -61,6 +64,10 @@ const AppRoutes = () => {
       {/* <Route path="/eventss" element={<EventList />} />
       <Route path="/events/:eventId" element={<EventDetail />} /> */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/register-host" element={<RegisterHostComponent />} />
+      {/* <Route path="/reset-password/:accountId" element={<ResetPassword />} /> */}
       <Route
         path="/manage-product/:vendorId"
         element={
@@ -260,7 +267,7 @@ const AppRoutes = () => {
           </AdminLayout>
         }
       />
-       <Route path="/host-package-info" component={HostPackageInfo} />
+      <Route path="/host-package-info" component={HostPackageInfo} />
       <Route
         path="/ordered-list/:vendorId/:eventId"
         element={
@@ -284,14 +291,15 @@ const AppRoutes = () => {
             <Transaction />
           </HostLayout>
         }
-      /><Route
-      path="/package-trans"
-      element={
-        <HostLayout>
-          <PackageTransactionHistory/>
-        </HostLayout>
-      }
-    />
+      />
+      <Route
+        path="/package-trans"
+        element={
+          <HostLayout>
+            <PackageTransactionHistory />
+          </HostLayout>
+        }
+      />
       <Route
         path="/manage-product"
         element={
