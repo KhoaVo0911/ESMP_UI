@@ -307,7 +307,7 @@ const EventEnrolled = () => {
   }, [eventId, accessToken, hostId, navigate]);
 
   const handleShopClick = () => {
-    navigate("/shop", {
+    navigate(`/shop/${vendorId}/${eventId}`, {
       state: {
         accessToken,
         vendorId,

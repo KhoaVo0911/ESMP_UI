@@ -26,6 +26,7 @@ const EventPageStaff = () => {
   const accessToken = sessionStorage.getItem("accessToken") || "";
   const vendorId = sessionStorage.getItem("vendorId") || "";
   const hostId = sessionStorage.getItem("hostId") || "";
+  const staffId = sessionStorage.getItem("staffId") || "";
 
   const [eventDetail, setEventDetail] = useState(null);
   const [boothData, setBoothData] = useState([]);
@@ -72,11 +73,11 @@ const EventPageStaff = () => {
   }, [eventId, accessToken, hostId]);
 
   const handleBackClick = () => {
-    navigate("/eventStaff");
+    navigate(`/eventStaff${vendorId}/${staffId}`);
   };
 
   const handleShopClick = () => {
-    navigate("/StaffShop", {
+    navigate(`/StaffShop/${vendorId}/${staffId}/${eventId}`, {
       state: {
         accessToken,
         vendorId,

@@ -10,7 +10,7 @@ import {
   Button,
   Stack,
 } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const BoothPayment = ({
@@ -27,15 +27,57 @@ const BoothPayment = ({
   const navigate = useNavigate(); // Initialize navigate
 
   useEffect(() => {
-    if (!boothTypeDetails || !eventId) {
-      console.error("Missing boothTypeDetails or eventId!");
-      return;
-    }
+    const fetchHostData = async () => {
+      try {
+        const hostId = sessionStorage.getItem("hostId");
+        if (!hostId) {
+          console.error("Host ID is missing!");
+          return;
+        }
+    
+        // Fetch host data from API based on hostId
+        const hostResponse = await axios.get(`/host/${hostId}`);
+        const hostData = hostResponse.data;
+    
+        if (hostData) {
+          const { apibanking, bankingaccount } = hostData;
+    
+          if (apibanking && bankingaccount) {
+            // 1. Create QR code with banking account
+            const qrUrl = `https://img.vietqr.io/image/${bankingaccount}-compact2.png?amount=${boothTypeDetails.price}&addInfo=${boothTypeDetails.typeName}&accountName=Dinh Quang Minh`;
+            setQrUrl(qrUrl);
+    
+            // 2. Post apibanking to API to get id
+            const apiBankingResponse = await axios.post("/host/apibanking", { apibanking });
+            const apiBankingId = apiBankingResponse.data.id;
+            console.log("API Bank ID", apiBankingId);
+    
+            if (apiBankingId) {
+              // 3. Update URL in fetch with id from apibanking
+              const fetchUrl = `${apiBankingId}`; // Update with actual endpoint
+              console.log("API Bank ID 2 lun nè", fetchUrl);
+              
+              // Save the fetchUrl to sessionStorage
+              sessionStorage.setItem("fetchUrl", fetchUrl);  // Ensure it's stored properly
+    
+              const startTime = new Date(); // capture start time
+              checkPaid(boothTypeDetails.price, boothTypeDetails.typeName, startTime);  // Proceed with payment check
+            } else {
+              console.error("Couldn't get apibanking ID.");
+            }
+          } else {
+            console.error("Missing banking information in host data.");
+          }
+        } else {
+          console.error("Host data not found.");
+        }
+      } catch (error) {
+        console.error("Error fetching host data:", error);
+      }
+    };
+    
 
-    // Generate QR Code URL
-    const qrUrl = `https://img.vietqr.io/image/ACB-18254271-compact2.png?amount=${boothTypeDetails.price}&addInfo=${boothTypeDetails.typeName}&accountName=Dinh Quang Minh`;
-    setQrUrl(qrUrl);
-
+    fetchHostData();
     setRemainingTime(900); // Reset countdown timer to 15 minutes
 
     if (countdownIntervalRef.current) {
@@ -62,14 +104,10 @@ const BoothPayment = ({
     }, 1000);
 
     // Start transaction check (every 5 seconds)
-    const startTime = new Date();
+    const startTime = new Date(); // Capture start time once at the beginning
     transactionCheckIntervalRef.current = setInterval(() => {
       console.log("Checking payment...");
-      checkPaid(
-        boothTypeDetails.price,
-        boothTypeDetails.typeName,
-        startTime
-      );
+      checkPaid(boothTypeDetails.price, boothTypeDetails.typeName, startTime);
     }, 5000); // Check every 5 seconds
 
     // Cleanup intervals on component unmount
@@ -79,78 +117,108 @@ const BoothPayment = ({
     };
   }, [boothTypeDetails, toast, eventId]);
 
-  const checkPaid = async (price, content, startTime) => {
+  const checkPaid = async (price, content , startTime) => {
     if (isPaymentProcessed.current) {
       console.log("Payment already processed. Skipping check.");
-      return; // Nếu đã xử lý thanh toán, không kiểm tra nữa
+      return; // If payment already processed, don't check again
     }
-
+  
     try {
-      const response = await fetch(
-        "https://script.googleusercontent.com/macros/echo?user_content_key=ezaHN4Gj4g-_qKyEpIFtMZQPkwJ0BbYQk3LG5p8k9b31Q7-kvTSXe2ZhZFRNoR7KhGYLTKEhpEOtSOcEac_Ekkb6_uiOxp_qm5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnKv_VMEXf_TlwaF4o_-JkqZsBeOE2g6GtB2F-g5rnh9Lg6IxlmlB0WqV6H5thtDBueCS5gbHSu7aRDOzV-kpgRZaH2A0H0nPU9z9Jw9Md8uu&lib=MbbErZamKd_6ahvdDuCk2MKVwqDhlS6o-"
-      );
+      // Get fetchUrl from sessionStorage after it was set
+      const fetchUrlhehe = sessionStorage.getItem("fetchUrl");
+  
+      if (!fetchUrlhehe) {
+        console.error("fetchUrl is not available in sessionStorage.");
+        return; // If no fetch URL, exit the function
+      }
+  
+      console.log("Using fetchUrl:", fetchUrlhehe);
+      const response = await fetch(fetchUrlhehe);
+  
+      // Check if the response is OK (2xx)
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      // Check if the response is JSON
+      const contentType = response.headers.get("Content-Type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Response is not JSON");
+      }
+  
+      // Parse JSON response
       const data = await response.json();
-      const lastPaid = data.data[data.data.length - 1];
-
-      const lastPrice =
-        lastPaid && lastPaid["Giá trị"] ? parseFloat(lastPaid["Giá trị"]) : 0;
-      const lastContent =
-        lastPaid && lastPaid["Mô tả"]
-          ? lastPaid["Mô tả"].trim().toLowerCase()
-          : "";
-      const transactionTime = new Date(lastPaid["Ngày diễn ra"]).getTime();
-      const startTimestamp = new Date(startTime).getTime();
-
-      if (
-        lastPrice >= price &&
-        lastContent.includes(content.toLowerCase()) &&
-        transactionTime > startTimestamp
-      ) {
-        console.log("Payment success detected!");
-
-        isPaymentProcessed.current = true; // Đánh dấu thanh toán đã xử lý
-        clearInterval(transactionCheckIntervalRef.current); // Stop transaction check
-        clearInterval(countdownIntervalRef.current); // Stop countdown timer
-
-        toast({
-          title: "Payment successful",
-          description: "You have successfully paid for the booth.",
-          status: "success",
-          duration: 5000,
-          isClosable: true,
-        });
-
-        await finalizePayment(); // Gọi hàm xử lý sau khi thanh toán
+  
+      if (data && data.data && data.data.length > 0) {
+        const lastPaid = data.data[data.data.length - 1];
+  
+        const lastPrice = lastPaid && lastPaid["Giá trị"] ? parseFloat(lastPaid["Giá trị"]) : 0;
+        const lastContent = lastPaid && lastPaid["Mô tả"] ? lastPaid["Mô tả"].trim().toLowerCase() : "";
+        const transactionTime = new Date(lastPaid["Ngày diễn ra"]).getTime();
+        const startTimestamp = new Date(startTime).getTime();
+  
+        if (
+          lastPrice >= price &&
+          lastContent.includes(content.toLowerCase()) &&
+          transactionTime > startTimestamp
+        ) {
+          console.log("Payment success detected!");
+  
+          isPaymentProcessed.current = true;
+          clearInterval(transactionCheckIntervalRef.current);
+          clearInterval(countdownIntervalRef.current);
+  
+          toast({
+            title: "Payment successful",
+            description: "You have successfully paid for the booth.",
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+  
+          await finalizePayment(); // Finalize the payment process
+        }
+      } else {
+        throw new Error("Invalid response data structure");
       }
     } catch (error) {
       console.error("Error during payment check:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while checking the payment.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     }
   };
+  
+  
 
   const finalizePayment = async () => {
     try {
       console.log("Finalizing payment...");
-      const vendorId = sessionStorage.getItem("vendorId"); // Lấy vendorId từ sessionStorage
+      const vendorId = sessionStorage.getItem("vendorId");
       const accessToken = sessionStorage.getItem("accessToken");
       if (!eventId || !vendorId) {
         throw new Error("Missing eventId or vendorId");
       }
 
-      // Tạo VendorInEvent bằng POST
+      // Create VendorInEvent using POST
       await axios.post(
         `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
         {},
         { headers: { Authorization: accessToken } }
       );
 
-      // GET VendorInEvent để lấy `vendorInEventId`
+      // GET VendorInEvent to retrieve `vendorInEventId`
       const vendorInEventResponse = await axios.get(
         `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
         { headers: { Authorization: accessToken } }
       );
       const vendorInEventId = vendorInEventResponse.data.vendorinEventId;
 
-      // Cập nhật trạng thái booth thành "Booked"
+      // Update booth status to "Booked"
       await axios.put(
         `https://esmpbe.id.vn/api/map`,
         {
@@ -160,7 +228,7 @@ const BoothPayment = ({
         { headers: { Authorization: accessToken } }
       );
 
-      // Gửi payment data
+      // Send payment data
       await axios.post(
         `https://esmpbe.id.vn/api/eventpayment`,
         {
@@ -173,14 +241,14 @@ const BoothPayment = ({
 
       console.log("Payment finalized successfully.");
       // Navigate to the next page
-      navigate("/eventenrolled", {
+      navigate(`/eventenrolled/${vendorId}/${eventId}`, {
         state: { accessToken, eventId, vendorId },
       });
     } catch (error) {
       console.error("Error during finalizing payment:", error);
       toast({
         title: "Error",
-        description: "An error occurred while processing your payment.",
+        description: "There was an error finalizing your payment.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -189,66 +257,31 @@ const BoothPayment = ({
   };
 
   return (
-    <Box
-      flex="2"
-      bg="white"
-      borderRadius="md"
-      border="1px solid"
-      borderColor="gray.200"
-      p={6}
-      height="100%"
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-    >
-      <Heading size="lg" mb={6} textAlign="center" color="teal.600">
-        Booth Payment
-      </Heading>
-      <Text fontSize="md" textAlign="center" color="gray.600" mb={4}>
-        Scan the QR code below to complete your payment within 15 minutes.
+    <VStack align="start" spacing={6} w="full" pb={10}>
+      <Heading size="md">Payment</Heading>
+      <Text>
+        Please scan the QR code below to complete your payment.
       </Text>
-      <Image
-        src={qrUrl}
-        alt="QR Code"
-        mx="auto"
-        mb={4}
-        boxShadow="md"
-        width="300px"
-        border="1px solid gray"
-        borderRadius="md"
-      />
-      <VStack align="start" spacing={3} width="100%" mb={4}>
-        <Text fontSize="lg" fontWeight="bold" color="teal.500">
-          Amount: {parseInt(boothTypeDetails.price).toLocaleString()} VND
-        </Text>
-        <Text fontSize="lg" fontWeight="bold" color="gray.700">
-          Content: {boothTypeDetails.typeName}
-        </Text>
-      </VStack>
-      <Box mt={4} p={2} width="100%">
-        <Text textAlign="center" mb={2} color="gray.500">
-          Time remaining:
-        </Text>
-        <Text fontSize="xl" fontWeight="bold" textAlign="center">
-          {`${Math.floor(remainingTime / 60)}:${String(
-            remainingTime % 60
-          ).padStart(2, "0")}`}
-        </Text>
-        <Progress
-          value={(remainingTime / 900) * 100}
-          size="sm"
-          colorScheme="teal"
-          mt={2}
-          width="100%"
-        />
+      <Box mt={4}>
+        {qrUrl ? (
+          <Image src={qrUrl} alt="QR Code" />
+        ) : (
+          <Text>Loading QR code...</Text>
+        )}
       </Box>
-      <Stack direction="row" spacing={4} mt={6}>
-        <Button colorScheme="gray" onClick={onBackToPolicy} variant="outline">
-          Back
-        </Button>
+
+      <Stack spacing={3}>
+        <Text>Your payment is processing</Text>
+        <Progress value={remainingTime} max={900} colorScheme="teal" size="lg" />
+        <Text>
+          Time remaining: {Math.floor(remainingTime / 60)}:{remainingTime % 60}
+        </Text>
       </Stack>
-    </Box>
+
+      <Button onClick={onBackToPolicy} colorScheme="teal">
+        Back to Policy
+      </Button>
+    </VStack>
   );
 };
 

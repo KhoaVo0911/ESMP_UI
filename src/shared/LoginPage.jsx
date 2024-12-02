@@ -51,7 +51,7 @@ const LoginPage = () => {
         state: { accessToken: token, vendorId: vendorCode },
       });
     } else if (userRole === "manager") {
-      navigate("/DashboardVendor", {
+      navigate(`/${vendorCode}/dashboardVendor`, {
         state: { accessToken: token, vendorId: vendorCode },
       });
     } else if (userRole === "host") {
@@ -62,7 +62,7 @@ const LoginPage = () => {
         },
       });
     } else if (userRole === "staff") {
-      navigate("/eventStaff", {
+      navigate(`/eventStaff/${vendorCode}/${staffIdValue}`, {
         state: {
           accessToken: token,
           vendorId: vendorCode,

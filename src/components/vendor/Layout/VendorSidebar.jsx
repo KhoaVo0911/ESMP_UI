@@ -20,7 +20,7 @@ const VendorSideBar = ({ collapsed }) => {
   const vendorId = location.state?.vendorId || "";
 
   useEffect(() => {
-    if (location.pathname.startsWith("/dashboardVendor")) {
+    if (location.pathname.startsWith(`/${vendorId}/dashboardVendor`)) {
       setSelectedMenuItem("1");
     } else if (location.pathname.startsWith("/productSample")) {
       setSelectedMenuItem("2");
@@ -78,22 +78,22 @@ const VendorSideBar = ({ collapsed }) => {
     setSelectedMenuItem(e.key);
     switch (e.key) {
       case "1":
-        navigate("/dashboardVendor", { state: { accessToken, vendorId } });
+        navigate(`/${vendorId}/dashboardVendor`, { state: { accessToken, vendorId } });
         break;
       case "2":
-        navigate("/productsList", { state: { accessToken, vendorId } });
+        navigate(`/productsList/${vendorId}`, { state: { accessToken, vendorId } });
         break;
       case "3":
-        navigate("/productSample", { state: { accessToken, vendorId } });
+        navigate(`/manage-product/${vendorId}`, { state: { accessToken, vendorId } });
         break;
       case "4":
-        navigate("/eventsVendor", { state: { accessToken, vendorId } });
+        navigate(`/eventsVendor/${vendorId}`, { state: { accessToken, vendorId } });
         break;
       case "5":
-        navigate("/staff-account-manager", { state: { accessToken, vendorId } });
+        navigate(`/staff-account-manager/${vendorId}`, { state: { accessToken, vendorId } });
         break;
       case "6":
-        navigate("/ListEventEnrolled", { state: { accessToken, vendorId } });
+        navigate(`/ListEventEnrolled/${vendorId}`, { state: { accessToken, vendorId } });
         break;
       default:
         navigate("/dashboardVendor", { state: { accessToken, vendorId } });

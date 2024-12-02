@@ -268,7 +268,7 @@ const EventDetail = () => {
           response.data.eventId === eventId &&
           response.data.vendorId === vendorId
         ) {
-          navigate("/eventenrolled", {
+          navigate(`/eventenrolled/${vendorId}/${eventId}`, {
             state: { accessToken, eventId, vendorId },
           });
         }
@@ -412,7 +412,7 @@ const EventDetail = () => {
             colorScheme="blue"
             size="md"
             onClick={() =>
-              navigate("/selectbooth", {
+              navigate(`/selectbooth/${vendorId}`, {
                 state: { eventId, vendorId, accessToken },
               })
             }

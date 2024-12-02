@@ -17,7 +17,7 @@ const EventStaff = () => {
   const accessToken = sessionStorage.getItem("accessToken") || "";
   const vendorId = sessionStorage.getItem("vendorId") || "";
   const hostId = sessionStorage.getItem("hostId") || "";
-
+  const staffId = sessionStorage.getItem("staffId") || "";
   // Fetch events and check vendor participation
   const fetchEvents = useCallback(async () => {
     setLoading(true);
@@ -80,7 +80,7 @@ const EventStaff = () => {
   }, [fetchEvents]);
 
   const handleEventClick = (event) => {
-    navigate(`/eventStaff/${event.eventId}`, {
+    navigate(`/eventStaff/${vendorId}/${staffId}/${event.eventId}`, {
       state: { eventId: event.eventId, accessToken },
     });
   };
