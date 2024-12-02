@@ -12,12 +12,14 @@ import {
   Button,
   Badge,
   Spinner,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { BellIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../shared/auth/AuthContext";
 import { pollNotifications } from "../../shared/notificationService";
 import NotificationList from "../../components/host/NotificationList";
+import UpdateApiBanking from "./UpdateApiBanking"; // Import the UpdateApiBanking component
 
 const HostHeader = ({ collapsed }) => {
   const location = useLocation();
@@ -29,6 +31,9 @@ const HostHeader = ({ collapsed }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const userId = sessionStorage.getItem("userId"); // Lấy userId từ currentUser
+
+  // Modal Disclosure for UpdateApiBanking
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     if (!userId) {
@@ -151,19 +156,16 @@ const HostHeader = ({ collapsed }) => {
           </MenuButton>
 
           <MenuList maxW="400px" maxH="300px" overflowY="auto">
-            {/* Kiểm tra trạng thái tải dữ liệu */}
             {isLoading ? (
               <Flex justifyContent="center" alignItems="center" p={4}>
                 <Spinner size="md" color="blue.500" />
               </Flex>
             ) : notifications && notifications.length > 0 ? (
-              /* Hiển thị danh sách thông báo */
               <NotificationList
                 notifications={notifications}
                 onMarkAsRead={markAsRead}
               />
             ) : (
-              /* Thông báo khi không có dữ liệu */
               <Flex justifyContent="center" alignItems="center" p={4}>
                 <Text fontSize="sm" color="gray.500">
                   No new notifications
@@ -203,9 +205,20 @@ const HostHeader = ({ collapsed }) => {
             >
               Log out
             </MenuItem>
+            <MenuItem
+              fontSize="md"
+              fontWeight="700"
+              color="blue.500"
+              onClick={onOpen} // Open the UpdateApiBanking modal
+            >
+              Update API Banking
+            </MenuItem>
           </MenuList>
         </Menu>
       </Flex>
+
+      {/* Modal for Update API Banking */}
+      <UpdateApiBanking isOpen={isOpen} onClose={onClose} />
     </Box>
   );
 };

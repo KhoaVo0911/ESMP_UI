@@ -62,7 +62,7 @@ const AppRoutes = () => {
       <Route path="/events/:eventId" element={<EventDetail />} /> */}
       <Route path="/login" element={<LoginPage />} />
       <Route
-        path="/productSample"
+        path="/manage-product/:vendorId"
         element={
           <VendorLayout>
             <ManageProducts />
@@ -78,7 +78,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/listEventEnrolled"
+        path="/listEventEnrolled/:vendorId"
         element={
           <VendorLayout>
             <ListEventEnrolled />
@@ -86,7 +86,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/staff-account-manager"
+        path="/staff-account-manager/:vendorId"
         element={
           <VendorLayout>
             <StaffAccountManager />
@@ -95,14 +95,14 @@ const AppRoutes = () => {
       />
 
       <Route
-        path="/selectbooth"
+        path="/selectbooth/:vendorId"
         element={
           <VendorLayout>
             <SelectBoothPage />
           </VendorLayout>
         }
       />
-      <Route path="/DashboardVendor" element={<DashboardVendor />} />
+      <Route path="/:vendorId/dashboardVendor" element={<DashboardVendor />} />
       <Route
         path="/qrcodecodecode"
         element={
@@ -124,7 +124,7 @@ const AppRoutes = () => {
       <Route path="testanh" element={<ImageUpload />} />
 
       <Route
-        path="/events/:eventId"
+        path="/events/:vendorId/:eventId"
         element={
           <VendorLayout>
             <EventPage />
@@ -132,7 +132,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/productsList"
+        path="/productsList/:vendorId"
         element={
           <VendorLayout>
             <ListProducts />
@@ -181,7 +181,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/eventsVendor"
+        path="/eventsVendor/:vendorId"
         element={
           <VendorLayout>
             <EventVendor />
@@ -189,7 +189,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/eventStaff"
+        path="/eventStaff/:vendorId/:staffId"
         element={
           <StaffLayout>
             <EventStaff />
@@ -197,7 +197,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/eventStaff/:eventId"
+        path="/eventStaff/:vendorId/:staffId/:eventId"
         element={
           <StaffLayout>
             <EventPageStaff />
@@ -213,7 +213,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/eventenrolled"
+        path="/eventenrolled/:vendorId/:eventId"
         element={
           <VendorLayout>
             <EventEnrolled />
@@ -221,7 +221,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/Shop"
+        path="/Shop/:vendorId/:eventId"
         element={
           <VendorLayout>
             <Shop />
@@ -229,7 +229,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/StaffShop"
+        path="/StaffShop/:vendorId/:staffId/:eventId"
         element={
           <StaffLayout>
             <StaffShop />
@@ -237,7 +237,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/staff-payment"
+        path="/staff-payment/:vendorId/:staffId/:eventId"
         element={
           <StaffLayout>
             <StaffPayment />
@@ -245,7 +245,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/staff-ordered-list"
+        path="/staff-ordered-list/:vendorId/:staffId/:eventId"
         element={
           <StaffLayout>
             <StaffOrderedList />
@@ -262,7 +262,7 @@ const AppRoutes = () => {
       />
        <Route path="/host-package-info" component={HostPackageInfo} />
       <Route
-        path="/ordered-list"
+        path="/ordered-list/:vendorId/:eventId"
         element={
           <VendorLayout>
             <OrderedList />
@@ -270,7 +270,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/payment"
+        path="/payment/:vendorId/:eventId"
         element={
           <VendorLayout>
             <Payment />

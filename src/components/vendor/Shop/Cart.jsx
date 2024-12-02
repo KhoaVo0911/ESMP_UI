@@ -53,7 +53,7 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
     sessionStorage.setItem("cartItems", JSON.stringify(cartItems));
     sessionStorage.setItem("totalPrice", totalPrice);
 
-    navigate("/payment", {
+    navigate(`/payment/${vendorId}/${eventId}`, {
       state: { accessToken, vendorId, eventId },
     });
   };

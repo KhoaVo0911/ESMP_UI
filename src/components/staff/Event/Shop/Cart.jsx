@@ -21,6 +21,7 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
   const accessToken = location.state?.accessToken || sessionStorage.getItem("accessToken") || "";
   const vendorId = location.state?.vendorId || sessionStorage.getItem("vendorId") || "";
   const eventId = location.state?.eventId || sessionStorage.getItem("eventId") || "";
+  const staffId = location.state?.staffId || sessionStorage.getItem("staffId") || "";
 
   const [itemsWithImages, setItemsWithImages] = useState([]);
 
@@ -53,7 +54,7 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
     sessionStorage.setItem("cartItems", JSON.stringify(cartItems));
     sessionStorage.setItem("totalPrice", totalPrice);
 
-    navigate("/staff-payment", {
+    navigate(`/staff-payment/${vendorId}/${staffId}/${eventId}`, {
       state: { accessToken, vendorId, eventId },
     });
   };

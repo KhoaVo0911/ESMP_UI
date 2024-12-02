@@ -213,7 +213,7 @@ const Shop = () => {
   };
 
   const handleGoToOrderedList = () => {
-    navigate("/ordered-list", {
+    navigate(`/ordered-list/${vendorId}/${eventId}`, {
       state: { accessToken, vendorId, eventId },
     });
   };

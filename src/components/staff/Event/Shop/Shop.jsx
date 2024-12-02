@@ -26,7 +26,7 @@ const StaffShop = () => {
   const accessToken = location.state?.accessToken || sessionStorage.getItem("accessToken") || "";
   const vendorId = location.state?.vendorId || sessionStorage.getItem("vendorId") || "";
   const eventId = location.state?.eventId || sessionStorage.getItem("eventId") || "";
-
+  const staffId = location.state?.staffId|| sessionStorage.getItem("staffId") || "";
   const [cart, setCart] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [productItems, setProductItems] = useState([]);
@@ -137,7 +137,7 @@ const StaffShop = () => {
   };
 
   const handleGoToOrderedList = () => {
-    navigate("/staff-ordered-list", {
+    navigate(`/staff-ordered-list/${vendorId}/${staffId}/${eventId}`, {
       state: { accessToken, vendorId, eventId },
     });
   };

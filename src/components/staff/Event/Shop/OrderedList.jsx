@@ -33,7 +33,7 @@ const OrderedList = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
-  const { accessToken, vendorId, eventId } = location.state || {};
+  const { accessToken, vendorId, eventId, staffId } = location.state || {};
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -161,7 +161,7 @@ const OrderedList = () => {
   }, [orders, accessToken]);
 
   const handleBack = () => {
-    navigate("/staffshop", { state: { accessToken, vendorId, eventId, totalRevenue } });
+    navigate(`/StaffShop/${vendorId}/${staffId}/${eventId}`, { state: { accessToken, vendorId, eventId, totalRevenue } });
   };
 
   const handleViewDetails = async (orderId) => {

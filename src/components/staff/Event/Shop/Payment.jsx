@@ -45,6 +45,7 @@ const StaffPayment = ({ removeItem }) => {
   const accessToken = location.state?.accessToken || sessionStorage.getItem("accessToken");
   const vendorId = location.state?.vendorId || sessionStorage.getItem("vendorId");
   const eventId = location.state?.eventId || sessionStorage.getItem("eventId");
+  const staffId = location.state?.staffId || sessionStorage.getItem("staffId");
 
   const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0);
 
@@ -167,7 +168,7 @@ const StaffPayment = ({ removeItem }) => {
       });
   
       // Điều hướng về shop
-      navigate("/staffshop", {
+      navigate(`/StaffShop/${vendorId}/${staffId}/${eventId}`, {
         state: { accessToken, vendorId, eventId },
       });
     } catch (error) {

@@ -25,6 +25,7 @@ const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 const EventVendor = () => {
   const navigate = useNavigate();
   const hostId = sessionStorage.getItem("hostId") || "";
+  const vendorId = sessionStorage.getItem("vendorId") || "";
 
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
@@ -113,7 +114,7 @@ const EventVendor = () => {
   const handleSearch = (e) => setSearchTerm(e.target.value.toLowerCase());
 
   const handleEventClick = (event) => {
-    navigate(`/events/${event.eventId}`, {
+    navigate(`/events/${vendorId}/${event.eventId}`, {
       state: { eventId: event.eventId },
     });
   };
