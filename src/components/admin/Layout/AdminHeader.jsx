@@ -21,25 +21,17 @@ const AdminHeader = ({ collapsed }) => {
   const { logout } = useAuth();
 
   const getPageTitle = () => {
-    if (location.pathname.startsWith("/bunbo")) {
-      return "Account Management";
-    } else if (location.pathname.startsWith("/admin")) {
-      return "Account Management";
+    if (location.pathname.startsWith("/dashboard-admin")) {
+      return "Dashboard Admin";
     } else if (location.pathname.startsWith("/adtransaction")) {
       return "Transaction History";
     } else if (location.pathname.startsWith("/admin-package")) {
-      return "Package ";
-    } else if (location.pathname.startsWith("/eventsVendor")) {
-      return "Events List";
-    } else if (location.pathname.startsWith("/shop")) {
-      return "Shop";
-    } else if (location.pathname.startsWith("/ordered-list")) {
-      return "Shop";
-    } else if (location.pathname.startsWith("/payment")) {
-      return "Shop";
+      return "Package";
+    } else if (location.pathname.startsWith("/accountList")) {
+      return "Host Account List";
+    } else {
+      return "Event Information"; // Default title if no match
     }
-
-    return "Event Information"; // Tiêu đề dự phòng
   };
 
   return (
@@ -100,7 +92,7 @@ const AdminHeader = ({ collapsed }) => {
               fontSize="md"
               fontWeight="700"
               color="red.500"
-              onClick={logout} // Gọi hàm logout từ AuthContext
+              onClick={logout} // Call logout function from AuthContext
             >
               Log out
             </MenuItem>

@@ -9,6 +9,7 @@ import HostLayout from "../../layouts/host/HostLayout";
 import CalendarChart from "../../components/host/chart/CalendarChart/CalendarChart";
 import EventLocationSlider from "../../components/host/EventSlider/EventLocationSlider";
 import { useParams } from "react-router-dom";
+import EventVendorCount from "../../components/host/chart/EventVendorCount";
 
 const Dashboard = () => {
   const { hostId } = useParams();
@@ -28,7 +29,7 @@ const Dashboard = () => {
           p={6}
           boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
         >
-          <RevenueChart hostId={hostId} />
+          <EventVendorCount hostId={hostId} />
           {/* <EventLocationSlider /> */}
         </Box>
         {/* <Box p={4} bg="white" borderRadius="md" boxShadow="md">

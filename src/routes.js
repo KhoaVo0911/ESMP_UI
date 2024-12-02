@@ -54,6 +54,7 @@ import OwenrPage from "./components/owner/OwnerPage";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import RegisterHostComponent from "./pages/RegisterHost.jsx";
+import DashboardAdmin from "./components/admin/AdminDashboard.jsx";
 
 const AppRoutes = () => {
   return (
@@ -148,7 +149,7 @@ const AppRoutes = () => {
       />
 
       <Route
-        path="/admin"
+        path="/accountList"
         element={
           <AdminLayout>
             <AdminAccountManagement />
@@ -378,6 +379,14 @@ const AppRoutes = () => {
           <HostLayout>
             <ViewWebsitePage />
           </HostLayout>
+        }
+      />
+      <Route
+        path="/dashboard-admin"
+        element={
+          <AdminLayout>
+            <DashboardAdmin />
+          </AdminLayout>
         }
       />
     </Routes>
