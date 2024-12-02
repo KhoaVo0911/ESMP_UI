@@ -161,7 +161,7 @@ const OrderedList = () => {
   }, [orders, accessToken]);
 
   const handleBack = () => {
-    navigate("/shop", { state: { accessToken, vendorId, eventId, totalRevenue } });
+    navigate(`/shop/${vendorId}/${eventId}`, { state: { accessToken, vendorId, eventId, totalRevenue } });
   };
 
   const handleViewDetails = async (orderId) => {

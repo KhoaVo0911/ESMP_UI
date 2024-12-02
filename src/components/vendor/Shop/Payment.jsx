@@ -49,10 +49,34 @@ const Payment = ({ removeItem }) => {
   const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   useEffect(() => {
-    const latestQrUrl = sessionStorage.getItem("urlQr") || "defaultBank-defaultAccount";
-    const newQrUrl = `https://img.vietqr.io/image/${latestQrUrl}-compact2.png?amount=${totalPrice}&addInfo=Event Tech&accountName=Quang Minh`;
-    setQrUrl(newQrUrl);
-  }, [totalPrice]);
+    const fetchQrUrl = async () => {
+      try {
+        // Make the API call to fetch the QR code URL
+        const response = await axios.get(`https://esmpbe.id.vn/api/vendor/${vendorId}`, {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+  
+        // Check if the response contains the URL
+        if (response.data && response.data.urlQr) {
+          const newQrUrl = `https://img.vietqr.io/image/${response.data.urlQr}-compact2.png?amount=${totalPrice}`;
+          setQrUrl(newQrUrl); // Set the QR URL
+        } else {
+          console.error("QR URL not found in the response.");
+        }
+      } catch (error) {
+        console.error("Error fetching QR URL:", error);
+        setQrUrl("defaultBank-defaultAccount"); // Fallback URL if the fetch fails
+      }
+    };
+  
+    if (vendorId && totalPrice > 0) {
+      fetchQrUrl(); // Fetch the QR URL when vendorId and totalPrice are available
+    }
+  }, [vendorId, totalPrice, accessToken]); // Run when vendorId or totalPrice changes
+  
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -167,7 +191,7 @@ const Payment = ({ removeItem }) => {
       });
   
       // Điều hướng về shop
-      navigate("/shop", {
+      navigate(`/shop/${vendorId}/${eventId}`, {
         state: { accessToken, vendorId, eventId },
       });
     } catch (error) {

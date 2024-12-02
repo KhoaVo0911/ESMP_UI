@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   ChakraProvider,
@@ -7,10 +7,8 @@ import {
   FormLabel,
   Input,
   Button,
-  VStack,
   List,
   ListItem,
-  Select,
   Image,
   Modal,
   ModalOverlay,
@@ -25,14 +23,17 @@ import {
 
 const TestQRCODE = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [bankCode, setBankCode] = useState("");
+  const [bankCode, setBankCode] = useState(""); // Allow bank code to be edited manually
   const [accountNumber, setAccountNumber] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
-  const [searchTerm, setSearchTerm] = useState(""); // Giá trị tìm kiếm
-  const [filteredBanks, setFilteredBanks] = useState([]); // Kết quả tìm kiếm
+  const [searchTerm, setSearchTerm] = useState(""); // Search term for bank name/code
+  const [filteredBanks, setFilteredBanks] = useState([]); // Filtered bank results
+  const [selectedBank, setSelectedBank] = useState(""); // Store selected bank name
+  const [vendorName, setVendorName] = useState(""); // Store vendor name
+  const [vendorEmail, setVendorEmail] = useState(""); // Store vendor email
   const toast = useToast();
 
-  // Lấy vendorId và accessToken từ sessionStorage
+  // Retrieve vendorId and accessToken from sessionStorage
   const vendorId = sessionStorage.getItem("vendorId");
   const accessToken = sessionStorage.getItem("accessToken");
 
@@ -49,10 +50,60 @@ const TestQRCODE = () => {
     { code: "970423", name: "TPBank" },
   ];
 
-  // Xử lý tìm kiếm ngân hàng
+  // Fetch URL QR code and vendor details from the API on component load
+  useEffect(() => {
+    const fetchVendorInfo = async () => {
+      try {
+        const response = await axios.get(
+          `https://esmpbe.id.vn/api/vendor/${vendorId}`,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const { name, email, urlQr } = response.data;
+
+        // Set vendor details
+        setVendorName(name);
+        setVendorEmail(email);
+
+        if (urlQr) {
+          // Extract bank code and account number from the URL
+          const [bankCodeFromApi, accountNumberFromApi] = urlQr.split("-");
+          setBankCode(bankCodeFromApi);
+          setAccountNumber(accountNumberFromApi);
+
+          // Find the selected bank from the bank list
+          const selectedBank = banks.find((bank) => bank.code === bankCodeFromApi);
+          if (selectedBank) {
+            setSelectedBank(selectedBank.name);
+          }
+
+          const qrImageUrl = `https://img.vietqr.io/image/${urlQr}-compact2.png?amount=0&addInfo=Event Tech&accountName=YourName`;
+          setQrCodeUrl(qrImageUrl);
+        }
+      } catch (error) {
+        console.error("Error fetching QR code info:", error);
+        toast({
+          title: "Error fetching QR info",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    };
+
+    if (vendorId && accessToken) {
+      fetchVendorInfo();
+    }
+  }, [vendorId, accessToken]);
+
+  // Handle search input and filter banks
   const handleSearch = (value) => {
     setSearchTerm(value);
-
     if (value === "") {
       setFilteredBanks([]);
       return;
@@ -66,17 +117,18 @@ const TestQRCODE = () => {
     setFilteredBanks(results);
   };
 
-  // Xử lý khi chọn ngân hàng
+  // Handle bank selection
   const handleSelectBank = (bank) => {
-    setBankCode(bank.code);
-    setSearchTerm(bank.name); // Hiển thị tên ngân hàng trong ô input
-    setFilteredBanks([]); // Xóa danh sách gợi ý
+    setBankCode(bank.code); // Update the bank code field
+    setSearchTerm(bank.name); // Show bank name in the input field
+    setFilteredBanks([]); // Clear the search suggestions
+    setSelectedBank(bank.name); // Set the selected bank name
   };
 
   const handleGenerateQR = async () => {
     if (!bankCode || !accountNumber) {
       toast({
-        title: "Vui lòng nhập đầy đủ thông tin!",
+        title: "Please enter all details!",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -84,16 +136,24 @@ const TestQRCODE = () => {
       return;
     }
 
+    // Combine the bankCode and accountNumber to form the new urlQr
     const newQrUrl = `${bankCode}-${accountNumber}`;
     const qrImageUrl = `https://img.vietqr.io/image/${newQrUrl}-compact2.png?amount=0&addInfo=Event Tech&accountName=YourName`;
     setQrCodeUrl(qrImageUrl);
     onOpen();
 
-    // Cập nhật urlQr vào API
+    // Data to update
+    const updatedData = {
+      name: vendorName, // Use vendor name from the GET request
+      email: vendorEmail, // Use vendor email from the GET request
+      urlQr: newQrUrl, // This is dynamically generated
+    };
+
+    // Update the URL QR in the API
     try {
       const response = await axios.put(
         `https://esmpbe.id.vn/api/vendor/${vendorId}`,
-        { urlQr: newQrUrl },
+        updatedData, // Send the updated name, email, and urlQr
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -103,19 +163,18 @@ const TestQRCODE = () => {
       );
 
       if (response.status === 200) {
-        // Cập nhật sessionStorage và phát sự kiện
-        sessionStorage.setItem("urlQr", newQrUrl);
+        sessionStorage.setItem("urlQr", newQrUrl); // Save the updated QR URL to sessionStorage
         toast({
-          title: "Cập nhật URL QR thành công!",
+          title: "QR URL updated successfully!",
           status: "success",
           duration: 3000,
           isClosable: true,
         });
       }
     } catch (error) {
-      console.error("Lỗi khi cập nhật URL QR:", error);
+      console.error("Error updating QR URL:", error);
       toast({
-        title: "Lỗi khi cập nhật URL QR",
+        title: "Error updating QR URL",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -126,12 +185,13 @@ const TestQRCODE = () => {
   return (
     <ChakraProvider>
       <Box maxW="md" mx="auto" mt={10} p={5} borderWidth={1} borderRadius="lg" boxShadow="lg">
+        {/* Bank search */}
         <FormControl mb={4}>
-          <FormLabel>Mã hoặc tên ngân hàng</FormLabel>
+          <FormLabel>Bank Code or Name</FormLabel>
           <Input
-            value={searchTerm}
+            value={searchTerm} // Use searchTerm for input value
             onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Nhập mã hoặc tên ngân hàng"
+            placeholder="Enter bank code or name"
           />
           {filteredBanks.length > 0 && (
             <List
@@ -158,50 +218,33 @@ const TestQRCODE = () => {
           )}
         </FormControl>
 
+        {/* Account Number */}
         <FormControl mb={4}>
-          <FormLabel>Hoặc chọn từ danh sách</FormLabel>
-          <Select
-            placeholder="Chọn ngân hàng"
-            onChange={(e) => {
-              const selected = banks.find((bank) => bank.code === e.target.value);
-              if (selected) handleSelectBank(selected);
-            }}
-            value={bankCode || ""}
-          >
-            {banks.map((bank) => (
-              <option key={bank.code} value={bank.code}>
-                {bank.code} - {bank.name}
-              </option>
-            ))}
-          </Select>
-        </FormControl>
-
-        <FormControl mb={4}>
-          <FormLabel>Số tài khoản</FormLabel>
+          <FormLabel>Account Number</FormLabel>
           <Input
             type="text"
-            placeholder="Nhập số tài khoản"
+            placeholder="Enter account number"
             value={accountNumber}
             onChange={(e) => setAccountNumber(e.target.value)}
           />
         </FormControl>
 
         <Button colorScheme="teal" onClick={handleGenerateQR} isFullWidth>
-          Tạo Quicklink
+          Generate Quicklink
         </Button>
 
         {/* QR Code Modal */}
         <Modal isOpen={isOpen} onClose={onClose}>
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>QR Code của bạn</ModalHeader>
+            <ModalHeader>Your QR Code</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
               {qrCodeUrl && <Image src={qrCodeUrl} alt="QR Code" />}
             </ModalBody>
             <ModalFooter>
               <Button colorScheme="teal" onClick={onClose}>
-                Đóng
+                Close
               </Button>
             </ModalFooter>
           </ModalContent>

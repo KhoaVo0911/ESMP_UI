@@ -96,7 +96,7 @@ const VendorSideBar = ({ collapsed }) => {
         navigate(`/ListEventEnrolled/${vendorId}`, { state: { accessToken, vendorId } });
         break;
       default:
-        navigate("/dashboardVendor", { state: { accessToken, vendorId } });
+        navigate(`/${vendorId}/dashboardVendor`, { state: { accessToken, vendorId } });
     }
   };
 
