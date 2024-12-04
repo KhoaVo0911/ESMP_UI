@@ -36,13 +36,12 @@ const ManageProducts = () => {
   const [productItems, setProductItems] = useState([]);
   const [details, setDetails] = useState([]);
   const [editingProductItem, setEditingProductItem] = useState(null);
-  const { register, handleSubmit, reset, setValue } = useForm();
+  const { register, handleSubmit, reset, setValue, formState: { errors }  } = useForm();
   const toast = useToast();
   const accessToken = sessionStorage.getItem("accessToken") || "";
   const vendorId = sessionStorage.getItem("vendorId") || "";
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(""); // Image preview
-
   const handleImageChange = (e) => {
     if (e.target.files[0]) {
       setImageFile(e.target.files[0]);
@@ -296,82 +295,134 @@ const ManageProducts = () => {
         )}
       </Grid>
 
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{editingProductItem ? "Edit Product" : "Add Product"}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <FormControl mt={4}>
-                <FormLabel>Product Name</FormLabel>
-                <Input {...register("productName")} placeholder="Enter name" />
-              </FormControl>
-              <FormControl mt={4}>
-                <FormLabel>Price</FormLabel>
-                <Input {...register("productPrice")} placeholder="Enter price" />
-              </FormControl>
+    
 
-              <FormControl mt={4}>
-                <FormLabel>Product Image</FormLabel>
-                {imagePreview && <Text mb={2}>Image Name: {imagePreview.split('/').pop()}</Text>}
-                <Input type="file" accept="image/*" onChange={handleImageChange} />
-              </FormControl>
+<Modal isOpen={isOpen} onClose={onClose} isCentered>
+  <ModalOverlay />
+  <ModalContent>
+    <ModalHeader>{editingProductItem ? "Edit Product" : "Add Product"}</ModalHeader>
+    <ModalCloseButton />
+    <ModalBody>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        onReset={() => {
+          // Reset form fields and other states on cancel
+          reset();
+          setImagePreview(null); // Clear image preview
+          setDetails([]); // Clear details array
+        }}
+      >
+        <FormControl mt={4}>
+          <FormLabel>Product Name</FormLabel>
+          <Input
+            {...register("productName", { required: "Product name is required!" })}
+            placeholder="Enter name"
+          />
+          {/* Display error message if validation fails */}
+          {errors.productName && <Text color="red.500">{errors.productName.message}</Text>}
+        </FormControl>
 
-              <FormControl mt={4}>
-                <FormLabel>Select Product and Quantity</FormLabel>
-                <Select placeholder="Select a product" {...register("productId")}>
-                  {products.map((product) => (
-                    <option key={product.productId} value={product.productId}>
-                      {product.productName}
-                    </option>
-                  ))}
-                </Select>
-                <FormControl mt={2}>
-                  <FormLabel>Quantity</FormLabel>
-                  <Input type="number" defaultValue={1} min={1} {...register("productQuantity")} placeholder="Enter quantity" />
-                </FormControl>
-                <Button
-                  mt={2}
-                  colorScheme="teal"
-                  onClick={() =>
-                    addProductToDetails(
-                      document.querySelector("select[name=productId]").value,
-                      document.querySelector("input[name=productQuantity]").value
-                    )
-                  }
-                >
-                  Add Product
-                </Button>
-              </FormControl>
+        <FormControl mt={4}>
+          <FormLabel>Price</FormLabel>
+          <Input
+            {...register("productPrice", {
+              required: "Price is required!",
+              valueAsNumber: true,
+              min: {
+                value: 0.01,
+                message: "Price must be greater than 0"
+              }
+            })}
+            type="number"
+            placeholder="Enter price"
+          />
+          {/* Display error message if validation fails */}
+          {errors.productPrice && <Text color="red.500">{errors.productPrice.message}</Text>}
+        </FormControl>
 
-              {details.length > 0 && (
-                <Box mt={4}>
-                  <Text>Selected Products:</Text>
-                  <List>
-                    {details.map((detail, index) => (
-                      <ListItem key={index}>
-                        <Flex justifyContent="space-between" alignItems="center">
-                          <Text>
-                            {products.find((p) => p.productId === detail.productId)?.productName} x {detail.quantity} {detail.unit}
-                          </Text>
-                          <IconButton icon={<FaTrash />} size="sm" colorScheme="red" onClick={() => removeProductFromDetails(detail.productId)} />
-                        </Flex>
-                      </ListItem>
-                    ))}
-                  </List>
-                </Box>
-              )}
-              <ModalFooter>
-                <Button colorScheme="blue" mr={3} type="submit">
-                  Save
-                </Button>
-                <Button onClick={onClose}>Cancel</Button>
-              </ModalFooter>
-            </form>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+        <FormControl mt={4}>
+          <FormLabel>Product Image</FormLabel>
+          {imagePreview && <Text mb={2}>Image Name: {imagePreview.split('/').pop()}</Text>}
+          <Input type="file" accept="image/*" onChange={handleImageChange} />
+        </FormControl>
+
+        <FormControl mt={4}>
+          <FormLabel>Select Product and Quantity</FormLabel>
+          <Select
+            placeholder="Select a product"
+            {...register("productId", { required: "Please select a product" })}
+          >
+            {products.map((product) => (
+              <option key={product.productId} value={product.productId}>
+                {product.productName}
+              </option>
+            ))}
+          </Select>
+          {errors.productId && <Text color="red.500">{errors.productId.message}</Text>}
+          
+          <FormControl mt={2}>
+            <FormLabel>Quantity</FormLabel>
+            <Input
+              type="number"
+              {...register("productQuantity", {
+                required: "Quantity is required!",
+                valueAsNumber: true,
+                min: {
+                  value: 1,
+                  message: "Quantity must be greater than 1"
+                }
+              })}
+              defaultValue={1}
+              min={1}
+              placeholder="Enter quantity"
+            />
+            {/* Display error message if validation fails */}
+            {errors.productQuantity && <Text color="red.500">{errors.productQuantity.message}</Text>}
+          </FormControl>
+
+          <Button
+            mt={2}
+            colorScheme="teal"
+            onClick={() =>
+              addProductToDetails(
+                document.querySelector("select[name=productId]").value,
+                document.querySelector("input[name=productQuantity]").value
+              )
+            }
+          >
+            Add Product
+          </Button>
+        </FormControl>
+
+        {details.length > 0 && (
+          <Box mt={4}>
+            <Text>Selected Products:</Text>
+            <List>
+              {details.map((detail, index) => (
+                <ListItem key={index}>
+                  <Flex justifyContent="space-between" alignItems="center">
+                    <Text>
+                      {products.find((p) => p.productId === detail.productId)?.productName} x {detail.quantity} {detail.unit}
+                    </Text>
+                    <IconButton icon={<FaTrash />} size="sm" colorScheme="red" onClick={() => removeProductFromDetails(detail.productId)} />
+                  </Flex>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        )}
+
+        <ModalFooter>
+          <Button colorScheme="blue" mr={3} type="submit">
+            Save
+          </Button>
+          <Button onClick={onClose} type="reset">Cancel</Button>
+        </ModalFooter>
+      </form>
+    </ModalBody>
+  </ModalContent>
+</Modal>
+
     </Box>
   );
 };

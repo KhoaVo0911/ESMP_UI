@@ -1,19 +1,72 @@
-import React, { useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Pie } from "react-chartjs-2";
 import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
 import { Text } from "@chakra-ui/react";
+import axios from "axios";
 
 Chart.register(ArcElement, Tooltip, Legend);
 
 const PieChart = () => {
   const chartRef = useRef(null);
 
-  // Dữ liệu của biểu đồ
-  const data = {
-    labels: ["Coca", "Sushi", "Pizza", "Bánh mì", "Bún riêu", "Bún đậu"],
+  const [categoryData, setCategoryData] = useState([]);
+  const [productData, setProductData] = useState([]);
+  const [categoryCounts, setCategoryCounts] = useState({});
+
+  useEffect(() => {
+    // Retrieve vendorId and hostId from sessionStorage
+    const vendorId = sessionStorage.getItem("vendorId");
+    const hostId = sessionStorage.getItem("hostId");
+
+    if (vendorId && hostId) {
+      // Fetch product data by vendorId
+      axios
+        .get(`https://esmpbe.id.vn/api/product/${vendorId}`)
+        .then((response) => {
+          setProductData(response.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching product data:", error);
+        });
+
+      // Fetch category data by hostId
+      axios
+        .get(`https://esmpbe.id.vn/api/category/host/${hostId}`)
+        .then((response) => {
+          setCategoryData(response.data);
+        })
+        .catch((error) => {
+          console.error("Error fetching category data:", error);
+        });
+    }
+  }, []);
+
+  // Calculate the product count per category
+  useEffect(() => {
+    if (productData.length && categoryData.length) {
+      const counts = categoryData.reduce((acc, category) => {
+        // Filter products by categoryId and sum up their count
+        const productsInCategory = productData.filter(
+          (product) => product.categoryId === category.categoryId
+        );
+        const totalCount = productsInCategory.reduce(
+          (sum, product) => sum + product.count,
+          0
+        );
+        acc[category.categoryId] = totalCount;
+        return acc;
+      }, {});
+
+      setCategoryCounts(counts);
+    }
+  }, [productData, categoryData]);
+
+  // Prepare data for the pie chart
+  const chartData = {
+    labels: categoryData.map((category) => category.categoryName),
     datasets: [
       {
-        data: [137, 188, 149, 197, 233, 155],
+        data: categoryData.map((category) => categoryCounts[category.categoryId] || 0),
         backgroundColor: [
           "#6FD195",
           "#8979FF",
@@ -34,27 +87,26 @@ const PieChart = () => {
     ],
   };
 
-  // Tính tổng số lượng
-  const totalQuantity = data.datasets[0].data.reduce(
+  // Calculate the total quantity
+  const totalQuantity = Object.values(categoryCounts).reduce(
     (acc, value) => acc + value,
     0
   );
 
-  // Cấu hình tùy chọn
+  // Chart options
   const chartOptions = {
     responsive: true,
     plugins: {
       legend: {
         display: true,
-        position: "right", // Di chuyển label sang bên phải
-        align: "right", // Căn giữa các label
-        
+        position: "right", // Move labels to the right
+        align: "right", // Center the labels
       },
       tooltip: {
         enabled: true,
       },
     },
-    cutout: "50%", // Tạo khoảng trống ở giữa biểu đồ
+    cutout: "50%", // Create space in the middle of the chart
   };
 
   return (
@@ -66,8 +118,6 @@ const PieChart = () => {
       }}
     >
       <div style={{ position: "relative", width: "450px" }}>
-        {" "}
-        {/* Tăng kích thước của biểu đồ */}
         <Text
           fontSize="22px"
           fontWeight="700"
@@ -77,7 +127,7 @@ const PieChart = () => {
         >
           Best Seller Product Categories
         </Text>
-        <Pie data={data} options={chartOptions} ref={chartRef} />
+        <Pie data={chartData} options={chartOptions} ref={chartRef} />
         <div
           style={{
             position: "absolute",

@@ -1,14 +1,24 @@
 import React from "react";
-
 import VendorLayout from "./Layout/VendorLayout";
 import { Box, Grid, Text } from "@chakra-ui/react";
 import RevenueChart from "./chart/RevenueChart";
 import MostOrderedProduct from "./MostOderProduct/MostOrderedProduct";
 import PieChart from "./chart/PieChart";
+import UpcomingEvents from "./UpcomingEvents";  // Import component mới
 
 const DashboardVendor = () => {
   return (
     <VendorLayout>
+       <Grid templateColumns="1fr" gap={8} mb={8}>
+        <Box
+          bg="white"
+          borderRadius="20px"
+          p={6}
+          boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
+        >
+          <UpcomingEvents />
+        </Box>
+      </Grid>
       <Grid templateColumns="2fr 1fr" gap={8} mb={8}>
         <Box
           bg="white"
@@ -39,6 +49,9 @@ const DashboardVendor = () => {
           <RevenueChart />
         </Box>
       </Grid>
+
+      {/* Phần sự kiện sắp tới */}
+     
     </VendorLayout>
   );
 };
