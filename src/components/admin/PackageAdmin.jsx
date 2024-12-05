@@ -271,7 +271,7 @@ const PackageAdmin = () => {
                   colorScheme={pkg.status ? "red" : "green"}
                   onClick={() => handleToggleStatus(pkg.id, pkg.status)}
                 >
-                  {pkg.status ? "Deactivate" : "Activate"}
+                  {pkg.status ? "Inactivate" : "Activate"}
                 </Button>
               </HStack>
             </VStack>
