@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "./ProtectedRoute";
 import HostLayout from "./layouts/host/HostLayout";
 import Dashboard from "./pages/host/Dashboard";
 import Event from "./pages/host/Event/Event";
@@ -72,59 +73,79 @@ const AppRoutes = () => {
       <Route
         path="/manage-product/:vendorId"
         element={
-          <VendorLayout>
-            <ManageProducts />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <ManageProducts />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/map-sample"
         element={
-          <VendorLayout>
-            <BoothPlanView />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <BoothPlanView />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/listEventEnrolled/:vendorId"
         element={
-          <VendorLayout>
-            <ListEventEnrolled />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <ListEventEnrolled />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/staff-account-manager/:vendorId"
         element={
-          <VendorLayout>
-            <StaffAccountManager />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <StaffAccountManager />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
-
       <Route
         path="/selectbooth/:vendorId"
         element={
-          <VendorLayout>
-            <SelectBoothPage />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <SelectBoothPage />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
-      <Route path="/:vendorId/dashboardVendor" element={<DashboardVendor />} />
+      <Route
+        path="/:vendorId/dashboardVendor"
+        element={
+          <ProtectedRoute>
+            <DashboardVendor />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/qrcodecodecode"
         element={
-          <VendorLayout>
-            <TestQRCODE />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <TestQRCODE />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/:hostId/dashboard"
         element={
-          <HostLayout>
-            <Dashboard />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <Dashboard />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route path="qrcode" element={<CourseList />} />
@@ -134,262 +155,332 @@ const AppRoutes = () => {
       <Route
         path="/events/:vendorId/:eventId"
         element={
-          <VendorLayout>
-            <EventPage />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <EventPage />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/productsList/:vendorId"
         element={
-          <VendorLayout>
-            <ListProducts />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <ListProducts />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
 
       <Route
         path="/accountList"
         element={
-          <AdminLayout>
-            <AdminAccountManagement />
-          </AdminLayout>
+          <ProtectedRoute>
+            <AdminLayout>
+              <AdminAccountManagement />
+            </AdminLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/adtransaction"
         element={
-          <AdminLayout>
-            <AdminTransactionHistory />
-          </AdminLayout>
+          <ProtectedRoute>
+            <AdminLayout>
+              <AdminTransactionHistory />
+            </AdminLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/ManageProductItems"
         element={
-          <VendorLayout>
-            <ManageProductItems />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <ManageProductItems />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/events/host/:hostId"
         element={
-          <HostLayout>
-            <Event />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <Event />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/event-detail/:eventId"
         element={
-          <HostLayout>
-            <EventDetails />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <EventDetails />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/eventsVendor/:vendorId"
         element={
-          <VendorLayout>
-            <EventVendor />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <EventVendor />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/eventStaff/:vendorId/:staffId"
         element={
-          <StaffLayout>
-            <EventStaff />
-          </StaffLayout>
+          <ProtectedRoute>
+            <StaffLayout>
+              <EventStaff />
+            </StaffLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/eventStaff/:vendorId/:staffId/:eventId"
         element={
-          <StaffLayout>
-            <EventPageStaff />
-          </StaffLayout>
+          <ProtectedRoute>
+            <StaffLayout>
+              <EventPageStaff />
+            </StaffLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/transaction"
         element={
-          <VendorLayout>
-            <Transaction />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <Transaction />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/eventenrolled/:vendorId/:eventId"
         element={
-          <VendorLayout>
-            <EventEnrolled />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <EventEnrolled />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/Shop/:vendorId/:eventId"
         element={
-          <VendorLayout>
-            <Shop />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <Shop />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/StaffShop/:vendorId/:staffId/:eventId"
         element={
-          <StaffLayout>
-            <StaffShop />
-          </StaffLayout>
+          <ProtectedRoute>
+            <StaffLayout>
+              <StaffShop />
+            </StaffLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/staff-payment/:vendorId/:staffId/:eventId"
         element={
-          <StaffLayout>
-            <StaffPayment />
-          </StaffLayout>
+          <ProtectedRoute>
+            <StaffLayout>
+              <StaffPayment />
+            </StaffLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/staff-ordered-list/:vendorId/:staffId/:eventId"
         element={
-          <StaffLayout>
-            <StaffOrderedList />
-          </StaffLayout>
+          <ProtectedRoute>
+            <StaffLayout>
+              <StaffOrderedList />
+            </StaffLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/admin-package"
         element={
-          <AdminLayout>
-            <PackageAdmin />
-          </AdminLayout>
+          <ProtectedRoute>
+            <AdminLayout>
+              <PackageAdmin />
+            </AdminLayout>
+          </ProtectedRoute>
         }
       />
-      <Route path="/host-package-info" component={HostPackageInfo} />
+      <Route
+        path="/host-package-info"
+        element={
+          <ProtectedRoute>
+            <HostPackageInfo />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/ordered-list/:vendorId/:eventId"
         element={
-          <VendorLayout>
-            <OrderedList />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <OrderedList />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/payment/:vendorId/:eventId"
         element={
-          <VendorLayout>
-            <Payment />
-          </VendorLayout>
+          <ProtectedRoute>
+            <VendorLayout>
+              <Payment />
+            </VendorLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/eventpayment/:eventId"
         element={
-          <HostLayout>
-            <Transaction />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <Transaction />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/package-trans"
         element={
-          <HostLayout>
-            <PackageTransactionHistory />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <PackageTransactionHistory />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/manage-product"
         element={
-          <HostLayout>
-            <ManageProduct />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <ManageProduct />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/event/:eventId/booth-plan"
         element={
-          <HostLayout>
-            <LocationMap />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <LocationMap />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/event/:eventId/booth-plan/:mode"
         element={
-          <HostLayout>
-            <BoothPlan />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <BoothPlan />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/event/:eventId/location-type"
         element={
-          <HostLayout>
-            <LocationTypePage />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <LocationTypePage />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/eventconfig"
         element={
-          <HostLayout>
-            <EventConfigPage />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <EventConfigPage />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/event/:eventId/extensionEvent"
         element={
-          <HostLayout>
-            <ExtensionEvent />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <ExtensionEvent />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/accounts"
         element={
-          <HostLayout>
-            <AccountManagement />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <AccountManagement />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/settings"
         element={
-          <HostLayout>
-            <Settings />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <Settings />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/packages"
         element={
-          <HostLayout>
-            <PackagePage />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <PackagePage />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/view-website"
         element={
-          <HostLayout>
-            <ViewWebsitePage />
-          </HostLayout>
+          <ProtectedRoute>
+            <HostLayout>
+              <ViewWebsitePage />
+            </HostLayout>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/dashboard-admin"
         element={
-          <AdminLayout>
-            <DashboardAdmin />
-          </AdminLayout>
-        }
-      />
-    </Routes>
+          <ProtectedRoute>
+            <AdminLayout>
+              <DashboardAdmin />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+        </Routes>
   );
 };
 

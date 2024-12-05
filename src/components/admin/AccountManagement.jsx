@@ -3,23 +3,26 @@ import {
   Table, Thead, Tbody, Tr, Th, Td, IconButton, Modal,
   ModalOverlay, ModalContent, ModalHeader, ModalFooter,
   ModalBody, ModalCloseButton, useDisclosure, FormControl,
-  FormLabel, Input, Stack, Button, Box
+  FormLabel, Input, Stack, Button, Box, InputGroup, InputLeftElement
 } from "@chakra-ui/react";
-import { EditIcon, DeleteIcon, ViewIcon } from "@chakra-ui/icons";
+import { EditIcon, DeleteIcon, ViewIcon, SearchIcon } from "@chakra-ui/icons";
 import axios from "axios";
 
 const AdminAccountManagement = () => {
   const [accounts, setAccounts] = useState([]);
+  const [filteredAccounts, setFilteredAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [newAccount, setNewAccount] = useState({
     userid: "", password: "", email: "", expiretime: ""
   });
 
-  // Modal for creating new account
+  const [currentPage, setCurrentPage] = useState(1);
+  const [accountsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Modal disclosures
   const { isOpen: isCreateOpen, onOpen: onCreateOpen, onClose: onCreateClose } = useDisclosure();
-  // Modal for viewing account details
   const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure();
-  // Modal for editing account
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
 
   // Get list of accounts from API
@@ -27,9 +30,30 @@ const AdminAccountManagement = () => {
     axios.get("https://esmpbe.id.vn/api/host")
       .then((response) => {
         setAccounts(response.data); // Assuming the API returns account data
+        setFilteredAccounts(response.data); // Set initial filtered accounts
       })
       .catch((error) => console.error(error));
   }, []);
+
+  // Handle search filter
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
+    const lowercasedSearchTerm = event.target.value.toLowerCase();
+    const filteredData = accounts.filter(account =>
+      account.account.username.toLowerCase().includes(lowercasedSearchTerm) ||
+      account.account.name.toLowerCase().includes(lowercasedSearchTerm)
+    );
+    setFilteredAccounts(filteredData);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  // Get current page's accounts
+  const indexOfLastAccount = currentPage * accountsPerPage;
+  const indexOfFirstAccount = indexOfLastAccount - accountsPerPage;
+  const currentAccounts = filteredAccounts.slice(indexOfFirstAccount, indexOfLastAccount);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Create a new account
   const createAccount = () => {
@@ -37,7 +61,8 @@ const AdminAccountManagement = () => {
     axios.post("https://esmpbe.id.vn/api/host", newHostAccount)
       .then((response) => {
         setAccounts([...accounts, response.data]);
-        onCreateClose(); // Close modal after creation
+        setFilteredAccounts([...filteredAccounts, response.data]);
+        onCreateClose();
       })
       .catch((error) => console.error(error));
   };
@@ -45,7 +70,6 @@ const AdminAccountManagement = () => {
   // Update account details
   const updateAccount = () => {
     if (!selectedAccount) return;
-    // Chỉ gửi các thay đổi ngoài trường account
     const updatedData = {
       phone: selectedAccount.phone,
       email: selectedAccount.email,
@@ -57,8 +81,8 @@ const AdminAccountManagement = () => {
     axios.put(`https://esmpbe.id.vn/api/host/${selectedAccount.account.id}`, updatedData)
       .then((response) => {
         setAccounts(accounts.map(acc => acc.account.id === selectedAccount.account.id ? response.data : acc));
-        setSelectedAccount(null); // Reset selected account
-        onEditClose(); // Close the edit modal
+        setSelectedAccount(null);
+        onEditClose();
       })
       .catch((error) => console.error(error));
   };
@@ -68,6 +92,7 @@ const AdminAccountManagement = () => {
     axios.delete(`https://esmpbe.id.vn/api/host/${id}`)
       .then(() => {
         setAccounts(accounts.filter(acc => acc.account.id !== id));
+        setFilteredAccounts(filteredAccounts.filter(acc => acc.account.id !== id));
       })
       .catch((error) => console.error(error));
   };
@@ -75,21 +100,27 @@ const AdminAccountManagement = () => {
   // View account details and open the modal
   const viewDetails = (account) => {
     setSelectedAccount(account);
-    onDetailOpen(); // Open view modal
+    onDetailOpen();
   };
 
   // Open edit modal
   const openEditModal = (account) => {
     setSelectedAccount(account);
-    onEditOpen(); // Open edit modal
+    onEditOpen();
   };
 
   return (
     <Stack spacing={4} p={4}>
-      {/* Button to create new account */}
-      <Button onClick={onCreateOpen} colorScheme="teal" size="sm" mb={4} alignSelf="flex-start">
-        Create New Account
-      </Button>
+      {/* Search Bar */}
+      <InputGroup mb={4}>
+        <InputLeftElement pointerEvents="none" children={<SearchIcon color="gray.300" />} />
+        <Input
+          type="text"
+          placeholder="Search accounts..."
+          value={searchTerm}
+          onChange={handleSearch}
+        />
+      </InputGroup>
 
       {/* Table displaying accounts */}
       <Box border="1px" borderColor="gray.200" borderRadius="md" boxShadow="lg" p={4}>
@@ -99,23 +130,23 @@ const AdminAccountManagement = () => {
               <Th>Username</Th>
               <Th>Password</Th>
               <Th>Name</Th>
-              <Th>Role</Th>
+              <Th>Status</Th>
               <Th textAlign="center">Actions</Th>
             </Tr>
           </Thead>
           <Tbody>
-            {accounts.map((account) => (
+            {currentAccounts.map((account) => (
               <Tr key={account.account.id}>
                 <Td>{account.account.username}</Td>
                 <Td>*******</Td>
                 <Td>{account.account.name}</Td>
-                <Td>{account.account.role}</Td>
+                <Td>{account.account.status ? 'Active' : 'Inactive'}</Td>
                 <Td textAlign="center">
                   {/* View details button */}
                   <IconButton
                     icon={<ViewIcon />}
                     aria-label="View account details"
-                    onClick={() => viewDetails(account)} // Open modal to view account details
+                    onClick={() => viewDetails(account)}
                     variant="ghost"
                     size="sm"
                     mx={1}
@@ -124,7 +155,7 @@ const AdminAccountManagement = () => {
                   <IconButton
                     icon={<EditIcon />}
                     aria-label="Edit account"
-                    onClick={() => openEditModal(account)} // Open modal to edit
+                    onClick={() => openEditModal(account)}
                     variant="ghost"
                     size="sm"
                     mx={1}
@@ -133,7 +164,7 @@ const AdminAccountManagement = () => {
                   <IconButton
                     icon={<DeleteIcon />}
                     aria-label="Delete account"
-                    onClick={() => deleteAccount(account.account.id)} // Delete the account
+                    onClick={() => deleteAccount(account.account.id)}
                     variant="ghost"
                     size="sm"
                     mx={1}
@@ -145,6 +176,35 @@ const AdminAccountManagement = () => {
         </Table>
       </Box>
 
+      {/* Pagination */}
+      <Box display="flex" justifyContent="center" mt={4}>
+        <Button
+          onClick={() => paginate(currentPage - 1)}
+          isDisabled={currentPage === 1}
+          mr={2}
+        >
+          Prev
+        </Button>
+        {[...Array(Math.ceil(filteredAccounts.length / accountsPerPage))].map((_, index) => (
+          <Button
+            key={index}
+            onClick={() => paginate(index + 1)}
+            variant={index + 1 === currentPage ? "solid" : "outline"}
+            colorScheme="teal"
+            mx={1}
+          >
+            {index + 1}
+          </Button>
+        ))}
+        <Button
+          onClick={() => paginate(currentPage + 1)}
+          isDisabled={currentPage === Math.ceil(filteredAccounts.length / accountsPerPage)}
+          ml={2}
+        >
+          Next
+        </Button>
+      </Box>
+
       {/* Modal for viewing account details */}
       <Modal isOpen={isDetailOpen} onClose={onDetailClose}>
         <ModalOverlay />
@@ -153,24 +213,24 @@ const AdminAccountManagement = () => {
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
-              <FormLabel>User ID</FormLabel>
-              <Input value={selectedAccount?.account?.username} isReadOnly />
+              <FormLabel>Name</FormLabel>
+              <Input value={selectedAccount?.account?.name} isReadOnly />
             </FormControl>
             <FormControl mt={4}>
               <FormLabel>Phone</FormLabel>
-              <Input value={selectedAccount?.phone} isReadOnly />
+              <Input value={selectedAccount?.account.phone} isReadOnly />
             </FormControl>
             <FormControl mt={4}>
               <FormLabel>Email</FormLabel>
-              <Input value={selectedAccount?.email} isReadOnly />
+              <Input value={selectedAccount?.account.email} isReadOnly />
             </FormControl>
             <FormControl mt={4}>
               <FormLabel>Expire Time</FormLabel>
-              <Input value={selectedAccount?.expiretime} isReadOnly />
+              <Input value={selectedAccount?.expiretime ? new Date(selectedAccount.expiretime).toLocaleDateString() : ''} isReadOnly />
             </FormControl>
             <FormControl mt={4}>
               <FormLabel>Event Storage Time</FormLabel>
-              <Input value={selectedAccount?.eventstoragetime} isReadOnly />
+              <Input value={selectedAccount?.eventstoragetime ? new Date(selectedAccount.eventstoragetime).toLocaleDateString() : ''} isReadOnly />
             </FormControl>
             <FormControl mt={4}>
               <FormLabel>Banking Account</FormLabel>
@@ -184,63 +244,62 @@ const AdminAccountManagement = () => {
       </Modal>
 
       {/* Modal for editing account */}
-     {/* Modal for editing account */}
-<Modal isOpen={isEditOpen} onClose={onEditClose}>
-  <ModalOverlay />
-  <ModalContent>
-    <ModalHeader>Edit Account</ModalHeader>
-    <ModalCloseButton />
-    <ModalBody>
-      <FormControl>
-        <FormLabel>Phone</FormLabel>
-        <Input
-          value={selectedAccount?.phone}
-          onChange={(e) => setSelectedAccount({ ...selectedAccount, phone: e.target.value })}
-        />
-      </FormControl>
-      <FormControl mt={4}>
-        <FormLabel>Email</FormLabel>
-        <Input
-          value={selectedAccount?.email}
-          onChange={(e) => setSelectedAccount({ ...selectedAccount, email: e.target.value })}
-        />
-      </FormControl>
-      <FormControl mt={4}>
-        <FormLabel>Expire Time</FormLabel>
-        <Input
-          value={selectedAccount?.expiretime}
-          onChange={(e) => setSelectedAccount({ ...selectedAccount, expiretime: e.target.value })}
-        />
-      </FormControl>
-      <FormControl mt={4}>
-        <FormLabel>Event Storage Time</FormLabel>
-        <Input
-          value={selectedAccount?.eventstoragetime}
-          onChange={(e) => setSelectedAccount({ ...selectedAccount, eventstoragetime: e.target.value })}
-        />
-      </FormControl>
-      <FormControl mt={4}>
-        <FormLabel>Banking Account</FormLabel>
-        <Input
-          value={selectedAccount?.bankingaccount}
-          onChange={(e) => setSelectedAccount({ ...selectedAccount, bankingaccount: e.target.value })}
-        />
-      </FormControl>
-      <FormControl mt={4}>
-        <FormLabel>Password</FormLabel>
-        <Input
-          type="password"
-          value={selectedAccount?.account?.password}
-          onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, password: e.target.value } })}
-        />
-      </FormControl>
-    </ModalBody>
-    <ModalFooter>
-      <Button variant="ghost" onClick={onEditClose}>Cancel</Button>
-      <Button colorScheme="teal" onClick={updateAccount}>Save Changes</Button>
-    </ModalFooter>
-  </ModalContent>
-</Modal>
+      <Modal isOpen={isEditOpen} onClose={onEditClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Edit Account</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>Name</FormLabel>
+              <Input
+                value={selectedAccount?.account?.name}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, name: e.target.value } })}
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Phone</FormLabel>
+              <Input
+                value={selectedAccount?.account?.phone}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, phone: e.target.value } })}
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Email</FormLabel>
+              <Input
+                value={selectedAccount?.account?.email}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, email: e.target.value } })}
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Expire Time</FormLabel>
+              <Input value={selectedAccount?.expiretime ? new Date(selectedAccount.expiretime).toLocaleDateString() : ''} isReadOnly />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Event Storage Time</FormLabel>
+              <Input value={selectedAccount?.eventstoragetime ? new Date(selectedAccount.eventstoragetime).toLocaleDateString() : ''} isReadOnly />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Banking Account</FormLabel>
+              <Input
+                value={selectedAccount?.bankingaccount}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, bankingaccount: e.target.value } })}
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>API BANKING</FormLabel>
+              <Input
+                value={selectedAccount?.apibanking}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, apibanking: e.target.value } })}
+              />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" onClick={onEditClose}>Cancel</Button>
+            <Button colorScheme="teal" onClick={updateAccount}>Save Changes</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Stack>
   );
 };

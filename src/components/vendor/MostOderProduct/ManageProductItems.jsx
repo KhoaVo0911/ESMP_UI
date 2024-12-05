@@ -158,14 +158,14 @@ const ManageProducts = () => {
     }
 
     const productItemData = {
-      vendorId,
+      // vendorId,
       name: data.productName,
       description: data.description || "Product item description",
       details,
       price: data.productPrice,
-      status: true,
-      createAt: new Date().toISOString(),
-      updateAt: new Date().toISOString(),
+      // status: true,
+      // createAt: new Date().toISOString(),
+      // updateAt: new Date().toISOString(),
     };
 
     try {

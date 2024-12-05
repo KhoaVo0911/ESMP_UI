@@ -22,13 +22,13 @@ const AdminHeader = ({ collapsed }) => {
 
   const getPageTitle = () => {
     if (location.pathname.startsWith("/dashboard-admin")) {
-      return "Dashboard Admin";
+      return "Dashboard";
     } else if (location.pathname.startsWith("/adtransaction")) {
       return "Transaction History";
     } else if (location.pathname.startsWith("/admin-package")) {
-      return "Package";
+      return "Package Management";
     } else if (location.pathname.startsWith("/accountList")) {
-      return "Host Account List";
+      return "Host Management";
     } else {
       return "Event Information"; // Default title if no match
     }

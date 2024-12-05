@@ -44,13 +44,38 @@ const HostSideBar = ({ collapsed }) => {
             <span
               style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
             >
-              Dashboard Admin
+              Dashboard
             </span>
           ),
           onClick: () => navigate(`/dashboard-admin`),
         },
         {
           key: "2",
+          icon: <AccountCircleIcon />,
+          label: (
+            <span
+              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
+            >
+              Host Management
+            </span>
+          ),
+          onClick: () => navigate("/accountList"),
+        },
+        {
+          key: "3",
+          icon: <BackpackIcon />,
+          label: (
+            <span
+              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
+            >
+              Package Management
+            </span>
+          ),
+          onClick: () => navigate("/admin-package"),
+        },
+       
+        {
+          key: "4",
           icon: <FormatListBulletedIcon />,
           label: (
             <span
@@ -60,30 +85,6 @@ const HostSideBar = ({ collapsed }) => {
             </span>
           ),
           onClick: () => navigate(`/adtransaction`),
-        },
-        {
-          key: "3",
-          icon: <BackpackIcon />,
-          label: (
-            <span
-              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
-            >
-              Package
-            </span>
-          ),
-          onClick: () => navigate("/admin-package"),
-        },
-        {
-          key: "4",
-          icon: <AccountCircleIcon />,
-          label: (
-            <span
-              style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
-            >
-              Host Account List
-            </span>
-          ),
-          onClick: () => navigate("/accountList"),
         },
       ],
     },
@@ -125,13 +126,13 @@ const HostSideBar = ({ collapsed }) => {
                 navigate(`/dashboard-admin`);
                 break;
               case "2":
-                navigate(`/adtransaction`);
+                navigate("/accountList");
                 break;
               case "3":
                 navigate("/admin-package");
                 break;
               case "4":
-                navigate("/accountList");
+                navigate(`/adtransaction`);
                 break;
               default:
                 navigate(`/dashboard-admin`);
