@@ -117,32 +117,72 @@ const AdminAccountManagement = () => {
   // Update account details
   const updateAccount = () => {
     if (!selectedAccount) return;
+  
     const updatedData = {
-      phone: selectedAccount.phone,
-      email: selectedAccount.email,
+      name: selectedAccount.account.name,
+      phone: selectedAccount.account.phone,
+      email: selectedAccount.account.email,
       expiretime: selectedAccount.expiretime,
       eventstoragetime: selectedAccount.eventstoragetime,
-      bankingaccount: selectedAccount.bankingaccount
+      bankingaccount: selectedAccount.bankingaccount,
+      apibanking: selectedAccount.apibanking
     };
-
-    axios.put(`https://esmpbe.id.vn/api/host/${selectedAccount.account.id}`, updatedData)
+  
+    axios.put(`https://esmpbe.id.vn/api/host/${selectedAccount.hostid}`, updatedData)
       .then((response) => {
-        setAccounts(accounts.map(acc => acc.account.id === selectedAccount.account.id ? response.data : acc));
+        // Show success toast
+        toast({
+          title: "Account Updated.",
+          description: "The account has been updated successfully.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+  
+        // Fetch the updated account list after the update
+        axios.get("https://esmpbe.id.vn/api/host")
+          .then((response) => {
+            setAccounts(response.data);  // Update the accounts state with the latest data
+            setFilteredAccounts(response.data);  // Update the filtered accounts as well
+          })
+          .catch((error) => {
+            console.error("Error fetching updated accounts:", error);
+            toast({
+              title: "Error Fetching Accounts.",
+              description: "There was an error fetching the latest account data.",
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
+          });
+  
+        // Close the modal and reset the selected account
         setSelectedAccount(null);
         onEditClose();
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        console.error(error);
+  
+        // Show error toast
+        toast({
+          title: "Error Updating Account.",
+          description: "There was an error updating the account. Please try again.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      });
   };
-
+  
   // Delete account
-  const deleteAccount = (id) => {
-    axios.delete(`https://esmpbe.id.vn/api/host/${id}`)
-      .then(() => {
-        setAccounts(accounts.filter(acc => acc.account.id !== id));
-        setFilteredAccounts(filteredAccounts.filter(acc => acc.account.id !== id));
-      })
-      .catch((error) => console.error(error));
-  };
+  // const deleteAccount = (hostid) => {
+  //   axios.delete(`https://esmpbe.id.vn/api/host/${hostid}`)
+  //     .then(() => {
+  //       setAccounts(accounts.filter(acc => acc.account.hostid !== hostid));
+  //       setFilteredAccounts(filteredAccounts.filter(acc => acc.account.hostid !== hostid));
+  //     })
+  //     .catch((error) => console.error(error));
+  // };
 
   // View account details and open the modal
   const viewDetails = (account) => {
@@ -214,14 +254,14 @@ const AdminAccountManagement = () => {
                     mx={1}
                   />
                   {/* Delete account button */}
-                  <IconButton
+                  {/* <IconButton
                     icon={<DeleteIcon />}
                     aria-label="Delete account"
-                    onClick={() => deleteAccount(account.account.id)}
+                    onClick={() => deleteAccount(account.account.hostid)}
                     variant="ghost"
                     size="sm"
                     mx={1}
-                  />
+                  /> */}
                 </Td>
               </Tr>
             ))}
@@ -257,7 +297,42 @@ const AdminAccountManagement = () => {
           Next
         </Button>
       </Box>
-
+      <Modal isOpen={isDetailOpen} onClose={onDetailClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Account Details</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>Name</FormLabel>
+              <Input value={selectedAccount?.account?.name} isReadOnly />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Phone</FormLabel>
+              <Input value={selectedAccount?.account?.phone} isReadOnly />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Email</FormLabel>
+              <Input value={selectedAccount?.account?.email} isReadOnly />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Expire Time</FormLabel>
+              <Input value={selectedAccount?.expiretime ? new Date(selectedAccount.expiretime).toLocaleDateString() : ''} isReadOnly />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Event Storage Time</FormLabel>
+              <Input value={selectedAccount?.eventstoragetime ? new Date(selectedAccount.eventstoragetime).toLocaleDateString() : ''} isReadOnly />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Banking Account</FormLabel>
+              <Input value={selectedAccount?.bankingaccount} isReadOnly />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" onClick={onDetailClose}>Close</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       {/* Create Account Modal */}
       <Modal isOpen={isCreateOpen} onClose={onCreateClose}>
         <ModalOverlay />
@@ -310,6 +385,62 @@ const AdminAccountManagement = () => {
           <ModalFooter>
             <Button variant="ghost" onClick={onCreateClose}>Cancel</Button>
             <Button colorScheme="teal" onClick={createAccount}>Create Account</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      <Modal isOpen={isEditOpen} onClose={onEditClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Edit Account</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl>
+              <FormLabel>Name</FormLabel>
+              <Input
+                value={selectedAccount?.account?.name}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, name: e.target.value } })}
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Phone</FormLabel>
+              <Input
+                value={selectedAccount?.account?.phone}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, phone: e.target.value } })}
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Email</FormLabel>
+              <Input
+                value={selectedAccount?.account?.email}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, email: e.target.value } })}
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Expire Time</FormLabel>
+              <Input value={selectedAccount?.expiretime ? new Date(selectedAccount.expiretime).toLocaleDateString() : ''} isReadOnly />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Event Storage Time</FormLabel>
+              <Input value={selectedAccount?.eventstoragetime ? new Date(selectedAccount.eventstoragetime).toLocaleDateString() : ''} isReadOnly />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>Banking Account</FormLabel>
+              <Input
+                value={selectedAccount?.bankingaccount}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount, bankingaccount: e.target.value } })}
+              />
+            </FormControl>
+            <FormControl mt={4}>
+              <FormLabel>API BANKING</FormLabel>
+              <Input
+                value={selectedAccount?.apibanking}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount, apibanking: e.target.value } })}
+              />
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" onClick={onEditClose}>Cancel</Button>
+            <Button colorScheme="teal" onClick={updateAccount}>Save Changes</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

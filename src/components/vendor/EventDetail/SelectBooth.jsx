@@ -36,6 +36,7 @@ const SelectBooth = () => {
   const [locationTypes, setLocationTypes] = useState([]);
   const [boothTypeDetails, setBoothTypeDetails] = useState(null);
   const [eventName, setEventName] = useState("");
+  const [deposit, setDeposit] = useState("");
   const [view, setView] = useState("details");
   const [isBooking, setIsBooking] = useState(false);
 
@@ -47,6 +48,7 @@ const SelectBooth = () => {
         headers: { Authorization: getAccessToken() },
       });
       setEventName(eventResponse.data.name);
+      setDeposit(eventResponse.data.deposit);
       const mapResponse = await axios.get(
         `${BASE_URL}/map/${hostId}/${eventId}`,
         { headers: { Authorization: getAccessToken() } }
@@ -380,6 +382,7 @@ const SelectBooth = () => {
               <BoothDetails
                 selectedBooth={selectedBooth}
                 boothTypeDetails={boothTypeDetails}
+                deposit={deposit}
                 onBookBooth={() => {
                   setView("policy");
                 }}
@@ -410,6 +413,7 @@ const SelectBooth = () => {
             {view === "payment" && (
               <BoothPayment
                 boothTypeDetails={boothTypeDetails}
+                deposit={deposit}
                 onBackToPolicy={() => setView("policy")}
                 onPaymentComplete={async () => {
                   await handleCompletePayment();

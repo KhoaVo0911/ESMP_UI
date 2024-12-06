@@ -252,7 +252,6 @@ const EventDetail = () => {
       navigate("/");
       return;
     }
-
     const checkVendorInEvent = async () => {
       try {
         const response = await axios.get(
@@ -264,19 +263,34 @@ const EventDetail = () => {
             },
           }
         );
-
+        const vendorinEventId = response.data.vendorinEventId;
+        console.log(vendorinEventId);
+    
         if (
           response.data.eventId === eventId &&
-          response.data.vendorId === vendorId
+          response.data.vendorId === vendorId &&
+          (response.data.status === "accept" || response.data.status === "finished")
         ) {
+          // Lấy vendorInEventId từ response
+          
+          console.log("Cax", vendorinEventId )
+    
+          // Thực hiện điều hướng và truyền vendorInEventId vào state
           navigate(`/eventenrolled/${vendorId}/${eventId}`, {
-            state: { accessToken, eventId, vendorId },
+            state: { 
+              accessToken, 
+              eventId, 
+              vendorId, 
+              vendorinEventId  // Thêm vendorInEventId vào state
+            },
           });
         }
       } catch (error) {
         console.warn("Vendor is not registered in the event:", error);
       }
     };
+    
+    
 
     const fetchEventDetail = async () => {
       try {
@@ -437,7 +451,7 @@ const EventDetail = () => {
             size="md"
             onClick={() =>
               navigate(`/selectbooth/${vendorId}`, {
-                state: { eventId, vendorId, accessToken },
+                state: { eventId, vendorId, accessToken},
               })
             }
           >
