@@ -8,6 +8,7 @@ const CancelEventButton = ({ onCancel, vendorinEventId, eventId }) => {
   const accessToken = sessionStorage.getItem('accessToken'); // Get the access token from sessionStorage
   const vendorId = sessionStorage.getItem('vendorId');
   const navigate = useNavigate(); // Initialize navigate from react-router-dom
+  console.log("hehe", vendorinEventId)
 
   const [locationId, setLocationId] = useState(null);
   const [typeId, setTypeId] = useState(null);

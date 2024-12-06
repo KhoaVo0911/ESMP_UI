@@ -49,7 +49,7 @@ const EventEnrolled = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(5); // Number of items per page
   const navigate = useNavigate();
-const vendorinEventId = state?.vendorinEventId;
+const vendorinEventId = state?.vendorInEventId;
   console.log("gi ki vay", vendorinEventId )
 
   useEffect(() => {

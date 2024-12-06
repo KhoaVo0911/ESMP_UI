@@ -263,8 +263,8 @@ const EventDetail = () => {
             },
           }
         );
-        const vendorinEventId = response.data.vendorinEventId;
-        console.log(vendorinEventId);
+        const vendorInEventId = response.data.vendorinEventId;
+        console.log(vendorInEventId);
     
         if (
           response.data.eventId === eventId &&
@@ -273,7 +273,7 @@ const EventDetail = () => {
         ) {
           // Lấy vendorInEventId từ response
           
-          console.log("Cax", vendorinEventId )
+          console.log("Cax", vendorInEventId )
     
           // Thực hiện điều hướng và truyền vendorInEventId vào state
           navigate(`/eventenrolled/${vendorId}/${eventId}`, {
@@ -281,7 +281,7 @@ const EventDetail = () => {
               accessToken, 
               eventId, 
               vendorId, 
-              vendorinEventId  // Thêm vendorInEventId vào state
+              vendorInEventId // Thêm vendorInEventId vào state
             },
           });
         }

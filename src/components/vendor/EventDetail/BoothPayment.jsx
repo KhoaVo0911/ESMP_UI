@@ -272,7 +272,7 @@ console.log("tiền", amount);
   
       // Navigate to the next page
       navigate(`/eventenrolled/${vendorId}/${eventId}`, {
-        state: { accessToken, eventId, vendorId, vendorInEventId },
+        state: { accessToken, eventId, vendorId, vendorInEventId},
       });
     } catch (error) {
       console.error("Error during finalizing payment:", error);
