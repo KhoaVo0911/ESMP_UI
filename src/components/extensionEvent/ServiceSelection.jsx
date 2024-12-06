@@ -18,6 +18,7 @@ import {
   FormControl,
   FormLabel,
   Input,
+  FormErrorMessage,
 } from "@chakra-ui/react";
 import axios from "axios";
 
@@ -30,9 +31,14 @@ const ServiceManagement = ({ eventId }) => {
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
 
+  // State to track errors
+  const [serviceNameError, setServiceNameError] = useState("");
+  const [priceError, setPriceError] = useState("");
+  const [quantityError, setQuantityError] = useState("");
+
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  // Fetch danh sách dịch vụ
+  // Fetch services list
   const fetchServices = async () => {
     if (!eventId) {
       alert("Event ID is required.");
@@ -48,7 +54,6 @@ const ServiceManagement = ({ eventId }) => {
       setServices(response.data);
     } catch (error) {
       console.error("Error fetching services:", error);
-      // alert("Lỗi khi tải danh sách dịch vụ.");
     }
   };
 
@@ -57,14 +62,34 @@ const ServiceManagement = ({ eventId }) => {
   }, [eventId]);
 
   const handleSave = async () => {
-    if (!serviceName || !price || !quantity) {
-      alert("Please fill all fields.");
-      return;
+    let valid = true;
+
+    // Clear previous errors
+    setServiceNameError("");
+    setPriceError("");
+    setQuantityError("");
+
+    // Validation checks
+    if (!serviceName) {
+      setServiceNameError("Service name is required.");
+      valid = false;
     }
+
+    if (!price || parseFloat(price) < 0) {
+      setPriceError("Price must be a positive number.");
+      valid = false;
+    }
+
+    if (!quantity || parseInt(quantity) < 0) {
+      setQuantityError("Quantity must be a positive number.");
+      valid = false;
+    }
+
+    if (!valid) return;
 
     try {
       if (editingService) {
-        // Cập nhật dịch vụ
+        // Update service
         await axios.put(
           `${API_BASE_URL}/${editingService.serviceId}`,
           {
@@ -80,7 +105,7 @@ const ServiceManagement = ({ eventId }) => {
           }
         );
       } else {
-        // Thêm dịch vụ mới
+        // Add new service
         await axios.post(
           `${API_BASE_URL}/${eventId}`,
           {
@@ -96,9 +121,9 @@ const ServiceManagement = ({ eventId }) => {
           }
         );
       }
-      await fetchServices(); // Fetch lại danh sách dịch vụ sau khi lưu
+      await fetchServices(); // Fetch the updated list of services
 
-      // Lưu danh sách dịch vụ mới nhất vào sessionStorage
+      // Save the latest service list to sessionStorage
       sessionStorage.setItem("eventServices", JSON.stringify(services));
 
       onClose();
@@ -115,11 +140,10 @@ const ServiceManagement = ({ eventId }) => {
           Authorization: sessionStorage.getItem("accessToken"),
         },
       });
-      alert("Xóa dịch vụ thành công!");
+      alert("Service deleted successfully!");
       fetchServices();
     } catch (error) {
       console.error("Error deleting service:", error);
-      // alert("Lỗi khi xóa dịch vụ.");
     }
   };
 
@@ -140,8 +164,8 @@ const ServiceManagement = ({ eventId }) => {
 
   return (
     <Box>
-      <Button colorScheme="teal" mb={4} onClick={onOpen}>
-        Add Service
+      <Button colorScheme="blue" mb={4} onClick={onOpen}>
+        Create New Service
       </Button>
 
       <Table variant="simple">
@@ -162,7 +186,7 @@ const ServiceManagement = ({ eventId }) => {
               <Td>
                 <Button
                   size="sm"
-                  colorScheme="blue"
+                  colorScheme="teal"
                   mr={2}
                   onClick={() => handleEdit(service)}
                 >
@@ -186,35 +210,44 @@ const ServiceManagement = ({ eventId }) => {
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
-            {editingService ? "Edit Service" : "Add Service"}
+            {editingService ? "Edit Service" : "Create New Service"}
           </ModalHeader>
           <ModalBody>
-            <FormControl mb={4}>
+            <FormControl mb={4} isInvalid={!!serviceNameError}>
               <FormLabel>Service Name</FormLabel>
               <Input
                 value={serviceName}
                 onChange={(e) => setServiceName(e.target.value)}
               />
+              {serviceNameError && (
+                <FormErrorMessage>{serviceNameError}</FormErrorMessage>
+              )}
             </FormControl>
-            <FormControl mb={4}>
+
+            <FormControl mb={4} isInvalid={!!priceError}>
               <FormLabel>Price</FormLabel>
               <Input
                 type="number"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
               />
+              {priceError && <FormErrorMessage>{priceError}</FormErrorMessage>}
             </FormControl>
-            <FormControl mb={4}>
+
+            <FormControl mb={4} isInvalid={!!quantityError}>
               <FormLabel>Quantity</FormLabel>
               <Input
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
               />
+              {quantityError && (
+                <FormErrorMessage>{quantityError}</FormErrorMessage>
+              )}
             </FormControl>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="teal" onClick={handleSave}>
+            <Button colorScheme="blue" onClick={handleSave}>
               Save
             </Button>
             <Button variant="ghost" onClick={onClose}>

@@ -552,18 +552,7 @@ const LocationMap = () => {
         <Flex gap={6}>
           <Flex align="center">
             <Box
-              bg="green.200"
-              border="1px solid black"
-              borderRadius="50%"
-              width="10px"
-              height="10px"
-              mr={2}
-            />
-            <Text fontSize="sm">Available</Text>
-          </Flex>
-          <Flex align="center">
-            <Box
-              bg="red.300"
+              bg="orange"
               borderRadius="50%"
               width="10px"
               height="10px"
@@ -627,8 +616,8 @@ const LocationMap = () => {
                     ? "gray"
                     : booth.location.status === "On-hold"
                     ? "orange"
-                    : "blue",
-                color: "white",
+                    : `${booth.color}`,
+                color: "black",
                 textAlign: "center",
                 lineHeight: `${booth.location.height}px`,
                 border: "1px solid black",

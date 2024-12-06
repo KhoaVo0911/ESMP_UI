@@ -462,7 +462,7 @@ const BoothPlan = () => {
       }
       // Gửi dữ liệu lên server
       await createLocationMap(hostId, eventId, payload);
-      alert("Map saved successfully!");
+      // alert("Map saved successfully!");
     } catch (error) {
       console.error("Error saving map:", error);
       alert("Failed to save map.");

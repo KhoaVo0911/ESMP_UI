@@ -358,7 +358,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/settings"
+        path="/settings/:hostId"
         element={
           <HostLayout>
             <Settings />

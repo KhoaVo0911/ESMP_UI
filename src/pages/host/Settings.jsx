@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useParams } from "react-router-dom";
+import bcrypt from "bcryptjs"; // Import bcryptjs để mã hóa mật khẩu
 import {
   Box,
   Flex,
   Avatar,
   Text,
   Heading,
-  Input,
   FormControl,
   FormLabel,
   Button,
@@ -15,28 +17,133 @@ import {
   Tab,
   TabPanel,
   VStack,
+  Input,
 } from "@chakra-ui/react";
+import avatar from "../../assets/images/avatardefault_92824.png";
 
 const Settings = () => {
+  const { hostId } = useParams(); // Lấy hostId từ URL
   const [user, setUser] = useState({
-    firstName: "",
-    lastName: "",
-    phoneNumber: "",
-    address: "",
-    email: "alexarawles@gmail.com",
+    account: {
+      id: "",
+      username: "",
+      password: "",
+      name: "",
+      phoneNumber: "",
+      email: "",
+    }, // Lưu mật khẩu để so sánh khi cập nhật
+    bankingaccount: "", // Thêm banking account
+    expiretime: "",
+    eventstoragetime: "", // Thời gian lưu trữ sự kiện sẽ được gửi trong API
   });
+  const [isEditing, setIsEditing] = useState(false); // Cờ chỉnh sửa hồ sơ
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState(""); // Lỗi xác nhận mật khẩu
+  const [oldPasswordError, setOldPasswordError] = useState(""); // Lỗi mật khẩu cũ
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setUser({
-      ...user,
-      [name]: value,
-    });
+  // Hàm chuyển expiretime từ chuỗi ISO sang định dạng ngày tháng dễ đọc
+  const convertExpireTime = (expiretime) => {
+    if (!expiretime) return "";
+    const date = new Date(expiretime);
+    return date.toISOString().slice(0, 16); // Lấy phần ngày và giờ
+  };
+
+  useEffect(() => {
+    if (!hostId) return;
+
+    // Lấy dữ liệu từ API
+    axios
+      .get(`https://esmpbe.id.vn/api/host/${hostId}`)
+      .then((response) => {
+        const data = response.data;
+        setUser({
+          account: data.account,
+          username: data.account.username,
+          password: data.account.password, // Lưu mật khẩu hiện tại để so sánh
+          name: data.account.name,
+          phoneNumber: data.account.phone,
+          email: data.account.email,
+          bankingaccount: data.bankingaccount || "", // Lấy tài khoản ngân hàng
+          expiretime: data.expiretime, // Lưu nguyên giá trị để gửi lên API
+          eventstoragetime: data.eventstoragetime,
+        });
+      })
+      .catch((error) => {
+        console.error("Error fetching host data", error);
+      });
+  }, [hostId]);
+
+  // Hàm cập nhật thông tin người dùng
+  const handleUpdateProfile = () => {
+    const updatedUser = { ...user };
+
+    // Không bao gồm expiretime và eventstoragetime trong UI nhưng giữ lại để gửi lên API
+    delete updatedUser.expiretime;
+    delete updatedUser.eventstoragetime;
+
+    // Gửi dữ liệu người dùng đã cập nhật lên API
+    axios
+      .put(`https://esmpbe.id.vn/api/host/${hostId}`, updatedUser)
+      .then(() => {
+        alert("Profile updated successfully!");
+        setIsEditing(false); // Thoát khỏi chế độ chỉnh sửa
+      })
+      .catch((error) => {
+        console.error("Error updating profile", error);
+      });
+  };
+
+  // Hàm cập nhật mật khẩu
+  const handleUpdatePassword = () => {
+    // Reset trạng thái lỗi
+    setPasswordError("");
+    setOldPasswordError("");
+
+    // Kiểm tra mật khẩu cũ
+    if (oldPassword !== user.password) {
+      setOldPasswordError("Mật khẩu cũ không đúng.");
+      return; // Dừng nếu mật khẩu cũ không chính xác
+    }
+
+    // Kiểm tra mật khẩu mới và xác nhận mật khẩu
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Mật khẩu mới và xác nhận mật khẩu không khớp.");
+      return;
+    }
+    // Dữ liệu gửi lên API
+    const passwordData = {
+      newPassword, // Mã hóa mật khẩu mới
+    };
+
+    // Lấy accountId từ dữ liệu người dùng
+    const accountId = user.account?.id; // Sử dụng optional chaining để tránh lỗi nếu account undefined
+    if (!accountId) {
+      console.error("Account ID is undefined");
+      return;
+    }
+
+    // Gửi yêu cầu cập nhật mật khẩu
+    axios
+      .put(
+        `https://esmpbe.id.vn/api/user/newpassword/${accountId}`,
+        passwordData
+      )
+      .then(() => {
+        alert("Mật khẩu đã được cập nhật thành công!");
+        // Reset lại các trường mật khẩu
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      })
+      .catch((error) => {
+        console.error("Error updating password", error);
+      });
   };
 
   return (
     <Box bg="gray.50" minHeight="100vh">
-      {/* Banner */}
       <Box
         bgGradient="linear(to-r, blue.200, purple.200)"
         h="180px"
@@ -52,22 +159,33 @@ const Settings = () => {
         shadow="lg"
         p={6}
       >
-        <Flex alignItems="center" mb={8}>
-          <Avatar size="xl" src="https://bit.ly/dan-abramov" />
-          <Box ml={6}>
-            <Heading as="h2" size="lg" fontWeight="bold">
-              Alexa Rawles
-            </Heading>
-            <Text fontSize="md" color="gray.500">
-              alexarawles@gmail.com
-            </Text>
-          </Box>
+        <Flex alignItems="center" justify="space-between" mb={8}>
+          <Flex alignItems="center">
+            <Avatar size="xl" src={avatar} />
+            <Box ml={6}>
+              <Heading as="h2" size="lg" fontWeight="bold">
+                {user.name || "Loading..."}
+              </Heading>
+              <Text fontSize="md" color="gray.500">
+                {user.email || "Loading..."}
+              </Text>
+            </Box>
+          </Flex>
+
+          {/* Nút Edit Profile */}
+          <Button
+            colorScheme="blue"
+            onClick={() => setIsEditing((prev) => !prev)}
+            variant="outline"
+          >
+            {isEditing ? "Cancel" : "Edit Profile"}
+          </Button>
         </Flex>
 
-        {/* Tabs for My Details and Password */}
+        {/* Tabs cho My Details và Password */}
         <Tabs variant="soft-rounded" colorScheme="blue">
           <TabList>
-            <Tab>My details</Tab>
+            <Tab>My Profile</Tab>
             <Tab>Password</Tab>
           </TabList>
 
@@ -75,91 +193,141 @@ const Settings = () => {
             {/* My Details Tab */}
             <TabPanel>
               <VStack spacing={6} align="stretch">
-                <Flex>
-                  <FormControl mr={4}>
-                    <FormLabel>First Name</FormLabel>
-                    <Input
-                      name="firstName"
-                      placeholder="Your First Name"
-                      value={user.firstName}
-                      onChange={handleInputChange}
-                    />
-                  </FormControl>
-                  <FormControl>
-                    <FormLabel>Last Name</FormLabel>
-                    <Input
-                      name="lastName"
-                      placeholder="Your Second Name"
-                      value={user.lastName}
-                      onChange={handleInputChange}
-                    />
-                  </FormControl>
-                </Flex>
-
-                <Flex>
-                  <FormControl mr={4}>
-                    <FormLabel>Phone Number</FormLabel>
-                    <Input
-                      name="phoneNumber"
-                      placeholder="+84 399 997 857"
-                      value={user.phoneNumber}
-                      onChange={handleInputChange}
-                    />
-                  </FormControl>
-                  <FormControl>
-                    <FormLabel>Address</FormLabel>
-                    <Input
-                      name="address"
-                      placeholder="Your Address"
-                      value={user.address}
-                      onChange={handleInputChange}
-                    />
-                  </FormControl>
-                </Flex>
-
+                {/* Các trường thông tin người dùng */}
                 <FormControl>
-                  <FormLabel>My email Address</FormLabel>
-                  <Input name="email" value={user.email} isDisabled />
+                  <FormLabel>Username</FormLabel>
+                  {isEditing ? (
+                    <Input
+                      value={user.username}
+                      onChange={(e) =>
+                        setUser({ ...user, username: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <Text>{user.username || "Loading..."}</Text>
+                  )}
                 </FormControl>
 
-                <Button colorScheme="blue" size="lg" alignSelf="flex-end">
-                  Save
-                </Button>
+                <FormControl>
+                  <FormLabel>Name</FormLabel>
+                  {isEditing ? (
+                    <Input
+                      value={user.name}
+                      onChange={(e) =>
+                        setUser({ ...user, name: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <Text>{user.name || "Loading..."}</Text>
+                  )}
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Phone Number</FormLabel>
+                  {isEditing ? (
+                    <Input
+                      value={user.phoneNumber}
+                      onChange={(e) =>
+                        setUser({ ...user, phoneNumber: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <Text>{user.phoneNumber || "Loading..."}</Text>
+                  )}
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Email Address</FormLabel>
+                  {isEditing ? (
+                    <Input
+                      value={user.email}
+                      onChange={(e) =>
+                        setUser({ ...user, email: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <Text>{user.email || "Loading..."}</Text>
+                  )}
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Banking Account</FormLabel>
+                  {isEditing ? (
+                    <Input
+                      value={user.bankingaccount}
+                      onChange={(e) =>
+                        setUser({ ...user, bankingaccount: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <Text>{user.bankingaccount || "Loading..."}</Text>
+                  )}
+                </FormControl>
+
+                {/* Nút Lưu thay đổi */}
+                {isEditing && (
+                  <Button
+                    colorScheme="blue"
+                    onClick={handleUpdateProfile}
+                    w="full"
+                    mt={4}
+                  >
+                    Save Changes
+                  </Button>
+                )}
               </VStack>
             </TabPanel>
 
             {/* Password Tab */}
             <TabPanel>
               <VStack spacing={6} align="stretch">
-                <FormControl>
+                {/* Trường mật khẩu cũ */}
+                <FormControl isInvalid={!!oldPasswordError}>
                   <FormLabel>Old Password</FormLabel>
                   <Input
-                    name="oldPassword"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
                     type="password"
                     placeholder="Your Old Password"
                   />
+                  {oldPasswordError && (
+                    <Text color="red.500">{oldPasswordError}</Text>
+                  )}
                 </FormControl>
 
+                {/* Trường mật khẩu mới */}
                 <FormControl>
                   <FormLabel>New Password</FormLabel>
                   <Input
-                    name="newPassword"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     type="password"
                     placeholder="Your New Password"
                   />
                 </FormControl>
 
-                <FormControl>
+                {/* Trường xác nhận mật khẩu */}
+                <FormControl isInvalid={passwordError}>
                   <FormLabel>Confirm Password</FormLabel>
                   <Input
-                    name="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     type="password"
                     placeholder="Confirm your password"
                   />
+                  {passwordError && (
+                    <Text color="red.500">{passwordError}</Text>
+                  )}
                 </FormControl>
 
-                <Button colorScheme="blue" size="lg" alignSelf="flex-end">
-                  Save
+                {/* Nút lưu mật khẩu */}
+                <Button
+                  colorScheme="teal"
+                  size="lg"
+                  alignSelf="flex-end"
+                  onClick={handleUpdatePassword}
+                >
+                  Save Password
                 </Button>
               </VStack>
             </TabPanel>

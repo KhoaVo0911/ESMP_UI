@@ -5,7 +5,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import BackpackIcon from "@mui/icons-material/Backpack";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import logo from "../../../assets/images/logo_EIPS.png";
+import logo from "../../../assets/images/trans_bg.png";
 
 const { Sider } = Layout;
 
@@ -108,7 +108,7 @@ const HostSideBar = ({ collapsed }) => {
           src={logo}
           alt="logo"
           style={{
-            width: collapsed ? "80px" : "200px",
+            width: collapsed ? "80px" : "180px",
             transition: "width 0.3s ease",
             margin: "16px auto",
             display: "block",

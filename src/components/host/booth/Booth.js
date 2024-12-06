@@ -6,10 +6,10 @@ const Booth = ({ booth }) => {
   return (
     <Box
       className={booth.selected ? "selected" : ""}
-      bg="blue.200"
+      bg={booth.color || "gray.200"} // Sử dụng màu từ booth.color
       border="1px solid black"
-      width="100%"
-      height="100%"
+      width={booth.width + "px"} // Sử dụng width của booth
+      height={booth.height + "px"} // Sử dụng height của booth
       display="flex"
       alignItems="center"
       justifyContent="center"

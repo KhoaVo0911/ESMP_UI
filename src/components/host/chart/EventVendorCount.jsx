@@ -1,62 +1,64 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import ReactECharts from "echarts-for-react";
+import { useNavigate } from "react-router-dom";
 
 const EventVendorCount = ({ hostId }) => {
-  const [eventData, setEventData] = useState([]);
+  const [eventData, setEventData] = useState([]); // Lưu trữ dữ liệu sự kiện
   const [vendorUsernames, setVendorUsernames] = useState({}); // Lưu trữ thông tin username của các vendor
+  const [eventNames, setEventNames] = useState({}); // Lưu trữ tên sự kiện theo eventId
+  const navigate = useNavigate(); // Dùng useNavigate để điều hướng
 
   useEffect(() => {
-    // Fetch data from the /vendorinevent/countevents API
+    // Fetch dữ liệu từ API về số lượng vendor trong sự kiện
     axios
       .get(`https://esmpbe.id.vn/api/vendorinevent/countevents/${hostId}`)
       .then((response) => {
         const vendorEvents = response.data.eventCount;
 
-        // Step 1: Group by eventId and count the vendors for each event
+        // Group dữ liệu theo eventId và đếm số vendor cho mỗi sự kiện
         const eventCounts = vendorEvents.reduce((acc, event) => {
           const { eventId, vendorId } = event;
           if (!acc[eventId]) {
-            acc[eventId] = { vendorIds: new Set() }; // Use Set to ensure unique vendors
+            acc[eventId] = { vendorIds: new Set() }; // Dùng Set để đảm bảo các vendor là duy nhất
           }
 
-          // Add the vendorId to the set for this eventId
+          // Thêm vendorId vào Set
           acc[eventId].vendorIds.add(vendorId);
 
           return acc;
         }, {});
 
-        // Step 2: Convert the data into a format suitable for the chart
+        // Chuyển đổi dữ liệu thành định dạng phù hợp cho chart
         const formattedEventData = Object.keys(eventCounts).map((eventId) => ({
-          eventId,
-          vendorCount: eventCounts[eventId].vendorIds.size, // The size of the Set gives the unique vendor count
+          eventId, // Lưu eventId để tìm tên sự kiện sau
+          vendorCount: eventCounts[eventId].vendorIds.size, // Số lượng vendor
           vendorIds: Array.from(eventCounts[eventId].vendorIds),
         }));
 
         setEventData(formattedEventData);
 
-        // Step 3: Fetch vendor usernames based on vendorIds
-        const vendorIds = formattedEventData
-          .flatMap((event) => event.vendorIds)
-          .filter((value, index, self) => self.indexOf(value) === index); // Unique vendorIds
+        // Lấy danh sách tất cả các eventId duy nhất
+        const eventIds = Object.keys(eventCounts);
 
-        const vendorRequests = vendorIds.map((vendorId) =>
-          axios.get(`https://esmpbe.id.vn/api/vendor/${vendorId}`)
+        // Fetch tên các sự kiện
+        const eventRequests = eventIds.map((eventId) =>
+          axios.get(`https://esmpbe.id.vn/api/event/${eventId}`)
         );
 
-        // Fetch all vendor usernames at once
-        Promise.all(vendorRequests)
+        // Fetch tất cả tên sự kiện một lần
+        Promise.all(eventRequests)
           .then((responses) => {
-            const newVendorUsernames = responses.reduce((acc, response) => {
-              const vendor = response.data;
-              acc[vendor.vendorid] = vendor.username; // Save vendor username by vendorId
+            const newEventNames = responses.reduce((acc, response) => {
+              const event = response.data;
+              acc[event.eventId] = event.name; // Lưu tên sự kiện theo eventId
               return acc;
             }, {});
 
-            setVendorUsernames(newVendorUsernames); // Set all vendor usernames
+            setEventNames(newEventNames); // Cập nhật tên các sự kiện
           })
           .catch((error) => {
-            console.error("Error fetching vendor usernames:", error);
+            console.error("Error fetching event names:", error);
           });
       })
       .catch((error) => {
@@ -84,20 +86,23 @@ const EventVendorCount = ({ hostId }) => {
         },
         formatter: (params) => {
           const event = params[0];
-          const eventId = event.name;
-          const vendorCount = event.value;
+          const eventId = event.eventId; // Lấy eventId chính xác
+          const vendorCount = event.value; // Số lượng vendor từ giá trị cột
 
-          const vendorList = eventData
-            .find((data) => data.eventId === eventId)
-            .vendorIds.map(
-              (vendorId) => vendorUsernames[vendorId] || "Unknown Vendor"
-            )
-            .join(", ");
+          const eventName = eventNames[eventId] || "Unknown Event"; // Lấy tên sự kiện từ eventNames
+
+          const eventDataItem = eventData.find(
+            (data) => data.eventId === eventId
+          );
+          const vendorList = eventDataItem
+            ? eventDataItem.vendorIds // Trả về mảng vendorIds thay vì join
+            : ["No Vendors Available"]; // Nếu không có vendor thì hiển thị mảng "No Vendors Available"
 
           return `
             Event ID: ${eventId}<br />
+            Event Name: ${eventName}<br />
             Number of Vendors: ${vendorCount}<br />
-            Vendors: ${vendorList}
+            Vendors: ${vendorList.join(", ")}
           `;
         },
       },
@@ -109,10 +114,12 @@ const EventVendorCount = ({ hostId }) => {
       },
       xAxis: {
         type: "category",
-        data: eventData.map((data) => data.eventId),
+        data: eventData.map(
+          (data) => eventNames[data.eventId] || "Unknown Event"
+        ), // Sử dụng tên sự kiện từ eventNames
         axisLabel: {
           interval: 0,
-          rotate: 45,
+          rotate: 45, // Xoay label để dễ đọc
         },
       },
       yAxis: {
@@ -131,12 +138,25 @@ const EventVendorCount = ({ hostId }) => {
     };
   };
 
+  // Xử lý khi người dùng click vào event
+  const handleEventClick = (eventId) => {
+    // Lưu eventId vào sessionStorage
+    sessionStorage.setItem("selectedEventId", eventId);
+
+    // Điều hướng tới trang chi tiết sự kiện
+    navigate(`/event-details/${eventId}`);
+  };
+
   return (
     <div style={{ width: "100%", height: "400px", marginTop: "20px" }}>
       <h2>Events with the Most Vendors</h2>
       <ReactECharts
         option={getChartOptions()}
         style={{ height: "100%", width: "100%" }}
+        // Lắng nghe sự kiện click trên biểu đồ
+        onEvents={{
+          click: (e) => handleEventClick(e.data.eventId), // Lấy eventId khi người dùng click
+        }}
       />
     </div>
   );

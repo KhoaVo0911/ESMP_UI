@@ -173,7 +173,7 @@ import {
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import forget from "../assets/images/forgot.png"; // Hình ảnh quên mật khẩu
-import projectLogo from "../assets/images/logo.png"; // Logo của dự án
+import projectLogo from "../assets/images/trans_bg.png"; // Logo của dự án
 import tree from "../assets/images/tree.png"; // Hình ảnh trang trí bên dưới
 
 const ResetPassword = () => {
@@ -260,7 +260,7 @@ const ResetPassword = () => {
     <Box display="flex" height="100vh" position="relative">
       {/* Logo của dự án ở góc trái */}
       <Box position="absolute" top={4} left={4}>
-        <Image src={projectLogo} alt="Project Logo" boxSize="50px" />
+        <Image src={projectLogo} alt="Project Logo" boxSize="140px" />
       </Box>
 
       {/* Bên trái - Hình ảnh */}

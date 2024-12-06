@@ -54,7 +54,7 @@ const Sidebar = ({
       justifyContent="center"
     >
       <VStack spacing={4} justifyContent="center" alignItems="center">
-        <Box
+        {/* <Box
           as="button"
           onClick={() => setMode("select")}
           display="flex"
@@ -74,7 +74,7 @@ const Sidebar = ({
         >
           <Icon as={MdPanTool} boxSize={6} />
           <Text>Hand</Text>
-        </Box>
+        </Box> */}
 
         <Box
           as="button"
@@ -98,7 +98,7 @@ const Sidebar = ({
           <Text>Text</Text>
         </Box>
 
-        <Box
+        {/* <Box
           as="button"
           onClick={openImageModal}
           display="flex"
@@ -107,7 +107,7 @@ const Sidebar = ({
         >
           <Icon as={MdImage} boxSize={6} />
           <Text>Image</Text>
-        </Box>
+        </Box> */}
 
         <Menu>
           <MenuButton
@@ -154,7 +154,7 @@ const Sidebar = ({
           </MenuList>
         </Menu>
 
-        <Menu>
+        {/* <Menu>
           <MenuButton
             as={Box}
             display="flex"
@@ -171,7 +171,7 @@ const Sidebar = ({
             <MenuItem onClick={() => addElement("door")}>Door</MenuItem>
             <MenuItem onClick={() => addElement("food")}>Food</MenuItem>
           </MenuList>
-        </Menu>
+        </Menu> */}
       </VStack>
     </Box>
   );

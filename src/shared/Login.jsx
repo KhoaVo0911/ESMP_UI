@@ -482,7 +482,7 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios"; // Đảm bảo bạn đã cài axios
 import logoLogin from "../assets/images/login.png"; // Đường dẫn đến logo login
-import projectLogo from "../assets/images/logo.png"; // Đường dẫn đến logo của project
+import projectLogo from "../assets/images/trans_bg.png"; // Đường dẫn đến logo của project
 import tree from "../assets/images/tree.png"; // Đường dẫn đến hình ảnh ở góc dưới trái
 import { useNavigate } from "react-router-dom";
 
@@ -543,7 +543,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
 
       // Show success toast
       toast({
-        title: "Đăng nhập thành công",
+        title: "Login Successfully",
         description: `Logged in as ${role}`,
         status: "success",
         duration: 3000,
@@ -557,7 +557,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
       // Set error state and show error toast
       setError("Login failed. Please check your credentials.");
       toast({
-        title: "Đăng nhập thất bại",
+        title: "Login failed",
         description: "Invalid username or password",
         status: "error",
         duration: 3000,
@@ -573,7 +573,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
     <Box display="flex" height="100vh" position="relative">
       {/* Thêm logo project ở góc trên trái */}
       <Box position="absolute" top={4} left={4}>
-        <Image src={projectLogo} alt="Project Logo" boxSize="50px" />
+        <Image src={projectLogo} alt="Project Logo" boxSize="140px" />
       </Box>
 
       {/* Bên trái - Hình ảnh */}

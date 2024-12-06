@@ -12,7 +12,7 @@ import {
   Image,
 } from "@chakra-ui/react";
 import forget from "../assets/images/forgot.png";
-import projectLogo from "../assets/images/logo.png";
+import projectLogo from "../assets/images/trans_bg.png";
 import tree from "../assets/images/tree.png";
 import axios from "axios";
 
@@ -152,7 +152,7 @@ const ForgotPassword = () => {
   return (
     <Box display="flex" height="100vh" position="relative">
       <Box position="absolute" top={4} left={4}>
-        <Image src={projectLogo} alt="Project Logo" boxSize="50px" />
+        <Image src={projectLogo} alt="Project Logo" boxSize="140px" />
       </Box>
 
       {/* Left side - Image */}

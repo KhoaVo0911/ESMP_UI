@@ -227,6 +227,7 @@ const EventEnrolled = () => {
   const [serviceData, setServiceData] = useState([]); // Service data state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [locationTypeColors, setLocationTypeColors] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(5); // Number of items per page
   const navigate = useNavigate();
@@ -300,10 +301,32 @@ const EventEnrolled = () => {
         console.error("Error fetching service data:", error);
       }
     };
+    const fetchLocationTypeColors = async () => {
+      try {
+        const response = await axios.get(
+          `${LOCATION_TYPE_URL}/${hostId}/${eventId}`,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        // Assuming each location type has a color property
+        const colors = response.data.reduce((acc, item) => {
+          acc[item.typeId] = item.color; // Store color by typeId
+          return acc;
+        }, {});
+        setLocationTypeColors(colors);
+      } catch (error) {
+        console.error("Error fetching location type colors:", error);
+      }
+    };
 
     fetchEventDetail();
     fetchBoothData();
     fetchServiceData();
+    fetchLocationTypeColors();
   }, [eventId, accessToken, hostId, navigate]);
 
   const handleShopClick = () => {
@@ -409,6 +432,7 @@ const EventEnrolled = () => {
               <Th textAlign="center">No</Th>
               <Th textAlign="center">Location Type Name</Th>
               <Th textAlign="center">Price</Th>
+              <Th textAlign="center">Color</Th>
               <Th textAlign="center">Status</Th>
             </Tr>
           </Thead>
@@ -420,6 +444,16 @@ const EventEnrolled = () => {
                 </Td>
                 <Td textAlign="center">{booth.typeName}</Td>
                 <Td textAlign="center">{booth.price}</Td>
+                <Td textAlign="center">
+                  <Box
+                    bg={locationTypeColors[booth.typeId] || "white"}
+                    width="20px"
+                    height="20px"
+                    borderRadius="50%"
+                    border="1px solid #000"
+                    margin="0 auto"
+                  />
+                </Td>
                 <Td textAlign="center">{booth.status}</Td>
               </Tr>
             ))}

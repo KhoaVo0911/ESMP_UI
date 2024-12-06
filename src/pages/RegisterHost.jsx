@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { InfoIcon } from "@chakra-ui/icons";
 import * as Yup from "yup"; // Import Yup
 import regiser from "../assets/images/register.png";
-import projectLogo from "../assets/images/logo.png";
+import projectLogo from "../assets/images/trans_bg.png";
 import tree from "../assets/images/tree.png";
 
 // Schema validation với Yup
@@ -76,7 +76,7 @@ const RegisterHostComponent = () => {
         currentDate.setFullYear(currentDate.getFullYear() + 1)
       ).toISOString(); // Tính expiretime
 
-      const apiUrl = "https://esmpbe.id.vn/api/user/register/host";
+      const apiUrl = "https://esmpbe.id.vn/api/user/register";
 
       // Gửi request đăng ký
       const response = await axios.post(apiUrl, {
@@ -122,7 +122,7 @@ const RegisterHostComponent = () => {
   return (
     <Box display="flex" height="100vh" position="relative">
       <Box position="absolute" top={4} left={4}>
-        <Image src={projectLogo} alt="Project Logo" boxSize="50px" />
+        <Image src={projectLogo} alt="Project Logo" boxSize="140px" />
       </Box>
 
       <Box

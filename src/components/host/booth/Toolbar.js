@@ -56,7 +56,7 @@ const Toolbar = ({
       alignItems="center"
     >
       <HStack spacing={4}>
-        <IconButton aria-label="Undo" icon={<MdUndo />} onClick={handleUndo} />
+        {/* <IconButton aria-label="Undo" icon={<MdUndo />} onClick={handleUndo} />
         <IconButton aria-label="Redo" icon={<MdRedo />} onClick={handleRedo} />
         <IconButton
           aria-label="Grid Toggle"
@@ -72,7 +72,7 @@ const Toolbar = ({
           aria-label="Zoom In"
           icon={<MdZoomIn />}
           onClick={handleZoomIn}
-        />
+        /> */}
         <IconButton
           aria-label="Delete"
           icon={<MdDelete />}

@@ -7,7 +7,7 @@ import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import FastfoodIcon from "@mui/icons-material/Fastfood";
 import PeopleIcon from "@mui/icons-material/People";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import logo from "../../../assets/images/logo_EIPS.png"; // Path to your logo
+import logo from "../../../assets/images/trans_bg.png"; // Path to your logo
 
 const { Sider } = Layout;
 
@@ -53,7 +53,9 @@ const VendorSideBar = ({ collapsed }) => {
         {
           key: "3",
           icon: <FastfoodIcon />,
-          label: <span style={{ fontWeight: "bold" }}>Manage Product Items</span>,
+          label: (
+            <span style={{ fontWeight: "bold" }}>Manage Product Items</span>
+          ),
         },
         {
           key: "4",
@@ -63,12 +65,16 @@ const VendorSideBar = ({ collapsed }) => {
         {
           key: "5",
           icon: <PeopleIcon />,
-          label: <span style={{ fontWeight: "bold" }}>Manage Staff Account</span>,
+          label: (
+            <span style={{ fontWeight: "bold" }}>Manage Staff Account</span>
+          ),
         },
         {
           key: "6",
           icon: <CheckCircleIcon />,
-          label: <span style={{ fontWeight: "bold" }}>List Event Enrolled</span>,
+          label: (
+            <span style={{ fontWeight: "bold" }}>List Event Enrolled</span>
+          ),
         },
       ],
     },
@@ -78,25 +84,39 @@ const VendorSideBar = ({ collapsed }) => {
     setSelectedMenuItem(e.key);
     switch (e.key) {
       case "1":
-        navigate(`/${vendorId}/dashboardVendor`, { state: { accessToken, vendorId } });
+        navigate(`/${vendorId}/dashboardVendor`, {
+          state: { accessToken, vendorId },
+        });
         break;
       case "2":
-        navigate(`/productsList/${vendorId}`, { state: { accessToken, vendorId } });
+        navigate(`/productsList/${vendorId}`, {
+          state: { accessToken, vendorId },
+        });
         break;
       case "3":
-        navigate(`/manage-product/${vendorId}`, { state: { accessToken, vendorId } });
+        navigate(`/manage-product/${vendorId}`, {
+          state: { accessToken, vendorId },
+        });
         break;
       case "4":
-        navigate(`/eventsVendor/${vendorId}`, { state: { accessToken, vendorId } });
+        navigate(`/eventsVendor/${vendorId}`, {
+          state: { accessToken, vendorId },
+        });
         break;
       case "5":
-        navigate(`/staff-account-manager/${vendorId}`, { state: { accessToken, vendorId } });
+        navigate(`/staff-account-manager/${vendorId}`, {
+          state: { accessToken, vendorId },
+        });
         break;
       case "6":
-        navigate(`/ListEventEnrolled/${vendorId}`, { state: { accessToken, vendorId } });
+        navigate(`/ListEventEnrolled/${vendorId}`, {
+          state: { accessToken, vendorId },
+        });
         break;
       default:
-        navigate(`/${vendorId}/dashboardVendor`, { state: { accessToken, vendorId } });
+        navigate(`/${vendorId}/dashboardVendor`, {
+          state: { accessToken, vendorId },
+        });
     }
   };
 
@@ -122,7 +142,7 @@ const VendorSideBar = ({ collapsed }) => {
           src={logo}
           alt="logo"
           style={{
-            width: collapsed ? "40px" : "120px",
+            width: collapsed ? "80px" : "180px",
             transition: "width 0.3s ease",
             margin: "16px auto",
             display: "block",
