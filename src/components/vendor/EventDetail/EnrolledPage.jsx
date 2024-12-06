@@ -210,6 +210,7 @@ import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
 import SelectBooth from "./SelectBooth";
 import { Pagination } from "antd";
+import ViewBoothMap from "./ViewBoothMap";
 
 const BASE_URL = "https://esmpbe.id.vn/api/event";
 const LOCATION_TYPE_URL = "https://esmpbe.id.vn/api/map/locationType";
@@ -414,10 +415,10 @@ const EventEnrolled = () => {
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
       <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
-        Select Booth
+       Booth Map
       </Text>
       <Box>
-        <SelectBooth boothData={boothData} setBoothData={setBoothData} />
+      <ViewBoothMap/>
       </Box>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />

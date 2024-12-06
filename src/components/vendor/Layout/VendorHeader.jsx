@@ -143,7 +143,9 @@ const VendorHeader = ({ collapsed }) => {
               fontSize="md"
               fontWeight="700"
               color="gray.700"
-              onClick={() => navigate("/qrcodecodecode")}
+              onClick={() => navigate("/qrcodecodecode",{
+                state: { vendorId: vendorId},
+              })}
             >
               Generate QR Code
             </MenuItem>
