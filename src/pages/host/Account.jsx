@@ -283,7 +283,7 @@ const AccountManagement = () => {
               <Th color="white">Username</Th>
               <Th color="white">Name</Th>
               <Th color="white">Email</Th>
-              <Th color="white">QR URL</Th>
+              <Th color="white">Account Banking</Th>
               <Th color="white">Status</Th>
               <Th color="white">Actions</Th>
             </Tr>
@@ -460,7 +460,7 @@ const AccountManagement = () => {
               <strong>Username:</strong> {selectedAccount?.username}
             </p>
             <p>
-              <strong>Password:</strong> {selectedAccount?.password}
+              <strong>Password:</strong> *********
             </p>
             <p>
               <strong>Name:</strong> {selectedAccount?.name}
