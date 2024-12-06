@@ -209,21 +209,44 @@ console.log("tiền", amount);
       if (!eventId || !vendorId) {
         throw new Error("Missing eventId or vendorId");
       }
-
-      // Create VendorInEvent using POST
-      await axios.post(
-        `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
-        {},
-        { headers: { Authorization: accessToken } }
-      );
-
-      // GET VendorInEvent to retrieve `vendorInEventId`
+  
+      // Check if vendorInEvent already exists
       const vendorInEventResponse = await axios.get(
         `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
         { headers: { Authorization: accessToken } }
       );
-      const vendorInEventId = vendorInEventResponse.data.vendorinEventId;
-
+  
+      let vendorInEventId;
+  
+      if (vendorInEventResponse.data && vendorInEventResponse.data.vendorinEventId) {
+        // If vendorInEvent exists, update the status to "accept"
+        vendorInEventId = vendorInEventResponse.data.vendorinEventId;
+  
+        await axios.put(
+          `https://esmpbe.id.vn/api/vendorinevent/${vendorInEventId}`,
+          {
+            status: "accept", // Update status to "accept"
+          },
+          { headers: { Authorization: accessToken } }
+        );
+        console.log("VendorInEvent status updated to 'accept'.");
+      } else {
+        // If vendorInEvent does not exist, create a new VendorInEvent
+        await axios.post(
+          `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
+          {},
+          { headers: { Authorization: accessToken } }
+        );
+  
+        // Now retrieve the vendorInEventId after creating the VendorInEvent
+        const vendorInEventAfterCreationResponse = await axios.get(
+          `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
+          { headers: { Authorization: accessToken } }
+        );
+        vendorInEventId = vendorInEventAfterCreationResponse.data.vendorinEventId;
+        console.log("New VendorInEvent created and retrieved.", vendorInEventId);
+      }
+  
       // Update booth status to "Booked"
       await axios.put(
         `https://esmpbe.id.vn/api/map`,
@@ -233,7 +256,7 @@ console.log("tiền", amount);
         },
         { headers: { Authorization: accessToken } }
       );
-
+  
       // Send payment data
       await axios.post(
         `https://esmpbe.id.vn/api/eventpayment`,
@@ -244,11 +267,12 @@ console.log("tiền", amount);
         },
         { headers: { Authorization: accessToken } }
       );
-
-      console.log("Payment finalized successfully.".vendorInEventId);
+  
+      console.log("Payment finalized successfully.", vendorInEventId);
+  
       // Navigate to the next page
       navigate(`/eventenrolled/${vendorId}/${eventId}`, {
-        state: { accessToken, eventId, vendorId, vendorInEventId},
+        state: { accessToken, eventId, vendorId, vendorInEventId },
       });
     } catch (error) {
       console.error("Error during finalizing payment:", error);
@@ -261,6 +285,7 @@ console.log("tiền", amount);
       });
     }
   };
+  
 
   return (
     <VStack align="center" spacing={6} w="full" pb={10}>
