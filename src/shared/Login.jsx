@@ -198,7 +198,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
           </Stack>
           <Divider my={4} />
 
-          <Text fontSize="sm" color="gray.500" textAlign="center" mt={4}>
+          {/* <Text fontSize="sm" color="gray.500" textAlign="center" mt={4}>
             Do you want to host an event?{" "}
             <Text
               as="span"
@@ -208,7 +208,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
             >
               Create Account for Host
             </Text>
-          </Text>
+          </Text> */}
           <Text
             colorScheme="gray"
             cursor="pointer"

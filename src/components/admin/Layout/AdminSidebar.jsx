@@ -16,17 +16,17 @@ const HostSideBar = ({ collapsed }) => {
   const [selectedMenuItem, setSelectedMenuItem] = useState("1");
 
   // Update selected menu item based on the location
-  useEffect(() => {
-    if (location.pathname.startsWith(`/dashboard-admin`)) {
-      setSelectedMenuItem("1");
-    } else if (location.pathname.startsWith("/adtransaction")) {
-      setSelectedMenuItem("2");
-    } else if (location.pathname.startsWith("/admin-package")) {
-      setSelectedMenuItem("3");
-    } else if (location.pathname.startsWith("/accountList")) {
-      setSelectedMenuItem("4");
-    }
-  }, [location.pathname]);
+  // useEffect(() => {
+  //   if (location.pathname.startsWith(`/dashboard-admin`)) {
+  //     setSelectedMenuItem("1");
+  //   } else if (location.pathname.startsWith("/adtransaction")) {
+  //     setSelectedMenuItem("2");
+  //   } else if (location.pathname.startsWith("/admin-package")) {
+  //     setSelectedMenuItem("3");
+  //   } else if (location.pathname.startsWith("/accountList")) {
+  //     setSelectedMenuItem("4");
+  //   }
+  // }, [location.pathname]);
 
   const defaultItems = [
     {
