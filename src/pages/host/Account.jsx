@@ -26,6 +26,7 @@ import {
   Tooltip,
   Button,
   Spinner,
+  FormErrorMessage,
 } from "@chakra-ui/react";
 import {
   AddIcon,
@@ -35,6 +36,7 @@ import {
   InfoIcon,
 } from "@chakra-ui/icons";
 import axios from "axios";
+import { useForm } from "react-hook-form";
 
 const API_GET_VENDORS = "https://esmpbe.id.vn/api/vendor/host";
 const API_VENDOR = "https://esmpbe.id.vn/api/vendor";
@@ -47,33 +49,25 @@ const AccountManagement = () => {
     onOpen: onOpenDetail,
     onClose: onCloseDetail,
   } = useDisclosure();
-  
+
   const [accounts, setAccounts] = useState([]);
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-    name: "",
-    phone: "",
-    email: "",
-    address: "",
-    urlQr: "",
-    status: true,
-  });
-  
   const [isEditing, setIsEditing] = useState(false);
   const [editVendorId, setEditVendorId] = useState(null);
   const [selectedAccount, setSelectedAccount] = useState(null);
-  
+
   const [loading, setLoading] = useState(false); // For loading vendors
   const [formSubmitting, setFormSubmitting] = useState(false); // For form submission
   const [deleting, setDeleting] = useState(false); // For deleting accounts
   const [sendingEmail, setSendingEmail] = useState(false); // For sending email
-  
+
   const hostId = sessionStorage.getItem("hostId") || "";
   const accessToken = sessionStorage.getItem("accessToken") || "";
 
+  // useForm hook
+  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm();
+
   const fetchVendors = async () => {
-    setLoading(true); // Show loading spinner
+    setLoading(true);
     try {
       const response = await axios.get(`${API_GET_VENDORS}/${hostId}`, {
         headers: {
@@ -85,22 +79,14 @@ const AccountManagement = () => {
     } catch (error) {
       console.error("Error fetching vendors:", error);
     } finally {
-      setLoading(false); // Hide loading spinner
+      setLoading(false);
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleCreateAccount = async () => {
-    setFormSubmitting(true); // Show loading spinner for form submission
+  const handleCreateAccount = async (data) => {
+    setFormSubmitting(true);
     try {
-      await axios.post(`${API_VENDOR}/${hostId}`, formData, {
+      await axios.post(`${API_VENDOR}/${hostId}`, data, {
         headers: {
           Authorization: `${accessToken}`,
           "Content-Type": "application/json",
@@ -108,18 +94,18 @@ const AccountManagement = () => {
       });
       onClose();
       fetchVendors();
-      resetForm();
+      reset();
     } catch (error) {
       console.error("Error creating account:", error);
     } finally {
-      setFormSubmitting(false); // Hide form submission spinner
+      setFormSubmitting(false);
     }
   };
 
-  const handleEditAccount = async () => {
-    setFormSubmitting(true); // Show loading spinner for form submission
+  const handleEditAccount = async (data) => {
+    setFormSubmitting(true);
     try {
-      await axios.put(`${API_VENDOR}/${editVendorId}`, formData, {
+      await axios.put(`${API_VENDOR}/${editVendorId}`, data, {
         headers: {
           Authorization: `${accessToken}`,
           "Content-Type": "application/json",
@@ -127,18 +113,18 @@ const AccountManagement = () => {
       });
       onClose();
       fetchVendors();
-      resetForm();
+      reset();
       setIsEditing(false);
       setEditVendorId(null);
     } catch (error) {
       console.error("Error updating account:", error);
     } finally {
-      setFormSubmitting(false); // Hide form submission spinner
+      setFormSubmitting(false);
     }
   };
 
   const handleDeleteAccount = async (vendorId) => {
-    setDeleting(true); // Show loading spinner for delete action
+    setDeleting(true);
     try {
       await axios.delete(`${API_VENDOR}/${vendorId}`, {
         headers: {
@@ -150,12 +136,12 @@ const AccountManagement = () => {
     } catch (error) {
       console.error("Error deleting account:", error);
     } finally {
-      setDeleting(false); // Hide delete action spinner
+      setDeleting(false);
     }
   };
 
   const handleSendEmail = async (account) => {
-    setSendingEmail(true); // Show loading spinner for email sending
+    setSendingEmail(true);
     try {
       const emailBody = `
         <html>
@@ -210,12 +196,12 @@ const AccountManagement = () => {
     } catch (error) {
       console.error("Error sending email:", error);
     } finally {
-      setSendingEmail(false); // Hide email sending spinner
+      setSendingEmail(false);
     }
   };
 
   const resetForm = () => {
-    setFormData({
+    reset({
       username: "",
       password: "",
       name: "",
@@ -223,23 +209,21 @@ const AccountManagement = () => {
       email: "",
       address: "",
       urlQr: "",
-      status: true,
+      // status: true,
     });
   };
 
   const openEditModal = (account) => {
     setIsEditing(true);
     setEditVendorId(account.vendorid);
-    setFormData({
-      username: account.username,
-      password: account.password,
-      name: account.name,
-      phone: account.phone,
-      email: account.email,
-      address: account.address,
-      urlQr: account.urlQr,
-      status: account.status,
-    });
+    setValue("username", account.username);
+    setValue("password", account.password);
+    setValue("name", account.name);
+    setValue("phone", account.phone);
+    setValue("email", account.email);
+    setValue("address", account.address);
+    setValue("urlQr", account.urlQr);
+    // setValue("status", account.status);
     onOpen();
   };
 
@@ -277,7 +261,7 @@ const AccountManagement = () => {
     <Box p={8} bg="gray.100" borderRadius="lg" shadow="lg" maxW="1200px" mx="auto">
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg" fontWeight="bold" color="teal.600">
-          Account Management
+          Vendor Management
         </Heading>
         <IconButton
           colorScheme="teal"
@@ -299,7 +283,7 @@ const AccountManagement = () => {
               <Th color="white">Username</Th>
               <Th color="white">Name</Th>
               <Th color="white">Email</Th>
-              <Th color="white">QR URL</Th>
+              <Th color="white">Account Banking</Th>
               <Th color="white">Status</Th>
               <Th color="white">Actions</Th>
             </Tr>
@@ -367,7 +351,7 @@ const AccountManagement = () => {
                         size="sm"
                         colorScheme="red"
                         icon={<DeleteIcon />}
-                        onClick={() => handleDeleteAccount(account.vendorid)}
+                        onClick={() => handleDeleteAccount(account.vendorId)}
                         aria-label="Delete Account"
                       />
                     </Tooltip>
@@ -382,88 +366,87 @@ const AccountManagement = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
-            {isEditing ? "Edit Account" : "Create New Account"}
-          </ModalHeader>
+          <ModalHeader>{isEditing ? "Edit Account" : "Create New Account"}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <FormControl>
-              <FormLabel>Username</FormLabel>
-              <Input
-                name="username"
-                placeholder="Enter username"
-                value={formData.username}
-                onChange={handleInputChange}
-              />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Password</FormLabel>
-              <Input
-                name="password"
-                type="password"
-                placeholder="Enter password"
-                value={formData.password}
-                onChange={handleInputChange}
-              />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Name</FormLabel>
-              <Input
-                name="name"
-                placeholder="Enter name"
-                value={formData.name}
-                onChange={handleInputChange}
-              />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Phone</FormLabel>
-              <Input
-                name="phone"
-                placeholder="Enter phone number"
-                value={formData.phone}
-                onChange={handleInputChange}
-              />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Email</FormLabel>
-              <Input
-                name="email"
-                placeholder="Enter email"
-                value={formData.email}
-                onChange={handleInputChange}
-              />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Address</FormLabel>
-              <Input
-                name="address"
-                placeholder="Enter address"
-                value={formData.address}
-                onChange={handleInputChange}
-              />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>QR URL</FormLabel>
-              <Input
-                name="urlQr"
-                placeholder="Enter QR code URL"
-                value={formData.urlQr}
-                onChange={handleInputChange}
-              />
-            </FormControl>
+            <form onSubmit={handleSubmit(isEditing ? handleEditAccount : handleCreateAccount)}>
+              <FormControl isInvalid={errors.username}>
+                <FormLabel>Username</FormLabel>
+                <Input
+                  {...register("username", { required: "Username is required" })}
+                  placeholder="Enter username"
+                />
+                <FormErrorMessage>{errors.username && errors.username.message}</FormErrorMessage>
+              </FormControl>
+
+              <FormControl mt={4} isInvalid={errors.password}>
+                <FormLabel>Password</FormLabel>
+                <Input
+                  {...register("password", { required: "Password is required" })}
+                  type="password"
+                  placeholder="Enter password"
+                />
+                <FormErrorMessage>{errors.password && errors.password.message}</FormErrorMessage>
+              </FormControl>
+
+              <FormControl mt={4} isInvalid={errors.name}>
+                <FormLabel>Name</FormLabel>
+                <Input
+                  {...register("name", { required: "Name is required" })}
+                  placeholder="Enter name"
+                />
+                <FormErrorMessage>{errors.name && errors.name.message}</FormErrorMessage>
+              </FormControl>
+
+              <FormControl mt={4} isInvalid={errors.phone}>
+                <FormLabel>Phone</FormLabel>
+                <Input
+                  {...register("phone", { required: "Phone is required" })}
+                  placeholder="Enter phone number"
+                />
+                <FormErrorMessage>{errors.phone && errors.phone.message}</FormErrorMessage>
+              </FormControl>
+
+              <FormControl mt={4} isInvalid={errors.email}>
+                <FormLabel>Email</FormLabel>
+                <Input
+                  {...register("email", { required: "Email is required" })}
+                  placeholder="Enter email"
+                />
+                <FormErrorMessage>{errors.email && errors.email.message}</FormErrorMessage>
+              </FormControl>
+
+              <FormControl mt={4} isInvalid={errors.address}>
+                <FormLabel>Address</FormLabel>
+                <Input
+                  {...register("address", { required: "Address is required" })}
+                  placeholder="Enter address"
+                />
+                <FormErrorMessage>{errors.address && errors.address.message}</FormErrorMessage>
+              </FormControl>
+
+              <FormControl mt={4} isInvalid={errors.urlQr}>
+                <FormLabel>Account Banking</FormLabel>
+                <Input
+                  {...register("urlQr", { required: "QR URL is required" })}
+                  placeholder="Enter QR code URL"
+                />
+                <FormErrorMessage>{errors.urlQr && errors.urlQr.message}</FormErrorMessage>
+              </FormControl>
+              <ModalFooter>
+                <Button
+                  colorScheme="teal"
+                  mr={3}
+                  type="submit"
+                  isLoading={formSubmitting}
+                  loadingText={isEditing ? "Updating" : "Creating"}
+                >
+                  {isEditing ? "Update" : "Create"}
+                </Button>
+                <Button onClick={onClose}>Cancel</Button>
+              </ModalFooter>
+            </form>
           </ModalBody>
-          <ModalFooter>
-            <Button
-              colorScheme="teal"
-              mr={3}
-              onClick={isEditing ? handleEditAccount : handleCreateAccount}
-              isLoading={formSubmitting} // Disable button when form is submitting
-              loadingText={isEditing ? "Updating" : "Creating"}
-            >
-              {isEditing ? "Update" : "Create"}
-            </Button>
-            <Button onClick={onClose}>Cancel</Button>
-          </ModalFooter>
         </ModalContent>
       </Modal>
 
@@ -477,7 +460,7 @@ const AccountManagement = () => {
               <strong>Username:</strong> {selectedAccount?.username}
             </p>
             <p>
-              <strong>Password:</strong> {selectedAccount?.password}
+              <strong>Password:</strong> *********
             </p>
             <p>
               <strong>Name:</strong> {selectedAccount?.name}
@@ -492,7 +475,7 @@ const AccountManagement = () => {
               <strong>Address:</strong> {selectedAccount?.address}
             </p>
             <p>
-              <strong>QR URL:</strong> {selectedAccount?.urlQr}
+              <strong>Account Banking:</strong> {selectedAccount?.urlQr}
             </p>
             <p>
               <strong>Status:</strong> {selectedAccount?.status ? "Active" : "Inactive"}

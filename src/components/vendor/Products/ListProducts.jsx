@@ -314,56 +314,76 @@ const ProductList = () => {
       </VStack>
 
       <Modal
-        title={editingProduct ? "Edit Product" : "Create New Product"}
-        open={isModalOpen}
-        onCancel={handleCancel}
-        onOk={handleSave}
-        okText={editingProduct ? "Update" : "Create"}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="productName"
-            label="Product Name"
-            rules={[{ required: true, message: "Please enter the product name!" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="quantity"
-            label="Quantity"
-            rules={[{ required: true, message: "Please enter the quantity!" }]}
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            name="description"
-            label="Description"
-            rules={[{ required: true, message: "Please enter the description!" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="count"
-            label="Count"
-            rules={[{ required: true, message: "Please enter the count!" }]}
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            name="categoryId"
-            label="Category"
-            rules={[{ required: true, message: "Please select a category!" }]}
-          >
-            <Select placeholder="Select category">
-              {categories.map((category) => (
-                <Option key={category.categoryId} value={category.categoryId}>
-                  {category.categoryName}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
+  title={editingProduct ? "Edit Product" : "Create New Product"}
+  open={isModalOpen}
+  onCancel={handleCancel}
+  onOk={handleSave}
+  okText={editingProduct ? "Update" : "Create"}
+>
+  <Form form={form} layout="vertical">
+    <Form.Item
+      name="productName"
+      label="Product Name"
+      rules={[{ required: true, message: "Please enter the product name!" }]}
+    >
+      <Input />
+    </Form.Item>
+
+    <Form.Item
+  name="quantity"
+  label="Quantity"
+  rules={[
+    { 
+      required: true, 
+      message: "Please enter the quantity!" 
+    },
+    {
+      validator: (_, value) => {
+        if (value < 1) {
+          return Promise.reject(new Error("Quantity must be greater than or equal to 1"));
+        }
+        return Promise.resolve();
+      }
+    }
+  ]}
+>
+  <Input type="number" />
+</Form.Item>
+
+
+    <Form.Item
+      name="description"
+      label="Description"
+      rules={[{ required: true, message: "Please enter the description!" }]}
+    >
+      <Input />
+    </Form.Item>
+
+    <Form.Item
+      name="count"
+      label="Count"
+      initialValue={0}  // Default value
+      rules={[{ required: true, message: "Count is required!" }]}
+    >
+      <Input type="number" value={0} disabled />
+    </Form.Item>
+
+    <Form.Item
+      name="categoryId"
+      label="Category"
+      rules={[{ required: true, message: "Please select a category!" }]}
+    >
+      <Select placeholder="Select category">
+        {categories.map((category) => (
+          <Option key={category.categoryId} value={category.categoryId}>
+            {category.categoryName}
+          </Option>
+        ))}
+      </Select>
+    </Form.Item>
+  </Form>
+</Modal>
+
     </Box>
   );
 };

@@ -70,6 +70,7 @@ const ProductCard = ({ product, addToCart }) => {
       flexDirection="column"
       justifyContent="space-between"
       position="relative"
+      width="200px"
     >
       <Image
         src={imageUrl}

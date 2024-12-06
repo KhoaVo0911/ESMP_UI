@@ -58,21 +58,22 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <Box display={{ base: "none", md: "flex" }}>
-            <Flex as="ul" gap="12">
-              {navItems.map(({ label, path }) => (
-                <ScrollLink
-                  key={label}
-                  to={path}
-                  spy={true}
-                  smooth={true}
-                  offset={-100}  // Adjust if needed
-                  className="block text-base text-gray-900 hover:text-blue-500"
-                >
-                  {label}
-                </ScrollLink>
-              ))}
-            </Flex>
-          </Box>
+  <Flex as="ul" gap="12">
+    {navItems.map(({ label, path }) => (
+      <ScrollLink
+        key={label}
+        to={path}
+        spy={true}
+        smooth={true}
+        offset={-100}  // Adjust if needed
+        className="block text-gray-900 hover:text-blue-500 cursor-pointer"
+      >
+        {label}
+      </ScrollLink>
+    ))}
+  </Flex>
+</Box>
+
 
           {/* Desktop Button Section */}
           <Box display={{ base: "none", lg: "flex" }} alignItems="center" gap="8">

@@ -17,6 +17,7 @@ import {
   Input,
   FormControl,
   FormLabel,
+  FormErrorMessage,
   Badge,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
@@ -32,10 +33,17 @@ const PackageAdmin = () => {
     eventstoragetime: "",
     price: "",
     description: "",
-    expiretime: "",  // Added expiretime field
+    expiretime: "", // Added expiretime field
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [errors, setErrors] = useState({
+    name: "",
+    price: "",
+    description: "",
+    expiretime: "", // Added error handling for expiretime
+    eventstoragetime: "", // Added error handling for eventstoragetime
+  });
 
   const accessToken = sessionStorage.getItem("accessToken") || "";
 
@@ -61,14 +69,36 @@ const PackageAdmin = () => {
     });
   };
 
+  // Form validation function
+  const validateForm = () => {
+    const newErrors = {
+      name: "",
+      price: "",
+      description: "",
+      expiretime: "",
+      eventstoragetime: "",
+    };
+
+    if (!formData.name) newErrors.name = "Name is required";
+    if (!formData.price) newErrors.price = "Price is required";
+    if (!formData.description) newErrors.description = "Description is required";
+    if (!formData.expiretime) newErrors.expiretime = "Expire time is required";
+    if (!formData.eventstoragetime) newErrors.eventstoragetime = "Event storage time is required";
+
+    setErrors(newErrors);
+    return Object.values(newErrors).every((error) => error === "");
+  };
+
   const handleCreatePackage = async () => {
+    if (!validateForm()) return;
+
     try {
       const payload = {
         name: formData.name,
         price: formData.price,
         eventstoragetime: parseInt(formData.eventstoragetime, 10),
         description: formData.description,
-        expiretime: parseInt(formData.expiretime, 10),  // Added expiretime to payload
+        expiretime: parseInt(formData.expiretime, 10),
       };
 
       await axios.post(API_PACKAGE, payload, {
@@ -93,13 +123,15 @@ const PackageAdmin = () => {
   };
 
   const handleEditPackage = async () => {
+    if (!validateForm()) return;
+
     try {
       const payload = {
         name: formData.name,
         price: formData.price,
         eventstoragetime: parseInt(formData.eventstoragetime, 10),
         description: formData.description,
-        expiretime: parseInt(formData.expiretime, 10),  // Added expiretime to payload
+        expiretime: parseInt(formData.expiretime, 10),
       };
 
       await axios.put(`${API_PACKAGE}/${editId}`, payload, {
@@ -115,7 +147,7 @@ const PackageAdmin = () => {
         eventstoragetime: "",
         price: "",
         description: "",
-        expiretime: "", // Reset expiretime
+        expiretime: "",
       });
       setIsEditing(false);
       setEditId(null);
@@ -178,7 +210,7 @@ const PackageAdmin = () => {
               eventstoragetime: "",
               price: "",
               description: "",
-              expiretime: "",  // Reset expiretime
+              expiretime: "", // Reset expiretime
             });
             onOpen();
           }}
@@ -217,7 +249,7 @@ const PackageAdmin = () => {
               <Text fontSize="lg" fontWeight="bold" color="teal.800">
                 {pkg.price} VND
               </Text>
-             
+
               <Badge
                 colorScheme={pkg.status ? "green" : "red"}
                 variant="solid"
@@ -239,7 +271,7 @@ const PackageAdmin = () => {
                   colorScheme={pkg.status ? "red" : "green"}
                   onClick={() => handleToggleStatus(pkg.id, pkg.status)}
                 >
-                  {pkg.status ? "Deactivate" : "Activate"}
+                  {pkg.status ? "Inactivate" : "Activate"}
                 </Button>
               </HStack>
             </VStack>
@@ -253,7 +285,7 @@ const PackageAdmin = () => {
           <ModalHeader>{isEditing ? "Edit Package" : "Create New Package"}</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
-            <FormControl>
+            <FormControl mt={4} isInvalid={!!errors.name}>
               <FormLabel>Name</FormLabel>
               <Input
                 name="name"
@@ -261,20 +293,10 @@ const PackageAdmin = () => {
                 value={formData.name}
                 onChange={handleInputChange}
               />
+              {errors.name && <FormErrorMessage>{errors.name}</FormErrorMessage>}
             </FormControl>
 
-            <FormControl mt={4}>
-              <FormLabel>Storage Time (Months)</FormLabel>
-              <Input
-                name="eventstoragetime"
-                type="number"
-                placeholder="Enter storage time in months"
-                value={formData.eventstoragetime}
-                onChange={handleInputChange}
-              />
-            </FormControl>
-
-            <FormControl mt={4}>
+            <FormControl mt={4} isInvalid={!!errors.price}>
               <FormLabel>Price</FormLabel>
               <Input
                 name="price"
@@ -283,9 +305,10 @@ const PackageAdmin = () => {
                 value={formData.price}
                 onChange={handleInputChange}
               />
+              {errors.price && <FormErrorMessage>{errors.price}</FormErrorMessage>}
             </FormControl>
 
-            <FormControl mt={4}>
+            <FormControl mt={4} isInvalid={!!errors.description}>
               <FormLabel>Description</FormLabel>
               <Input
                 name="description"
@@ -293,29 +316,39 @@ const PackageAdmin = () => {
                 value={formData.description}
                 onChange={handleInputChange}
               />
+              {errors.description && <FormErrorMessage>{errors.description}</FormErrorMessage>}
             </FormControl>
 
-            <FormControl mt={4}>
+            <FormControl mt={4} isInvalid={!!errors.expiretime}>
               <FormLabel>Expire Time (Months)</FormLabel>
               <Input
                 name="expiretime"
                 type="number"
-                placeholder="Enter expiration time in months"
+                placeholder="Enter expire time in months"
                 value={formData.expiretime}
                 onChange={handleInputChange}
               />
+              {errors.expiretime && <FormErrorMessage>{errors.expiretime}</FormErrorMessage>}
+            </FormControl>
+
+            <FormControl mt={4} isInvalid={!!errors.eventstoragetime}>
+              <FormLabel>Event Storage Time (Months)</FormLabel>
+              <Input
+                name="eventstoragetime"
+                type="number"
+                placeholder="Enter event storage time in months"
+                value={formData.eventstoragetime}
+                onChange={handleInputChange}
+              />
+              {errors.eventstoragetime && <FormErrorMessage>{errors.eventstoragetime}</FormErrorMessage>}
             </FormControl>
           </ModalBody>
 
           <ModalFooter>
-            <Button
-              colorScheme="teal"
-              mr={3}
-              onClick={isEditing ? handleEditPackage : handleCreatePackage}
-            >
-              {isEditing ? "Update" : "Create"}
+            <Button colorScheme="blue" onClick={isEditing ? handleEditPackage : handleCreatePackage}>
+              {isEditing ? "Update Package" : "Create Package"}
             </Button>
-            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={onClose} ml={3}>Cancel</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

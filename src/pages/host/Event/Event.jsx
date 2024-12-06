@@ -731,7 +731,7 @@ const Event = () => {
   return (
     <div>
       <div className="header-container">
-        <h1 className="headername">Events</h1>
+        <h1 className="headername">Events Management</h1>
         <Button
           type="primary"
           icon={<PlusOutlined />}
