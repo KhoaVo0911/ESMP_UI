@@ -121,26 +121,7 @@ const RegisterHostComponent = () => {
 
   return (
     <Box display="flex" height="100vh" position="relative">
-      <Box position="absolute" top={4} left={4}>
-        <Image src={projectLogo} alt="Project Logo" boxSize="140px" />
-      </Box>
-
-      <Box
-        flex="3"
-        bg="gray.100"
-        p={4}
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <Image
-          src={regiser}
-          alt="register"
-          width="100%"
-          height="auto"
-          maxWidth="580px"
-        />
-      </Box>
+      
 
       <Box
         flex="1"

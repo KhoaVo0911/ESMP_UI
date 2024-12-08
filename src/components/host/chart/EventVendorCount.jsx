@@ -331,7 +331,7 @@ const EventVendorCount = ({ hostId }) => {
 
   return (
     <div style={{ width: "100%", height: "400px", marginTop: "20px" }}>
-      <h2>Events with the Most Vendors</h2>
+      
       <ReactECharts
         option={getChartOptions()}
         style={{ height: "100%", width: "100%" }}

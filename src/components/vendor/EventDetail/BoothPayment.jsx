@@ -17,6 +17,7 @@ const BoothPayment = ({
   boothTypeDetails,
   onBackToPolicy,
   eventId,
+  deposit,
 }) => {
   const [remainingTime, setRemainingTime] = useState(900); // Countdown timer: 15 minutes
   const [qrUrl, setQrUrl] = useState(""); // QR Code URL
@@ -25,7 +26,9 @@ const BoothPayment = ({
   const isPaymentProcessed = useRef(false); // Tránh xử lý thanh toán nhiều lần
   const toast = useToast();
   const navigate = useNavigate(); // Initialize navigate
-
+  const amount = Number(boothTypeDetails.price) + Number(deposit);
+  
+  
   useEffect(() => {
     const fetchHostData = async () => {
       try {
@@ -44,7 +47,10 @@ const BoothPayment = ({
     
           if (apibanking && bankingaccount) {
             // 1. Create QR code with banking account
-            const qrUrl = `https://img.vietqr.io/image/${bankingaccount}-compact2.png?amount=${boothTypeDetails.price}&addInfo=${boothTypeDetails.typeName}&accountName=Dinh Quang Minh`;
+            console.log(deposit);
+            
+console.log("tiền", amount);
+            const qrUrl = `https://img.vietqr.io/image/${bankingaccount}-compact2.png?amount=${amount}&addInfo=${boothTypeDetails.typeName}`;
             setQrUrl(qrUrl);
     
             // 2. Post apibanking to API to get id
@@ -203,21 +209,44 @@ const BoothPayment = ({
       if (!eventId || !vendorId) {
         throw new Error("Missing eventId or vendorId");
       }
-
-      // Create VendorInEvent using POST
-      await axios.post(
-        `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
-        {},
-        { headers: { Authorization: accessToken } }
-      );
-
-      // GET VendorInEvent to retrieve `vendorInEventId`
+  
+      // Check if vendorInEvent already exists
       const vendorInEventResponse = await axios.get(
         `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
         { headers: { Authorization: accessToken } }
       );
-      const vendorInEventId = vendorInEventResponse.data.vendorinEventId;
-
+  
+      let vendorInEventId;
+  
+      if (vendorInEventResponse.data && vendorInEventResponse.data.vendorinEventId) {
+        // If vendorInEvent exists, update the status to "accept"
+        vendorInEventId = vendorInEventResponse.data.vendorinEventId;
+  
+        await axios.put(
+          `https://esmpbe.id.vn/api/vendorinevent/${vendorInEventId}`,
+          {
+            status: "accept", // Update status to "accept"
+          },
+          { headers: { Authorization: accessToken } }
+        );
+        console.log("VendorInEvent status updated to 'accept'.");
+      } else {
+        // If vendorInEvent does not exist, create a new VendorInEvent
+        await axios.post(
+          `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
+          {},
+          { headers: { Authorization: accessToken } }
+        );
+  
+        // Now retrieve the vendorInEventId after creating the VendorInEvent
+        const vendorInEventAfterCreationResponse = await axios.get(
+          `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
+          { headers: { Authorization: accessToken } }
+        );
+        vendorInEventId = vendorInEventAfterCreationResponse.data.vendorinEventId;
+        console.log("New VendorInEvent created and retrieved.", vendorInEventId);
+      }
+  
       // Update booth status to "Booked"
       await axios.put(
         `https://esmpbe.id.vn/api/map`,
@@ -227,22 +256,23 @@ const BoothPayment = ({
         },
         { headers: { Authorization: accessToken } }
       );
-
+  
       // Send payment data
       await axios.post(
         `https://esmpbe.id.vn/api/eventpayment`,
         {
-          deposit: parseFloat(boothTypeDetails.price),
+          total: parseFloat(amount),
           locationId: boothTypeDetails.locationId,
           vendorinEventId: vendorInEventId,
         },
         { headers: { Authorization: accessToken } }
       );
-
-      console.log("Payment finalized successfully.");
+  
+      console.log("Payment finalized successfully.", vendorInEventId);
+  
       // Navigate to the next page
       navigate(`/eventenrolled/${vendorId}/${eventId}`, {
-        state: { accessToken, eventId, vendorId },
+        state: { accessToken, eventId, vendorId, vendorInEventId},
       });
     } catch (error) {
       console.error("Error during finalizing payment:", error);
@@ -255,28 +285,33 @@ const BoothPayment = ({
       });
     }
   };
+  
 
   return (
-    <VStack align="start" spacing={6} w="full" pb={10}>
-      <Heading size="md">Payment</Heading>
+    <VStack align="center" spacing={6} w="full" pb={10}>
+    
       <Text>
         Please scan the QR code below to complete your payment.
       </Text>
+      <Text>Booth Price: {boothTypeDetails.price}VNĐ</Text>
+      <Text>Deposit: {deposit}VNĐ</Text>
+      <Text>Total: {amount}VNĐ</Text>
       <Box mt={4}>
-        {qrUrl ? (
-          <Image src={qrUrl} alt="QR Code" />
-        ) : (
-          <Text>Loading QR code...</Text>
-        )}
-      </Box>
+  {qrUrl ? (
+    <Image src={qrUrl} alt="QR Code" style={{  height: '400px' }} />
+  ) : (
+    <Text>Loading QR code...</Text>
+  )}
+</Box>
 
-      <Stack spacing={3}>
-        <Text>Your payment is processing</Text>
-        <Progress value={remainingTime} max={900} colorScheme="teal" size="lg" />
-        <Text>
-          Time remaining: {Math.floor(remainingTime / 60)}:{remainingTime % 60}
-        </Text>
-      </Stack>
+<Stack align="center" spacing={3} width="50%">
+  <Text>Your payment is processing</Text>
+  <Progress value={remainingTime} max={900} colorScheme="teal" size="lg" width="100%" />
+  <Text>
+    Time remaining: {Math.floor(remainingTime / 60)}:{remainingTime % 60}
+  </Text>
+</Stack>
+
 
       <Button onClick={onBackToPolicy} colorScheme="teal">
         Back to Policy

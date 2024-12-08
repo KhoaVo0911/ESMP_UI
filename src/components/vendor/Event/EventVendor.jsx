@@ -115,7 +115,7 @@ const EventVendor = () => {
 
   const handleEventClick = (event) => {
     navigate(`/events/${vendorId}/${event.eventId}`, {
-      state: { eventId: event.eventId },
+      state: { eventId: event.eventId, vendorId },
     });
   };
 

@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom"; // Import the useNavigate hook
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -9,9 +10,24 @@ import banner2 from "../../assets/images/banner2.png";
 import banner3 from "../../assets/images/banner3.png";
 
 const Home = () => {
+  const navigate = useNavigate(); // Initialize the navigate function
+
+  // Function to handle button click
+  const handleExperienceNowClick = () => {
+    navigate("/login"); // Navigate to /login page
+  };
+
   return (
-    <Box bgGradient="linear(to-r, #6EE7B7, #3B82F6)" id="home">
-      <Box px={{ base: 4, lg: 14 }} maxW="screen-2xl" mx="auto"   minH="screen" display="flex" justifyContent="center" alignItems="center">
+    <Box bgGradient="linear(to-r, teal.600, blue.900)" id="home">
+      <Box
+        px={{ base: 4, lg: 14 }}
+        maxW="screen-2xl"
+        mx="auto"
+        minH="screen"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+      >
         <Swiper
           navigation={{
             nextEl: ".swiper-button-next",
@@ -22,23 +38,60 @@ const Home = () => {
             disableOnInteraction: false,
           }}
           modules={[Navigation, Autoplay]}
-          className="w-5/6 mx-auto"
+          className="w-full mx-auto"
         >
           {/* Slide 1 */}
           <SwiperSlide>
-            <Flex direction={{ base: "column", md: "row-reverse" }} align="center" justify="space-between" gap={6} py={{ base: 12, md: 8 }} my={{ base: 24, md: 8 }} minH="500px">
-              <Image src={banner} alt="Banner"  />
-              <Box ml={{ base: 0, md: 14 }} w={{ base: "full", md: "1/2" }}>
-                <Text fontSize={{ base: "3xl", md: "5xl" }} mb={4} fontWeight="bold" color="#1E3A8A" lineHeight="1.4">
-                  MANAGEMENT SYSTEM <Text as="span" color="#FF9F1C">FOR SALES</Text> <Text as="span" color="#4B5563"> AT EVENTS</Text>
+            <Flex
+              direction={{ base: "column", md: "row" }}
+              align="center"
+              justify="space-between"
+              gap={8}
+              py={{ base: 8, md: 12 }}
+              my={{ base: 16, md: 8 }}
+              minH="500px"
+            >
+              <Image
+                src={banner}
+                alt="Banner"
+                objectFit="cover"
+                maxW={{ base: "100%", md: "50%" }}
+              />
+              <Box
+                ml={{ base: 0, md: 14 }}
+                w={{ base: "full", md: "1/2" }}
+                textAlign={{ base: "center", md: "left" }}
+              >
+                <Text
+                  fontSize={{ base: "3xl", md: "5xl" }}
+                  mb={4}
+                  fontWeight="bold"
+                  color="white"
+                  lineHeight="1.4"
+                >
+                  MANAGEMENT SYSTEM{" "}
+                  <Text as="span" color="#FF9F1C">
+                    FOR SALES
+                  </Text>{" "}
+                  <Text as="span" color="#D1D5DB">
+                    AT EVENTS
+                  </Text>
                 </Text>
-                <Text color="#4B5563" fontSize="lg" mb={3}>
+                <Text color="gray.200" fontSize="lg" mb={3}>
                   ESMP offers sellers a fast, easy, and effective experience.
                 </Text>
-                <Text fontWeight="bold" fontSize="2xl" color="black" mb={6}>
+                <Text fontWeight="bold" fontSize="2xl" color="white" mb={6}>
                   FAST, EASY, EFFECTIVE!
                 </Text>
-                <Button bg="#1E3A8A" color="white" size="lg" rounded="md" _hover={{ bg: "#2563EB" }} transition="all 0.3s ease">
+                <Button
+                  bg="#FF9F1C"
+                  color="white"
+                  size="lg"
+                  rounded="md"
+                  _hover={{ bg: "#FF7A00" }}
+                  transition="all 0.3s ease"
+                  onClick={handleExperienceNowClick} // Trigger navigation on click
+                >
                   EXPERIENCE NOW
                 </Button>
               </Box>
@@ -47,16 +100,51 @@ const Home = () => {
 
           {/* Slide 2 */}
           <SwiperSlide>
-            <Flex direction={{ base: "column", md: "row-reverse" }} align="center" justify="space-between" gap={6} py={{ base: 12, md: 8 }} my={{ base: 24, md: 8 }} minH="500px">
-              <Image src={banner2} alt="Banner 2"  />
-              <Box ml={{ base: 0, md: 14 }} w={{ base: "full", md: "1/2" }}>
-                <Text fontSize={{ base: "3xl", md: "5xl" }} mb={4} fontWeight="bold" color="#1E3A8A" lineHeight="1.4">
-                  ESMP - THE "KEY" TO ENHANCING <Text as="span" color="#FF9F1C">BUSINESS PERFORMANCE</Text>
+            <Flex
+              direction={{ base: "column", md: "row" }}
+              align="center"
+              justify="space-between"
+              gap={8}
+              py={{ base: 8, md: 12 }}
+              my={{ base: 16, md: 8 }}
+              minH="500px"
+            >
+              <Image
+                src={banner2}
+                alt="Banner 2"
+                objectFit="cover"
+                maxW={{ base: "100%", md: "50%" }}
+              />
+              <Box
+                ml={{ base: 0, md: 14 }}
+                w={{ base: "full", md: "1/2" }}
+                textAlign={{ base: "center", md: "left" }}
+              >
+                <Text
+                  fontSize={{ base: "3xl", md: "5xl" }}
+                  mb={4}
+                  fontWeight="bold"
+                  color="white"
+                  lineHeight="1.4"
+                >
+                  ESMP - THE "KEY" TO ENHANCING{" "}
+                  <Text as="span" color="#FF9F1C">
+                    BUSINESS PERFORMANCE
+                  </Text>
                 </Text>
-                <Text color="#4B5563" fontSize="lg" mb={3}>
-                  A comprehensive solution for managing and selling at events with many useful features.
+                <Text color="gray.200" fontSize="lg" mb={3}>
+                  A comprehensive solution for managing and selling at events
+                  with many useful features.
                 </Text>
-                <Button bg="#1E3A8A" color="white" size="lg" rounded="md" _hover={{ bg: "#2563EB" }} transition="all 0.3s ease">
+                <Button
+                  bg="#FF9F1C"
+                  color="white"
+                  size="lg"
+                  rounded="md"
+                  _hover={{ bg: "#FF7A00" }}
+                  transition="all 0.3s ease"
+                  onClick={handleExperienceNowClick} // Trigger navigation on click
+                >
                   EXPERIENCE NOW
                 </Button>
               </Box>
@@ -65,18 +153,60 @@ const Home = () => {
 
           {/* Slide 3 */}
           <SwiperSlide>
-            <Flex direction={{ base: "column", md: "row-reverse" }} align="center" justify="space-between" gap={6} py={{ base: 12, md: 8 }} my={{ base: 24, md: 8 }} minH="500px">
-              <Image src={banner3} alt="Banner 3"  />
-              <Box ml={{ base: 0, md: 14 }} w={{ base: "full", md: "1/2" }}>
-                <Text fontSize={{ base: "3xl", md: "5xl" }} mb={4} fontWeight="bold" color="#1E3A8A" lineHeight="1.4">
+            <Flex
+              direction={{ base: "column", md: "row" }}
+              align="center"
+              justify="space-between"
+              gap={8}
+              py={{ base: 8, md: 12 }}
+              my={{ base: 16, md: 8 }}
+              minH="500px"
+            >
+              <Image
+                src={banner3}
+                alt="Banner 3"
+                objectFit="cover"
+                maxW={{ base: "100%", md: "50%" }}
+              />
+              <Box
+                ml={{ base: 0, md: 14 }}
+                w={{ base: "full", md: "1/2" }}
+                textAlign={{ base: "center", md: "left" }}
+              >
+                <Text
+                  fontSize={{ base: "3xl", md: "5xl" }}
+                  mb={4}
+                  fontWeight="bold"
+                  color="white"
+                  lineHeight="1.4"
+                >
                   WHAT ARE THE BENEFITS OF SALES PLATFORM?
                 </Text>
-                <Text color="#4B5563" fontSize="lg" mb={1.5}>Efficient inventory management</Text>
-                <Text color="#4B5563" fontSize="lg" mb={1.5}>Fast and secure transactions</Text>
-                <Text color="#4B5563" fontSize="lg" mb={1.5}>Accurate revenue tracking</Text>
-                <Text color="#4B5563" fontSize="lg" mb={1.5}>Improved customer experience</Text>
-                <Text color="#4B5563" fontSize="lg" mb={1.5}>Optimized business performance</Text>
-                <Button bg="#1E3A8A" color="white" size="lg" rounded="md" mt={6} _hover={{ bg: "#2563EB" }} transition="all 0.3s ease">
+                <Text color="gray.200" fontSize="lg" mb={1.5}>
+                  Efficient inventory management
+                </Text>
+                <Text color="gray.200" fontSize="lg" mb={1.5}>
+                  Fast and secure transactions
+                </Text>
+                <Text color="gray.200" fontSize="lg" mb={1.5}>
+                  Accurate revenue tracking
+                </Text>
+                <Text color="gray.200" fontSize="lg" mb={1.5}>
+                  Improved customer experience
+                </Text>
+                <Text color="gray.200" fontSize="lg" mb={1.5}>
+                  Optimized business performance
+                </Text>
+                <Button
+                  bg="#FF9F1C"
+                  color="white"
+                  size="lg"
+                  rounded="md"
+                  mt={6}
+                  _hover={{ bg: "#FF7A00" }}
+                  transition="all 0.3s ease"
+                  onClick={handleExperienceNowClick} // Trigger navigation on click
+                >
                   EXPERIENCE NOW
                 </Button>
               </Box>

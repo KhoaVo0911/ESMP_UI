@@ -13,6 +13,8 @@ const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 const UpcomingEvents = () => {
   const navigate = useNavigate();
   const hostId = sessionStorage.getItem("hostId") || "";
+  const vendorId = sessionStorage.getItem("vendorId") || "";
+
 
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
@@ -80,8 +82,8 @@ const UpcomingEvents = () => {
   const handleSearch = (e) => setSearchTerm(e.target.value.toLowerCase());
 
   const handleEventClick = (event) => {
-    navigate(`/events/${event.vendorId}/${event.eventId}`, {
-      state: { eventId: event.eventId },
+    navigate(`/events/${vendorId}/${event.eventId}`, {
+      state: { vendorId: vendorId, eventId: event.eventId },
     });
   };
 

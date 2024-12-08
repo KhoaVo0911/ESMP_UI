@@ -15,26 +15,8 @@ const VendorSideBar = ({ collapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedMenuItem, setSelectedMenuItem] = useState("1");
-
   const accessToken = location.state?.accessToken || "";
   const vendorId = location.state?.vendorId || "";
-
-  useEffect(() => {
-    if (location.pathname.startsWith(`/${vendorId}/dashboardVendor`)) {
-      setSelectedMenuItem("1");
-    } else if (location.pathname.startsWith("/productSample")) {
-      setSelectedMenuItem("2");
-    } else if (location.pathname.startsWith("/ManageProductItems")) {
-      setSelectedMenuItem("3");
-    } else if (location.pathname.startsWith("/eventsVendor")) {
-      setSelectedMenuItem("4");
-    } else if (location.pathname.startsWith("/staff-account-manager")) {
-      setSelectedMenuItem("5");
-    } else if (location.pathname.startsWith("/ListEventEnrolled")) {
-      setSelectedMenuItem("6");
-    }
-  }, [location.pathname]);
-
   const defaultItems = [
     {
       type: "group",

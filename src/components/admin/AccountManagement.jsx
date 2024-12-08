@@ -3,7 +3,7 @@ import {
   Table, Thead, Tbody, Tr, Th, Td, IconButton, Modal,
   ModalOverlay, ModalContent, ModalHeader, ModalFooter,
   ModalBody, ModalCloseButton, useDisclosure, FormControl,
-  FormLabel, Input, Stack, Button, Box, InputGroup, InputLeftElement
+  FormLabel, Input, Stack, Button, Box, InputGroup, InputLeftElement, FormErrorMessage, useToast
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, ViewIcon, SearchIcon } from "@chakra-ui/icons";
 import axios from "axios";
@@ -13,12 +13,15 @@ const AdminAccountManagement = () => {
   const [filteredAccounts, setFilteredAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [newAccount, setNewAccount] = useState({
-    userid: "", password: "", email: "", expiretime: ""
+    username: "", password: "", name: "", phone: "", email: "", expiretime: ""
   });
+  const [error, setError] = useState({});
 
   const [currentPage, setCurrentPage] = useState(1);
   const [accountsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const toast = useToast(); // Initialize toast
 
   // Modal disclosures
   const { isOpen: isCreateOpen, onOpen: onCreateOpen, onClose: onCreateClose } = useDisclosure();
@@ -57,45 +60,129 @@ const AdminAccountManagement = () => {
 
   // Create a new account
   const createAccount = () => {
-    const newHostAccount = { ...newAccount, role: "Host" };
-    axios.post("https://esmpbe.id.vn/api/host", newHostAccount)
-      .then((response) => {
-        setAccounts([...accounts, response.data]);
-        setFilteredAccounts([...filteredAccounts, response.data]);
-        onCreateClose();
-      })
-      .catch((error) => console.error(error));
+    if (validateForm()) {
+      const updatedAccount = { ...newAccount, expiretime: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString() };
+      axios.post("https://esmpbe.id.vn/api/user/register", updatedAccount)
+        .then((response) => {
+          setAccounts([...accounts, response.data]);
+          setFilteredAccounts([...filteredAccounts, response.data]);
+          onCreateClose();
+
+          // Show success toast
+          toast({
+            title: "Account Created.",
+            description: "The account has been created successfully.",
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+
+          // Refetch the data to make sure it's updated
+          axios.get("https://esmpbe.id.vn/api/host")
+            .then((response) => {
+              setAccounts(response.data);
+              setFilteredAccounts(response.data);
+            })
+            .catch((error) => console.error(error));
+        })
+        .catch((error) => console.error(error));
+    }
+  };
+
+  // Validation function
+  const validateForm = () => {
+    const newError = {};
+
+    // Check for empty fields
+    if (!newAccount.username) newError.username = "Username is required";
+    if (!newAccount.password) newError.password = "Password is required";
+    if (!newAccount.name) newError.name = "Name is required";
+    if (!newAccount.phone) newError.phone = "Phone number is required";
+    if (!newAccount.email) newError.email = "Email is required";
+
+    // Password should only be numbers
+    if (newAccount.password && !/^\d+$/.test(newAccount.password)) {
+      newError.password = "Password must be numeric";
+    }
+
+    // Email format validation
+    if (newAccount.email && !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(newAccount.email)) {
+      newError.email = "Email format is invalid";
+    }
+
+    setError(newError);
+    return Object.keys(newError).length === 0;
   };
 
   // Update account details
   const updateAccount = () => {
     if (!selectedAccount) return;
+  
     const updatedData = {
-      phone: selectedAccount.phone,
-      email: selectedAccount.email,
+      name: selectedAccount.account.name,
+      phone: selectedAccount.account.phone,
+      email: selectedAccount.account.email,
       expiretime: selectedAccount.expiretime,
       eventstoragetime: selectedAccount.eventstoragetime,
-      bankingaccount: selectedAccount.bankingaccount
+      bankingaccount: selectedAccount.bankingaccount,
+      apibanking: selectedAccount.apibanking
     };
-
-    axios.put(`https://esmpbe.id.vn/api/host/${selectedAccount.account.id}`, updatedData)
+  
+    axios.put(`https://esmpbe.id.vn/api/host/${selectedAccount.hostid}`, updatedData)
       .then((response) => {
-        setAccounts(accounts.map(acc => acc.account.id === selectedAccount.account.id ? response.data : acc));
+        // Show success toast
+        toast({
+          title: "Account Updated.",
+          description: "The account has been updated successfully.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+  
+        // Fetch the updated account list after the update
+        axios.get("https://esmpbe.id.vn/api/host")
+          .then((response) => {
+            setAccounts(response.data);  // Update the accounts state with the latest data
+            setFilteredAccounts(response.data);  // Update the filtered accounts as well
+          })
+          .catch((error) => {
+            console.error("Error fetching updated accounts:", error);
+            toast({
+              title: "Error Fetching Accounts.",
+              description: "There was an error fetching the latest account data.",
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
+          });
+  
+        // Close the modal and reset the selected account
         setSelectedAccount(null);
         onEditClose();
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        console.error(error);
+  
+        // Show error toast
+        toast({
+          title: "Error Updating Account.",
+          description: "There was an error updating the account. Please try again.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      });
   };
-
+  
   // Delete account
-  const deleteAccount = (id) => {
-    axios.delete(`https://esmpbe.id.vn/api/host/${id}`)
-      .then(() => {
-        setAccounts(accounts.filter(acc => acc.account.id !== id));
-        setFilteredAccounts(filteredAccounts.filter(acc => acc.account.id !== id));
-      })
-      .catch((error) => console.error(error));
-  };
+  // const deleteAccount = (hostid) => {
+  //   axios.delete(`https://esmpbe.id.vn/api/host/${hostid}`)
+  //     .then(() => {
+  //       setAccounts(accounts.filter(acc => acc.account.hostid !== hostid));
+  //       setFilteredAccounts(filteredAccounts.filter(acc => acc.account.hostid !== hostid));
+  //     })
+  //     .catch((error) => console.error(error));
+  // };
 
   // View account details and open the modal
   const viewDetails = (account) => {
@@ -122,8 +209,14 @@ const AdminAccountManagement = () => {
         />
       </InputGroup>
 
+      {/* Create Account Button */}
+     
+
       {/* Table displaying accounts */}
       <Box border="1px" borderColor="gray.200" borderRadius="md" boxShadow="lg" p={4}>
+      <Button colorScheme="teal" onClick={onCreateOpen} mb={4} size="sm">
+        Create Account
+      </Button>
         <Table variant="striped" size="md" colorScheme="gray" borderRadius="md">
           <Thead>
             <Tr>
@@ -161,14 +254,14 @@ const AdminAccountManagement = () => {
                     mx={1}
                   />
                   {/* Delete account button */}
-                  <IconButton
+                  {/* <IconButton
                     icon={<DeleteIcon />}
                     aria-label="Delete account"
-                    onClick={() => deleteAccount(account.account.id)}
+                    onClick={() => deleteAccount(account.account.hostid)}
                     variant="ghost"
                     size="sm"
                     mx={1}
-                  />
+                  /> */}
                 </Td>
               </Tr>
             ))}
@@ -204,8 +297,6 @@ const AdminAccountManagement = () => {
           Next
         </Button>
       </Box>
-
-      {/* Modal for viewing account details */}
       <Modal isOpen={isDetailOpen} onClose={onDetailClose}>
         <ModalOverlay />
         <ModalContent>
@@ -218,11 +309,11 @@ const AdminAccountManagement = () => {
             </FormControl>
             <FormControl mt={4}>
               <FormLabel>Phone</FormLabel>
-              <Input value={selectedAccount?.account.phone} isReadOnly />
+              <Input value={selectedAccount?.account?.phone} isReadOnly />
             </FormControl>
             <FormControl mt={4}>
               <FormLabel>Email</FormLabel>
-              <Input value={selectedAccount?.account.email} isReadOnly />
+              <Input value={selectedAccount?.account?.email} isReadOnly />
             </FormControl>
             <FormControl mt={4}>
               <FormLabel>Expire Time</FormLabel>
@@ -242,8 +333,61 @@ const AdminAccountManagement = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-
-      {/* Modal for editing account */}
+      {/* Create Account Modal */}
+      <Modal isOpen={isCreateOpen} onClose={onCreateClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Create Account</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl isInvalid={error.username}>
+              <FormLabel>Username</FormLabel>
+              <Input
+                value={newAccount.username}
+                onChange={(e) => setNewAccount({ ...newAccount, username: e.target.value })}
+              />
+              <FormErrorMessage>{error.username}</FormErrorMessage>
+            </FormControl>
+            <FormControl mt={4} isInvalid={error.password}>
+              <FormLabel>Password</FormLabel>
+              <Input
+                type="password"
+                value={newAccount.password}
+                onChange={(e) => setNewAccount({ ...newAccount, password: e.target.value })}
+              />
+              <FormErrorMessage>{error.password}</FormErrorMessage>
+            </FormControl>
+            <FormControl mt={4} isInvalid={error.name}>
+              <FormLabel>Name</FormLabel>
+              <Input
+                value={newAccount.name}
+                onChange={(e) => setNewAccount({ ...newAccount, name: e.target.value })}
+              />
+              <FormErrorMessage>{error.name}</FormErrorMessage>
+            </FormControl>
+            <FormControl mt={4} isInvalid={error.phone}>
+              <FormLabel>Phone</FormLabel>
+              <Input
+                value={newAccount.phone}
+                onChange={(e) => setNewAccount({ ...newAccount, phone: e.target.value })}
+              />
+              <FormErrorMessage>{error.phone}</FormErrorMessage>
+            </FormControl>
+            <FormControl mt={4} isInvalid={error.email}>
+              <FormLabel>Email</FormLabel>
+              <Input
+                value={newAccount.email}
+                onChange={(e) => setNewAccount({ ...newAccount, email: e.target.value })}
+              />
+              <FormErrorMessage>{error.email}</FormErrorMessage>
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="ghost" onClick={onCreateClose}>Cancel</Button>
+            <Button colorScheme="teal" onClick={createAccount}>Create Account</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       <Modal isOpen={isEditOpen} onClose={onEditClose}>
         <ModalOverlay />
         <ModalContent>
@@ -283,14 +427,14 @@ const AdminAccountManagement = () => {
               <FormLabel>Banking Account</FormLabel>
               <Input
                 value={selectedAccount?.bankingaccount}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, bankingaccount: e.target.value } })}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount, bankingaccount: e.target.value } })}
               />
             </FormControl>
             <FormControl mt={4}>
               <FormLabel>API BANKING</FormLabel>
               <Input
                 value={selectedAccount?.apibanking}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, apibanking: e.target.value } })}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount, apibanking: e.target.value } })}
               />
             </FormControl>
           </ModalBody>

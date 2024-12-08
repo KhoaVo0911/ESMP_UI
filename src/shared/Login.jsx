@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -26,6 +26,11 @@ const LoginComponent = ({ onLoginSuccess }) => {
   const toast = useToast();
   const hostCode = "default"; // HostCode is set to 'default'
   const navigate = useNavigate();
+
+  // Xóa accessToken khi component được render
+  useEffect(() => {
+    sessionStorage.removeItem("accessToken"); // Xóa token khi vào trang login
+  }, []);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -68,6 +73,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
       sessionStorage.setItem("email", email);
       sessionStorage.setItem("eventstoragetime", eventstoragetime);
       sessionStorage.setItem("hostid", hostid);
+      sessionStorage.setItem("accessToken", accessToken); // Lưu accessToken
 
       // Pass accessToken and userInfo on successful login
       onLoginSuccess(accessToken, userInfo);
@@ -192,7 +198,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
           </Stack>
           <Divider my={4} />
 
-          <Text fontSize="sm" color="gray.500" textAlign="center" mt={4}>
+          {/* <Text fontSize="sm" color="gray.500" textAlign="center" mt={4}>
             Do you want to host an event?{" "}
             <Text
               as="span"
@@ -202,7 +208,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
             >
               Create Account for Host
             </Text>
-          </Text>
+          </Text> */}
           <Text
             colorScheme="gray"
             cursor="pointer"

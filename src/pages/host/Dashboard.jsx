@@ -11,6 +11,7 @@ import EventLocationSlider from "../../components/host/EventSlider/EventLocation
 import { useParams } from "react-router-dom";
 import EventVendorCount from "../../components/host/chart/EventVendorCount";
 import ProfitBarChart from "../../components/host/chart/ProfitBarChart";
+import BarChart from "../../components/host/chart/ProfitChart";
 
 const Dashboard = () => {
   const { hostId } = useParams();
@@ -61,6 +62,16 @@ const Dashboard = () => {
         >
           <ProfitBarChart hostId={hostId} />
           {/* <EventLocationSlider /> */}
+        </Box>
+      </Grid>
+      <Grid templateColumns="(1fr)" mt={10} gap={8}>
+        <Box
+          bg="white"
+          borderRadius="20px"
+          p={6}
+          boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
+        >
+          <BarChart />
         </Box>
       </Grid>
     </>

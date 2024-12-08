@@ -425,23 +425,8 @@ const TransactionList = () => {
                     <Td>{selectedPayment.deposit}</Td>
                   </Tr>
                   <Tr>
-                    <Th>Total Profit</Th>
+                    <Th>Total</Th>
                     <Td>{selectedPayment.totalprofit}</Td>
-                  </Tr>
-                  <Tr>
-                    <Th>Profit Percent</Th>
-                    <Td>{selectedPayment.profitpercent} %</Td>
-                  </Tr>
-                  <Tr>
-                    <Th>Profit Payment Date</Th>
-                    <Td>
-                      {selectedPayment.profitpaymentdate
-                        ? format(
-                            new Date(selectedPayment.profitpaymentdate),
-                            "MM/dd/yyyy HH:mm:ss"
-                          )
-                        : "N/A"}
-                    </Td>
                   </Tr>
                   <Tr>
                     <Th>Status</Th>

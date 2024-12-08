@@ -153,8 +153,8 @@ const EndEvent = ({
       await axios.put(
         `https://esmpbe.id.vn/api/eventpayment/${vendorInEventId}`,
         {
-          totalrevenue: totalRevenue,
-          status: "Refunding Deposit", // Trạng thái thanh toán
+          
+          status: "Event Finished", // Trạng thái thanh toán
         },
         {
           headers: {
