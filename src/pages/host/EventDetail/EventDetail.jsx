@@ -549,7 +549,7 @@ const EventDetails = () => {
         body: JSON.stringify({
           ...event,
           onWeb: newVisibility,
-          profit: event.profit ? parseFloat(event.profit) : 0,
+          deposit: event.deposit ? parseFloat(event.deposit) : 0,
         }),
       });
 
