@@ -5,6 +5,7 @@ import {
   Table,
   Thead,
   Tbody,
+  Flex,
   Tr,
   Th,
   Td,
@@ -38,6 +39,9 @@ const ServiceManagement = ({ eventId }) => {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const typesPerPage = 3; // Show 5 items per page
+
   // Fetch services list
   const fetchServices = async () => {
     if (!eventId) {
@@ -60,6 +64,11 @@ const ServiceManagement = ({ eventId }) => {
   useEffect(() => {
     fetchServices();
   }, [eventId]);
+
+  const totalPages = Math.ceil(services.length / typesPerPage);
+  const indexOfLastType = currentPage * typesPerPage;
+  const indexOfFirstType = indexOfLastType - typesPerPage;
+  const currentTypes = services.slice(indexOfFirstType, indexOfLastType);
 
   const handleSave = async () => {
     let valid = true;
@@ -162,6 +171,10 @@ const ServiceManagement = ({ eventId }) => {
     setQuantity("");
   };
 
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   return (
     <Box>
       <Button colorScheme="blue" mb={4} onClick={onOpen}>
@@ -178,32 +191,49 @@ const ServiceManagement = ({ eventId }) => {
           </Tr>
         </Thead>
         <Tbody>
-          {services.map((service) => (
-            <Tr key={service.serviceId}>
-              <Td>{service.name}</Td>
-              <Td>{service.price}</Td>
-              <Td>{service.quantity}</Td>
-              <Td>
-                <Button
-                  size="sm"
-                  colorScheme="teal"
-                  mr={2}
-                  onClick={() => handleEdit(service)}
-                >
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  colorScheme="red"
-                  onClick={() => handleDelete(service.serviceId)}
-                >
-                  Delete
-                </Button>
-              </Td>
-            </Tr>
-          ))}
+          {currentTypes.map(
+            (
+              service // Thay từ services.map thành currentTypes.map
+            ) => (
+              <Tr key={service.serviceId}>
+                <Td>{service.name}</Td>
+                <Td>{service.price}</Td>
+                <Td>{service.quantity}</Td>
+                <Td>
+                  <Button
+                    size="sm"
+                    colorScheme="teal"
+                    mr={2}
+                    onClick={() => handleEdit(service)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    colorScheme="red"
+                    onClick={() => handleDelete(service.serviceId)}
+                  >
+                    Delete
+                  </Button>
+                </Td>
+              </Tr>
+            )
+          )}
         </Tbody>
       </Table>
+
+      <Flex justifyContent="flex-end" mt={4}>
+        {Array.from({ length: totalPages }, (_, i) => (
+          <Button
+            key={i}
+            onClick={() => handlePageChange(i + 1)}
+            colorScheme={currentPage === i + 1 ? "blue" : "gray"}
+            mx={1}
+          >
+            {i + 1}
+          </Button>
+        ))}
+      </Flex>
 
       {/* Popup Form */}
       <Modal isOpen={isOpen} onClose={onClose}>

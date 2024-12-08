@@ -493,22 +493,29 @@ const Event = () => {
     let filtered = events;
 
     const now = new Date(); // Lấy thời gian hiện tại
+    const startOfDay = new Date(now.setHours(0, 0, 0, 0)); // Bắt đầu ngày hôm nay (00:00:00)
+    const endOfDay = new Date(now.setHours(23, 59, 59, 999)); // Kết thúc ngày hôm nay (23:59:59)
 
     switch (activeTab) {
       case "0": // Up Coming
-        filtered = events.filter((event) => new Date(event.startDate) > now);
+        filtered = events.filter(
+          (event) => new Date(event.startDate) > startOfDay
+        );
         break;
       case "1": // Running
         filtered = events.filter(
           (event) =>
-            new Date(event.startDate) <= now && new Date(event.endDate) >= now
+            new Date(event.startDate) <= endOfDay &&
+            new Date(event.endDate) >= startOfDay
         );
         break;
       case "2": // Cancelled
         filtered = events.filter((event) => event.status === "cancelled");
         break;
       case "3": // Finished
-        filtered = events.filter((event) => new Date(event.endDate) < now);
+        filtered = events.filter(
+          (event) => new Date(event.endDate) < startOfDay
+        );
         break;
       default: // All
         filtered = events;
@@ -519,7 +526,8 @@ const Event = () => {
         event.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    console.log(filtered, "filter");
+
+    console.log(filtered, "filtered");
     setFilteredEvents(filtered);
   }, [events, activeTab, searchTerm]);
 
@@ -624,7 +632,7 @@ const Event = () => {
   //   }
   // };
   const handleCreateEvent = async (values) => {
-    const { name, description, startDate, endDate, file, profit, themeId } =
+    const { name, description, startDate, endDate, file, deposit, themeId } =
       values;
 
     if (
@@ -633,7 +641,7 @@ const Event = () => {
       !startDate ||
       !endDate ||
       !file ||
-      !profit ||
+      !deposit ||
       !themeId
     ) {
       message.error("Please fill in all fields.");
@@ -641,21 +649,28 @@ const Event = () => {
     }
 
     try {
-      // Chuẩn bị dữ liệu sự kiện
+      // Manually set startDate and endDate to midnight UTC to avoid timezone issues
+      const startDateUTC = new Date(startDate);
+      startDateUTC.setHours(0, 0, 0, 0); // Set to midnight UTC
+
+      const endDateUTC = new Date(endDate);
+      endDateUTC.setHours(23, 59, 59, 999); // Set to end of day UTC
+
+      // Prepare event data
       const newEvent = {
         name,
         hostId,
         themeId,
         description,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        profit: parseFloat(profit),
+        startDate: startDateUTC.toISOString(), // Ensure it's in ISO format
+        endDate: endDateUTC.toISOString(), // Ensure it's in ISO format
+        deposit: parseFloat(deposit), // Use deposit instead of profit
         status: "upcoming",
       };
 
       console.log("Payload being sent:", newEvent);
 
-      // Gửi request tạo sự kiện
+      // Send request to create event
       const response = await axios.post(BASE_URL, newEvent, {
         headers: { Authorization: getAccessToken() },
       });
@@ -666,16 +681,16 @@ const Event = () => {
         throw new Error("Event ID is missing in the response");
       }
 
-      // Upload ảnh lên Firebase
+      // Upload image to Firebase
       const imageFile = file[0].originFileObj;
       const imageRef = ref(storage, `${hostId}/${eventId}/${imageFile.name}`);
       await uploadBytes(imageRef, imageFile);
       const imageURL = await getDownloadURL(imageRef);
 
-      // Fetch lại danh sách sự kiện
+      // Refetch events list
       fetchEvents();
 
-      // Cập nhật thông tin sự kiện trong state
+      // Update event info in state
       const updatedEvent = {
         ...newEvent,
         eventId,
@@ -683,14 +698,12 @@ const Event = () => {
       };
       setEvents((prevEvents) => [updatedEvent, ...prevEvents]);
 
-      // Hiển thị thông báo thành công cho sự kiện
       message.success("Event created successfully!");
 
-      // Đóng modal và reset form sau khi mọi thứ hoàn thành
+      // Close modal and reset form
       setModalVisible(false);
       form.resetFields();
     } catch (error) {
-      // Xử lý lỗi
       console.error("Error creating event:", error);
       message.error(
         `Error: ${error.response?.data?.message || "Something went wrong"}`
@@ -801,7 +814,7 @@ const Event = () => {
             </GridItem>
           ))
         ) : (
-          <Box>No events found.</Box>
+          <Box></Box>
         )}
       </Grid>
 
@@ -858,16 +871,13 @@ const Event = () => {
             </Col>
           </Row>
           <Form.Item
-            name="profit"
-            label="Profit (%)"
+            name="deposit"
+            label="Deposit (VND)"
             rules={[
-              {
-                required: true,
-                message: "Please enter the profit percentage!",
-              },
+              { required: true, message: "Please enter the deposit amount!" },
             ]}
           >
-            <Input type="number" placeholder="Enter profit percentage" />
+            <Input type="number" placeholder="Enter deposit amount" />
           </Form.Item>
           <Form.Item
             name="themeId"

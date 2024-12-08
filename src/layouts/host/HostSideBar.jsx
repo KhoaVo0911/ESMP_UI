@@ -349,7 +349,6 @@ const HostSideBar = ({ collapsed }) => {
   const hostId = sessionStorage.getItem("hostId");
 
   const [selectedMenuItem, setSelectedMenuItem] = useState("1");
-  const [eventName, setEventName] = useState(""); // Khai báo state để lưu tên sự kiện
 
   useEffect(() => {
     console.log("Current eventId:", eventId);
@@ -380,23 +379,6 @@ const HostSideBar = ({ collapsed }) => {
     }
   }, [location.pathname]);
 
-  useEffect(() => {
-    if (eventId) {
-      // Lấy tên sự kiện từ API
-      fetchEventData(eventId);
-    }
-  }, [eventId]);
-
-  const fetchEventData = async (eventId) => {
-    try {
-      const response = await fetch(`/api/event/host/${hostId}`);
-      const data = await response.json();
-      setEventName(data.name); // Lưu tên sự kiện vào state
-    } catch (error) {
-      console.error("Error fetching event data:", error);
-    }
-  };
-
   const eventDetailItems = [
     {
       type: "group",
@@ -408,7 +390,7 @@ const HostSideBar = ({ collapsed }) => {
             <span
               style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
             >
-              {eventName || "Event Information"}
+              Event Information
             </span>
           ),
           onClick: () => navigate(`/event-detail/${eventId}`),
@@ -420,7 +402,7 @@ const HostSideBar = ({ collapsed }) => {
             <span
               style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
             >
-              {eventName || "Payment List"}
+              Payment List
             </span>
           ),
           onClick: () => navigate(`/eventpayment/${eventId}`),
@@ -432,7 +414,7 @@ const HostSideBar = ({ collapsed }) => {
             <span
               style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
             >
-              {eventName || "Booth Plan"}
+              Booth Plan
             </span>
           ),
           onClick: () => navigate(`/event/${eventId}/booth-plan`),
@@ -444,7 +426,7 @@ const HostSideBar = ({ collapsed }) => {
             <span
               style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
             >
-              {eventName || "Extension Event"}
+              Extension Event
             </span>
           ),
           onClick: () => navigate(`/event/${eventId}/extensionEvent`),

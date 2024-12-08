@@ -681,16 +681,16 @@ const EventDetails = () => {
 
       <Box mb={6}>
         <Text fontWeight="bold" color="purple.900" fontSize="lg">
-          Profit:
+          Deposit:
         </Text>
         <Text>
-          {event?.profit ? `${event.profit}%` : "No profit specified."}
+          {event?.deposit ? `${event.deposit} VND` : "No deposit specified."}
         </Text>
       </Box>
 
       <Box mb={6}>
         <Text fontWeight="bold" color="purple.900" fontSize="lg">
-          Theme:
+          Theme Event:
         </Text>
         {loadingTheme ? (
           <Spinner size="sm" />

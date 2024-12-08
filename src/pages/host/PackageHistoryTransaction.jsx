@@ -49,7 +49,9 @@ const TransactionHistory = () => {
         setTransactions(hostTransactions);
 
         // Fetch package details for the corresponding transactions
-        const packageIds = hostTransactions.map((transaction) => transaction.packageid);
+        const packageIds = hostTransactions.map(
+          (transaction) => transaction.packageid
+        );
         const uniquePackageIds = [...new Set(packageIds)];
 
         const packageResponses = await Promise.all(
@@ -62,7 +64,9 @@ const TransactionHistory = () => {
           )
         );
 
-        const fetchedPackages = packageResponses.map((response) => response.data);
+        const fetchedPackages = packageResponses.map(
+          (response) => response.data
+        );
         setPackages(fetchedPackages);
         setLoading(false);
       } catch (error) {
@@ -90,7 +94,13 @@ const TransactionHistory = () => {
 
   if (loading) {
     return (
-      <Box p={4} display="flex" justifyContent="center" alignItems="center" minH="90vh">
+      <Box
+        p={4}
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minH="90vh"
+      >
         <Spinner size="xl" />
       </Box>
     );
@@ -98,13 +108,29 @@ const TransactionHistory = () => {
 
   return (
     <Box p={4} bg="gray.50" minH="70vh">
-      <VStack spacing={6} align="center" padding={4} bg="white" borderRadius="lg" boxShadow="md" height="60vh" w="full">
-        <Heading as="h1" size="xl" textAlign="center" color="teal.600" mb={4}>
+      <VStack
+        spacing={6}
+        align="center"
+        padding={4}
+        bg="white"
+        borderRadius="lg"
+        boxShadow="md"
+        height="60vh"
+        w="full"
+      >
+        <Heading as="h1" size="xl" textAlign="center" color="black" mb={4}>
           Transaction History
         </Heading>
 
         {transactions.length > 0 ? (
-          <Table variant="striped" width="100%" border="1px" borderColor="gray.200" borderRadius="lg" overflow="hidden">
+          <Table
+            variant="striped"
+            width="100%"
+            border="1px"
+            borderColor="gray.200"
+            borderRadius="lg"
+            overflow="hidden"
+          >
             <Thead bg="blue.50" color="white">
               <Tr>
                 <Th>Service Package</Th>
@@ -124,11 +150,15 @@ const TransactionHistory = () => {
 
                 return packageDetails ? (
                   <Tr key={transaction.id}>
-                    <Td border="1px" borderColor="gray.200">{packageDetails.name}</Td>
-                    <Td border="1px" borderColor="gray.200">{packageDetails.description}</Td>
+                    <Td border="1px" borderColor="gray.200">
+                      {packageDetails.name}
+                    </Td>
+                    <Td border="1px" borderColor="gray.200">
+                      {packageDetails.description}
+                    </Td>
                     <Td border="1px" borderColor="gray.200">
                       <Box
-                        color="green.600"  // Green color for purchase date text
+                        color="blue" // Green color for purchase date text
                         fontWeight="bold"
                       >
                         {new Date(transaction.createdat).toLocaleDateString()}
@@ -136,19 +166,24 @@ const TransactionHistory = () => {
                     </Td>
                     <Td border="1px" borderColor="gray.200">
                       <Box
-                        color="red.600"  // Red color for expiration date text
+                        color="red.600" // Red color for expiration date text
                         fontWeight="bold"
                       >
-                        {calculateExpirationDate(transaction.createdat, packageDetails.expiretime)}
+                        {calculateExpirationDate(
+                          transaction.createdat,
+                          packageDetails.expiretime
+                        )}
                       </Box>
                     </Td>
                     <Td border="1px" borderColor="gray.200">
                       <Box
-                        color="blue.600"  // Red color for expiration date text
+                        color="blue.600" // Red color for expiration date text
                         fontWeight="bold"
                       >
-                       
-                       {packageDetails.eventstoragetime} {packageDetails.eventstoragetime > 1 ? "Months" : "Month"}
+                        {packageDetails.eventstoragetime}{" "}
+                        {packageDetails.eventstoragetime > 1
+                          ? "Months"
+                          : "Month"}
                       </Box>
                     </Td>
                     <Td border="1px" borderColor="gray.200">

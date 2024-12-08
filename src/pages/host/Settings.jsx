@@ -322,7 +322,7 @@ const Settings = () => {
 
                 {/* Nút lưu mật khẩu */}
                 <Button
-                  colorScheme="teal"
+                  colorScheme="blue"
                   size="lg"
                   alignSelf="flex-end"
                   onClick={handleUpdatePassword}

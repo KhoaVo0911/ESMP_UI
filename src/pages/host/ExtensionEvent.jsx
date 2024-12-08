@@ -20,10 +20,12 @@ const ExtensionEvent = () => {
       <Grid
         templateRows="repeat(2, 1fr)"
         templateColumns="repeat(2, 1fr)"
-        gap={6}
+        gap={4} // Giảm khoảng cách giữa các phần tử
+        minHeight="80vh"
+        overflow="hidden"
       >
         {/* Image Event Management */}
-        <GridItem colSpan={2}>
+        <GridItem colSpan={2} minHeight="300px">
           <Box p={4} bg="white" borderRadius="md" boxShadow="sm">
             <Heading size="md" mb={4}>
               Image Event Management
@@ -35,7 +37,7 @@ const ExtensionEvent = () => {
 
         {/* Location Type Management */}
         <GridItem>
-          <Box p={4} bg="white" borderRadius="md" boxShadow="sm">
+          <Box p={2} bg="white" borderRadius="md" boxShadow="sm">
             <Heading size="md" mb={4}>
               Location Type Management
             </Heading>

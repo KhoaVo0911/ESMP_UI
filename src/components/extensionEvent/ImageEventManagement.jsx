@@ -353,12 +353,13 @@ const ImageEventManagement = ({ eventId, hostId }) => {
 
   return (
     <HStack
-      spacing={24}
+      spacing={12}
       align="flex-start"
       p={4}
       borderWidth="1px"
       borderRadius="md"
       boxShadow="sm"
+      wrap="wrap" // Thêm wrap để các ảnh không bị tràn
     >
       {/* Preview and upload */}
       <VStack align="start" spacing={4}>
@@ -372,6 +373,7 @@ const ImageEventManagement = ({ eventId, hostId }) => {
           alignItems="center"
           bg="gray.50"
           borderRadius="md"
+          overflow="hidden" // Thêm overflow để tránh phần tử kéo dài
         >
           {previewUrl ? (
             <Image src={previewUrl} alt="Preview" maxH="100%" />
@@ -419,6 +421,7 @@ const ImageEventManagement = ({ eventId, hostId }) => {
             height={imageSize}
             bg="white"
             position="relative"
+            marginBottom="20px" // Đảm bảo có khoảng cách giữa các ảnh
           >
             <Image
               src={url}

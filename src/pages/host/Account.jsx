@@ -64,7 +64,13 @@ const AccountManagement = () => {
   const accessToken = sessionStorage.getItem("accessToken") || "";
 
   // useForm hook
-  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm();
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+    reset,
+  } = useForm();
 
   const fetchVendors = async () => {
     setLoading(true);
@@ -258,34 +264,42 @@ const AccountManagement = () => {
   }, [hostId, accessToken]);
 
   return (
-    <Box p={8} bg="gray.100" borderRadius="lg" shadow="lg" maxW="1200px" mx="auto">
-      <Flex justify="space-between" align="center" mb={6}>
-        <Heading size="lg" fontWeight="bold" color="teal.600">
-          Vendor Management
-        </Heading>
-        <IconButton
-          colorScheme="teal"
-          icon={<AddIcon />}
-          onClick={() => {
-            setIsEditing(false);
-            resetForm();
-            onOpen();
-          }}
-          aria-label="Add Account"
-        />
-      </Flex>
+    <Box bg="white" p={6} borderRadius="md" shadow="md">
+      <Box mb={10}>
+        <Flex justify="space-between" align="center" mb={6}>
+          <Heading size="lg" fontWeight="bold" color="blue.600">
+            Vendor Management
+          </Heading>
+          <Button
+            colorScheme="blue"
+            leftIcon={<AddIcon />}
+            onClick={() => {
+              setIsEditing(false);
+              resetForm();
+              onOpen();
+            }}
+          >
+            Create New Account
+          </Button>
+        </Flex>
 
-      <TableContainer borderRadius="md" shadow="md" bg="white">
-        <Table variant="simple" colorScheme="teal">
-          <Thead bg="teal.500">
+        <Table
+          variant="simple"
+          colorScheme="gray"
+          size="lg"
+          bg="white"
+          borderRadius="md"
+          shadow="md"
+        >
+          <Thead bg="gray.200">
             <Tr>
-              <Th color="white">No</Th>
-              <Th color="white">Username</Th>
-              <Th color="white">Name</Th>
-              <Th color="white">Email</Th>
-              <Th color="white">Account Banking</Th>
-              <Th color="white">Status</Th>
-              <Th color="white">Actions</Th>
+              <Th>No</Th>
+              <Th>Username</Th>
+              <Th>Name</Th>
+              <Th>Email</Th>
+              <Th>Account Banking</Th>
+              <Th>Status</Th>
+              <Th textAlign="center">Actions</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -304,190 +318,169 @@ const AccountManagement = () => {
                   <Td>{account.email}</Td>
                   <Td>{account.urlQr}</Td>
                   <Td>
-                    <Badge
-                      colorScheme={account.status ? "green" : "red"}
-                      variant="solid"
-                      onClick={() =>
-                        handleToggleStatus(account.vendorid, account.status)
-                      }
-                      style={{ cursor: "pointer" }}
-                    >
-                      {account.status ? "Active" : "Inactive"}
+                    <Badge colorScheme={account.status ? "green" : "red"}>
+                      {account.status ? "ACTIVE" : "INACTIVE"}
                     </Badge>
                   </Td>
-                  <Td>
-                    <Tooltip label="Details">
-                      <IconButton
-                        size="sm"
-                        colorScheme="blue"
-                        icon={<InfoIcon />}
-                        onClick={() => openDetailModal(account)}
-                        mr={2}
-                        aria-label="View Details"
-                      />
-                    </Tooltip>
-                    <Tooltip label="Edit">
-                      <IconButton
-                        size="sm"
-                        colorScheme="yellow"
-                        icon={<EditIcon />}
-                        onClick={() => openEditModal(account)}
-                        mr={2}
-                        aria-label="Edit Account"
-                      />
-                    </Tooltip>
-                    <Tooltip label="Send Email">
-                      <IconButton
-                        size="sm"
-                        colorScheme="teal"
-                        icon={<EmailIcon />}
-                        onClick={() => handleSendEmail(account)}
-                        mr={2}
-                        aria-label="Send Email"
-                      />
-                    </Tooltip>
-                    <Tooltip label="Delete">
-                      <IconButton
-                        size="sm"
-                        colorScheme="red"
-                        icon={<DeleteIcon />}
-                        onClick={() => handleDeleteAccount(account.vendorId)}
-                        aria-label="Delete Account"
-                      />
-                    </Tooltip>
+                  <Td textAlign="center">
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      mr={2}
+                      onClick={() => openDetailModal(account)}
+                    >
+                      Details
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="yellow"
+                      mr={2}
+                      onClick={() => openEditModal(account)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="teal"
+                      mr={2}
+                      onClick={() => handleSendEmail(account)}
+                    >
+                      Email
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorScheme="red"
+                      onClick={() => handleDeleteAccount(account.vendorId)}
+                    >
+                      Delete
+                    </Button>
                   </Td>
                 </Tr>
               ))
             )}
           </Tbody>
         </Table>
-      </TableContainer>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{isEditing ? "Edit Account" : "Create New Account"}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <form onSubmit={handleSubmit(isEditing ? handleEditAccount : handleCreateAccount)}>
-              <FormControl isInvalid={errors.username}>
-                <FormLabel>Username</FormLabel>
-                <Input
-                  {...register("username", { required: "Username is required" })}
-                  placeholder="Enter username"
-                />
-                <FormErrorMessage>{errors.username && errors.username.message}</FormErrorMessage>
-              </FormControl>
+        {/* Modal for Create/Edit Account */}
+        <Modal isOpen={isOpen} onClose={onClose}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>
+              {isEditing ? "Edit Account" : "Create New Account"}
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <form
+                onSubmit={handleSubmit(
+                  isEditing ? handleEditAccount : handleCreateAccount
+                )}
+              >
+                <FormControl isInvalid={errors.username}>
+                  <FormLabel>Username</FormLabel>
+                  <Input
+                    {...register("username", {
+                      required: "Username is required",
+                    })}
+                    placeholder="Enter username"
+                  />
+                  <FormErrorMessage>
+                    {errors.username?.message}
+                  </FormErrorMessage>
+                </FormControl>
 
-              <FormControl mt={4} isInvalid={errors.password}>
-                <FormLabel>Password</FormLabel>
-                <Input
-                  {...register("password", { required: "Password is required" })}
-                  type="password"
-                  placeholder="Enter password"
-                />
-                <FormErrorMessage>{errors.password && errors.password.message}</FormErrorMessage>
-              </FormControl>
+                <FormControl mt={4} isInvalid={errors.password}>
+                  <FormLabel>Password</FormLabel>
+                  <Input
+                    {...register("password", {
+                      required: "Password is required",
+                    })}
+                    type="password"
+                    placeholder="Enter password"
+                  />
+                  <FormErrorMessage>
+                    {errors.password?.message}
+                  </FormErrorMessage>
+                </FormControl>
 
-              <FormControl mt={4} isInvalid={errors.name}>
-                <FormLabel>Name</FormLabel>
-                <Input
-                  {...register("name", { required: "Name is required" })}
-                  placeholder="Enter name"
-                />
-                <FormErrorMessage>{errors.name && errors.name.message}</FormErrorMessage>
-              </FormControl>
+                <FormControl mt={4} isInvalid={errors.name}>
+                  <FormLabel>Name</FormLabel>
+                  <Input
+                    {...register("name", { required: "Name is required" })}
+                    placeholder="Enter name"
+                  />
+                  <FormErrorMessage>{errors.name?.message}</FormErrorMessage>
+                </FormControl>
 
-              <FormControl mt={4} isInvalid={errors.phone}>
-                <FormLabel>Phone</FormLabel>
-                <Input
-                  {...register("phone", { required: "Phone is required" })}
-                  placeholder="Enter phone number"
-                />
-                <FormErrorMessage>{errors.phone && errors.phone.message}</FormErrorMessage>
-              </FormControl>
+                <FormControl mt={4} isInvalid={errors.email}>
+                  <FormLabel>Email</FormLabel>
+                  <Input
+                    {...register("email", { required: "Email is required" })}
+                    placeholder="Enter email"
+                  />
+                  <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
+                </FormControl>
 
-              <FormControl mt={4} isInvalid={errors.email}>
-                <FormLabel>Email</FormLabel>
-                <Input
-                  {...register("email", { required: "Email is required" })}
-                  placeholder="Enter email"
-                />
-                <FormErrorMessage>{errors.email && errors.email.message}</FormErrorMessage>
-              </FormControl>
+                <FormControl mt={4} isInvalid={errors.urlQr}>
+                  <FormLabel>Account Banking</FormLabel>
+                  <Input
+                    {...register("urlQr", { required: "QR URL is required" })}
+                    placeholder="Enter QR code URL"
+                  />
+                  <FormErrorMessage>{errors.urlQr?.message}</FormErrorMessage>
+                </FormControl>
 
-              <FormControl mt={4} isInvalid={errors.address}>
-                <FormLabel>Address</FormLabel>
-                <Input
-                  {...register("address", { required: "Address is required" })}
-                  placeholder="Enter address"
-                />
-                <FormErrorMessage>{errors.address && errors.address.message}</FormErrorMessage>
-              </FormControl>
+                <ModalFooter>
+                  <Button
+                    colorScheme="blue"
+                    mr={3}
+                    type="submit"
+                    isLoading={formSubmitting}
+                    loadingText={isEditing ? "Updating" : "Creating"}
+                  >
+                    {isEditing ? "Update" : "Create"}
+                  </Button>
+                  <Button onClick={onClose}>Cancel</Button>
+                </ModalFooter>
+              </form>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
 
-              <FormControl mt={4} isInvalid={errors.urlQr}>
-                <FormLabel>Account Banking</FormLabel>
-                <Input
-                  {...register("urlQr", { required: "QR URL is required" })}
-                  placeholder="Enter QR code URL"
-                />
-                <FormErrorMessage>{errors.urlQr && errors.urlQr.message}</FormErrorMessage>
-              </FormControl>
-              <ModalFooter>
-                <Button
-                  colorScheme="teal"
-                  mr={3}
-                  type="submit"
-                  isLoading={formSubmitting}
-                  loadingText={isEditing ? "Updating" : "Creating"}
-                >
-                  {isEditing ? "Update" : "Create"}
-                </Button>
-                <Button onClick={onClose}>Cancel</Button>
-              </ModalFooter>
-            </form>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-
-      <Modal isOpen={isDetailOpen} onClose={onCloseDetail}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Account Details</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <p>
-              <strong>Username:</strong> {selectedAccount?.username}
-            </p>
-            <p>
-              <strong>Password:</strong> *********
-            </p>
-            <p>
-              <strong>Name:</strong> {selectedAccount?.name}
-            </p>
-            <p>
-              <strong>Phone:</strong> {selectedAccount?.phone}
-            </p>
-            <p>
-              <strong>Email:</strong> {selectedAccount?.email}
-            </p>
-            <p>
-              <strong>Address:</strong> {selectedAccount?.address}
-            </p>
-            <p>
-              <strong>Account Banking:</strong> {selectedAccount?.urlQr}
-            </p>
-            <p>
-              <strong>Status:</strong> {selectedAccount?.status ? "Active" : "Inactive"}
-            </p>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="teal" onClick={onCloseDetail}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        {/* Modal for Account Details */}
+        <Modal isOpen={isDetailOpen} onClose={onCloseDetail}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Account Details</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <p>
+                <strong>Username:</strong> {selectedAccount?.username}
+              </p>
+              <p>
+                <strong>Password:</strong> *********
+              </p>
+              <p>
+                <strong>Name:</strong> {selectedAccount?.name}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedAccount?.email}
+              </p>
+              <p>
+                <strong>Account Banking:</strong> {selectedAccount?.urlQr}
+              </p>
+              <p>
+                <strong>Status:</strong>{" "}
+                {selectedAccount?.status ? "Active" : "Inactive"}
+              </p>
+            </ModalBody>
+            <ModalFooter>
+              <Button colorScheme="teal" onClick={onCloseDetail}>
+                Close
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </Box>
     </Box>
   );
 };

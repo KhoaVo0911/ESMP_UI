@@ -297,6 +297,9 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
     color: "",
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const typesPerPage = 3; // Show 5 items per page
+
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Fetch Location Types
@@ -321,6 +324,12 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
   useEffect(() => {
     fetchLocationTypes();
   }, [eventId, hostId]);
+
+  // Calculate total pages and slice the data for pagination
+  const totalPages = Math.ceil(locationTypes.length / typesPerPage);
+  const indexOfLastType = currentPage * typesPerPage;
+  const indexOfFirstType = indexOfLastType - typesPerPage;
+  const currentTypes = locationTypes.slice(indexOfFirstType, indexOfLastType);
 
   // Check if the color already exists in the location types
   const isColorDuplicate = (color) => {
@@ -419,13 +428,17 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
     });
   };
 
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   return (
     <Box>
       <Button colorScheme="blue" mb={4} onClick={onOpen}>
         Create New Location Type
       </Button>
 
-      <Table variant="simple">
+      <Table variant="simple" overflow="auto" maxHeight="400px">
         <Thead>
           <Tr>
             <Th>Name</Th>
@@ -436,7 +449,7 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
           </Tr>
         </Thead>
         <Tbody>
-          {locationTypes.map((type) => (
+          {currentTypes.map((type) => (
             <Tr key={type.typeId}>
               <Td>{type.typeName}</Td>
               <Td>{type.price?.toLocaleString("vi-VN")}</Td>
@@ -472,14 +485,34 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
         </Tbody>
       </Table>
 
+      {/* Pagination */}
+      <Flex justifyContent="flex-end" mt={4}>
+        {Array.from({ length: totalPages }, (_, i) => (
+          <Button
+            key={i}
+            onClick={() => handlePageChange(i + 1)}
+            colorScheme={currentPage === i + 1 ? "blue" : "gray"}
+            mx={1}
+          >
+            {i + 1}
+          </Button>
+        ))}
+      </Flex>
+
       {/* Popup Form */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent maxHeight="80vh" overflow="hidden">
           <ModalHeader>
             {editingType ? "Edit Location Type" : "Create Location Type"}
           </ModalHeader>
-          <ModalBody>
+          <ModalBody
+            style={{
+              paddingRight: "16px",
+              overflowY: "auto",
+              maxHeight: "calc(80vh - 120px)",
+            }}
+          >
             <FormControl isInvalid={errors.typeName} mb={4}>
               <FormLabel>Type Name</FormLabel>
               <Input

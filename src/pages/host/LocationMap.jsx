@@ -481,11 +481,52 @@ const LocationMap = () => {
   const [boothTypeDetails, setBoothTypeDetails] = useState(null); // State to hold booth type details
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
   const navigate = useNavigate();
+  const [eventName, setEventName] = useState("");
 
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `${BASE_URL}/map/${hostId}/${eventId}`,
+  //         {
+  //           headers: {
+  //             Authorization: accessToken,
+  //             "Content-Type": "application/json",
+  //           },
+  //         }
+  //       );
+  //       const apiData = response.data;
+  //       if (apiData) {
+  //         setIsMapExists(true);
+  //         setBoothData(apiData.booths || []);
+  //         setShapes(apiData.shapes || []);
+  //         setTextElements(apiData.textElements || []);
+  //         setImageElements(apiData.imageElements || []);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching data from API:", error);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, [hostId, eventId, accessToken]);
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchEventData = async () => {
       try {
-        const response = await axios.get(
+        // Gửi yêu cầu đến API để lấy thông tin chi tiết sự kiện (bao gồm cả tên sự kiện)
+        const eventResponse = await axios.get(`${BASE_URL}/event/${eventId}`, {
+          headers: {
+            Authorization: accessToken,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (eventResponse.data) {
+          setEventName(eventResponse.data.name || "Event Name"); // Lưu tên sự kiện vào state
+        }
+
+        // Tiếp tục với các yêu cầu API khác nếu cần
+        const mapResponse = await axios.get(
           `${BASE_URL}/map/${hostId}/${eventId}`,
           {
             headers: {
@@ -494,7 +535,8 @@ const LocationMap = () => {
             },
           }
         );
-        const apiData = response.data;
+
+        const apiData = mapResponse.data;
         if (apiData) {
           setIsMapExists(true);
           setBoothData(apiData.booths || []);
@@ -507,8 +549,10 @@ const LocationMap = () => {
       }
     };
 
-    fetchData();
-  }, [hostId, eventId, accessToken]);
+    if (eventId) {
+      fetchEventData(); // Chỉ thực hiện khi eventId có giá trị
+    }
+  }, [eventId, hostId, accessToken]);
 
   const handleCreateMap = () => {
     navigate(`/event/${eventId}/booth-plan/create`);
@@ -550,6 +594,11 @@ const LocationMap = () => {
         borderBottom="1px solid #e2e8f0"
       >
         <Flex gap={6}>
+          {/* Hiển thị tên sự kiện bên trái nút Edit */}
+          <Text fontSize="xl" fontWeight="bold" color="purple.900">
+            {eventName}
+          </Text>
+
           <Flex align="center">
             <Box
               bg="orange"
@@ -558,7 +607,7 @@ const LocationMap = () => {
               height="10px"
               mr={2}
             />
-            <Text fontSize="sm">Booked</Text>
+            <Text fontSize="sm">On Hold</Text>
           </Flex>
           <Flex align="center">
             <Box
@@ -568,7 +617,7 @@ const LocationMap = () => {
               height="10px"
               mr={2}
             />
-            <Text fontSize="sm">On Hold</Text>
+            <Text fontSize="sm">Booked</Text>
           </Flex>
         </Flex>
         {isMapExists ? (

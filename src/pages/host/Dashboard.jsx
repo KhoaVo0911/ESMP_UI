@@ -10,6 +10,7 @@ import CalendarChart from "../../components/host/chart/CalendarChart/CalendarCha
 import EventLocationSlider from "../../components/host/EventSlider/EventLocationSlider";
 import { useParams } from "react-router-dom";
 import EventVendorCount from "../../components/host/chart/EventVendorCount";
+import ProfitBarChart from "../../components/host/chart/ProfitBarChart";
 
 const Dashboard = () => {
   const { hostId } = useParams();
@@ -51,30 +52,15 @@ const Dashboard = () => {
       </Grid>
 
       {/* Phần các bảng xếp hạng */}
-      <Grid templateColumns="repeat(3, 1fr)" gap={8}>
+      <Grid templateColumns="2fr" gap={6} mb={6}>
         <Box
           bg="white"
           borderRadius="20px"
           p={6}
           boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
         >
-          <EventRanking />
-        </Box>
-        <Box
-          bg="white"
-          borderRadius="20px"
-          p={6}
-          boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
-        >
-          <MostOrderedProduct />
-        </Box>
-        <Box
-          bg="white"
-          borderRadius="20px"
-          p={6}
-          boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
-        >
-          <TopVendor />
+          <ProfitBarChart hostId={hostId} />
+          {/* <EventLocationSlider /> */}
         </Box>
       </Grid>
     </>

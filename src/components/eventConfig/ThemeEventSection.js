@@ -191,7 +191,7 @@ const ThemeEventSection = () => {
         mr={4}
         leftIcon={<AddIcon />}
       >
-        Add Theme
+        Create New Theme
       </Button>
 
       <Table
