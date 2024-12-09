@@ -36,6 +36,7 @@ const Payment = ({ removeItem }) => {
   const [paymentMethod, setPaymentMethod] = useState("QR");
   const [cashAmount, setCashAmount] = useState(0);
   const [change, setChange] = useState(0);
+  const [transactionType, setTransactionType] = useState(0);
   const toast = useToast();
 
   const cartItems = useMemo(() => JSON.parse(sessionStorage.getItem("cartItems")) || [], []);
@@ -124,8 +125,10 @@ const Payment = ({ removeItem }) => {
         details: cartItems.map((item) => ({
           productitemId: item.productItemId,
           quantity: item.quantity,
-          unitPrice: item.price,
+          unitPrice: parseFloat(item.price),
         })),
+        transactionType: paymentMethod === "QR" ? "Bank Transfer" : "Cash",
+
       };
   
       await axios.post(

@@ -189,7 +189,7 @@ const CourseList = () => {
               _hover={{ bg: "#d4af37", color: "white" }}
               onClick={() => handleCourseClick(item, index)}
             >
-              Mua
+              Buy
             </Button>
           </Box>
         ))}
