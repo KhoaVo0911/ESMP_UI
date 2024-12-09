@@ -230,6 +230,7 @@ const Shop = () => {
           },
         }
       );
+     
       setShowCreateMenuModal(false); // Close modal after success
       toast({
         title: "Menu Created!",
@@ -250,6 +251,41 @@ const Shop = () => {
       });
     }
   };
+
+  const handleFetchMenuName = async () => {
+    try {
+      const response = await axios.get(
+        `https://esmpbe.id.vn/api/menu/${vendorId}/${eventId}`, // Endpoint để lấy menu
+        {
+          headers: {
+            Authorization: `${accessToken}`, // Thêm token xác thực nếu cần
+          },
+        }
+      );
+  
+      const menuName = response.data.menuEvent.menuName; // Giả sử menuName nằm trong response.data
+      console.log("Menu Name:", menuName); // Hiển thị menuName
+  
+      // Nếu cần sử dụng menuName sau đó, bạn có thể set vào state
+      setMenuName(menuName); // Ví dụ: lưu menuName vào state nếu cần
+    } catch (error) {
+      console.error("Error fetching menu:", error);
+      toast({
+        title: "Error",
+        description: "There was an issue fetching the menu name.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+  
+  useEffect(() => {
+    if (vendorId && eventId && accessToken) {
+      handleFetchMenuName(); // Gọi khi cần thiết để lấy menuName
+    }
+  }, [vendorId, eventId, accessToken]);
+  
 
   return (
     <Box
@@ -376,6 +412,7 @@ const Shop = () => {
         eventId={eventId}
         accessToken={accessToken}
         onAdd={fetchMenuItems}
+        menuName={menuName}
       />
       <CreateProductModal isOpen={isCreateOpen} onClose={onCloseCreate} />
 

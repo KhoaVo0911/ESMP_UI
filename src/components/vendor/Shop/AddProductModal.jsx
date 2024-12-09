@@ -19,7 +19,7 @@ import axios from "axios";
 import { storage } from "./../../../shared/firebase/firebaseConfig";
 import { ref, getDownloadURL } from "firebase/storage";
 
-const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAdd }) => {
+const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAdd,menuName }) => {
   const [products, setProducts] = useState([]);
   const [productNames, setProductNames] = useState({});
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -103,14 +103,16 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
     setIsSubmitting(true);
     try {
       const payload = {
+        menuName:  menuName,
         productItem: selectedProducts.map((product) => ({
           id: product.productItemId,
+         
         })),
       };
 
       const response = await axios.post(
         `https://esmpbe.id.vn/api/menu/${vendorId}/${eventId}`,
-        payload,
+        payload, 
         {
           headers: {
             Authorization: `${accessToken}`,
