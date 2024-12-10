@@ -421,6 +421,7 @@ const SelectBooth = () => {
                   onClose();
                 }}
                 eventId={eventId}
+                eventName={eventName}
               />
             )}
           </ModalBody>

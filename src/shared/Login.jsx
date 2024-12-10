@@ -58,6 +58,8 @@ const LoginComponent = ({ onLoginSuccess }) => {
       const { hostInfo } = userInfo;
 
       const userid = userInfo.userid || "N/A";
+      const vendorName = userInfo.username || "N/A";
+      console.log("hehe", vendorName)
       const expiretime = hostInfo?.expiretime || "N/A";
       const bankingaccount = userInfo.bankingaccount || "N/A";
       const phone = userInfo.phone || "N/A";
@@ -66,6 +68,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
       const hostid = hostInfo?.hostId || "N/A";
 
       // Save details in sessionStorage for later use
+      sessionStorage.setItem("vendorName", vendorName);
       sessionStorage.setItem("userid", userid);
       sessionStorage.setItem("expiretime", expiretime);
       sessionStorage.setItem("bankingaccount", bankingaccount);
