@@ -18,6 +18,7 @@ const BoothPayment = ({
   onBackToPolicy,
   eventId,
   deposit,
+  eventName
 }) => {
   const [remainingTime, setRemainingTime] = useState(900); // Countdown timer: 15 minutes
   const [qrUrl, setQrUrl] = useState(""); // QR Code URL
@@ -27,12 +28,13 @@ const BoothPayment = ({
   const toast = useToast();
   const navigate = useNavigate(); // Initialize navigate
   const amount = Number(boothTypeDetails.price) + Number(deposit);
-  
+  const hostId = sessionStorage.getItem("hostId");
+  const vendorName = sessionStorage.getItem("vendorName");
   
   useEffect(() => {
     const fetchHostData = async () => {
       try {
-        const hostId = sessionStorage.getItem("hostId");
+       
         if (!hostId) {
           console.error("Host ID is missing!");
           return;
@@ -203,88 +205,120 @@ console.log("tiền", amount);
 
   const finalizePayment = async () => {
     try {
-      console.log("Finalizing payment...");
-      const vendorId = sessionStorage.getItem("vendorId");
-      const accessToken = sessionStorage.getItem("accessToken");
-      if (!eventId || !vendorId) {
-        throw new Error("Missing eventId or vendorId");
-      }
-  
-      // Check if vendorInEvent already exists
-      const vendorInEventResponse = await axios.get(
-        `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
-        { headers: { Authorization: accessToken } }
-      );
-  
-      let vendorInEventId;
-  
-      if (vendorInEventResponse.data && vendorInEventResponse.data.vendorinEventId) {
-        // If vendorInEvent exists, update the status to "accept"
-        vendorInEventId = vendorInEventResponse.data.vendorinEventId;
-  
+        console.log("Finalizing payment...");
+        const vendorId = sessionStorage.getItem("vendorId");
+        const accessToken = sessionStorage.getItem("accessToken");
+        if (!eventId || !vendorId) {
+            throw new Error("Missing eventId or vendorId");
+        }
+
+        // Check if vendorInEvent already exists
+        const vendorInEventResponse = await axios.get(
+            `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
+            { headers: { Authorization: accessToken } }
+        );
+
+        let vendorInEventId;
+
+        if (
+            vendorInEventResponse.data &&
+            vendorInEventResponse.data.vendorinEventId
+        ) {
+            // If vendorInEvent exists, update the status to "accept"
+            vendorInEventId = vendorInEventResponse.data.vendorinEventId;
+
+            await axios.put(
+                `https://esmpbe.id.vn/api/vendorinevent/${vendorInEventId}`,
+                {
+                    status: "accept", // Update status to "accept"
+                },
+                { headers: { Authorization: accessToken } }
+            );
+            console.log("VendorInEvent status updated to 'accept'.");
+        } else {
+            // If vendorInEvent does not exist, create a new VendorInEvent
+            await axios.post(
+                `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
+                {},
+                { headers: { Authorization: accessToken } }
+            );
+
+            // Now retrieve the vendorInEventId after creating the VendorInEvent
+            const vendorInEventAfterCreationResponse = await axios.get(
+                `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
+                { headers: { Authorization: accessToken } }
+            );
+            vendorInEventId =
+                vendorInEventAfterCreationResponse.data.vendorinEventId;
+            console.log(
+                "New VendorInEvent created and retrieved.",
+                vendorInEventId
+            );
+        }
+
+        // Update booth status to "Booked"
         await axios.put(
-          `https://esmpbe.id.vn/api/vendorinevent/${vendorInEventId}`,
-          {
-            status: "accept", // Update status to "accept"
-          },
-          { headers: { Authorization: accessToken } }
+            `https://esmpbe.id.vn/api/map`,
+            {
+                locationId: boothTypeDetails.locationId,
+                status: "Booked",
+            },
+            { headers: { Authorization: accessToken } }
         );
-        console.log("VendorInEvent status updated to 'accept'.");
-      } else {
-        // If vendorInEvent does not exist, create a new VendorInEvent
+
+        // Send payment data
         await axios.post(
-          `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
-          {},
-          { headers: { Authorization: accessToken } }
+            `https://esmpbe.id.vn/api/eventpayment`,
+            {
+                total: parseFloat(amount),
+                locationId: boothTypeDetails.locationId,
+                vendorinEventId: vendorInEventId,
+                status: "Deposite success",
+            },
+            { headers: { Authorization: accessToken } }
         );
-  
-        // Now retrieve the vendorInEventId after creating the VendorInEvent
-        const vendorInEventAfterCreationResponse = await axios.get(
-          `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
-          { headers: { Authorization: accessToken } }
+
+        // Get userId from host
+        const hostResponse = await axios.get(
+            `https://esmpbe.id.vn/api/host/${hostId}`,
+            { headers: { Authorization: accessToken } }
         );
-        vendorInEventId = vendorInEventAfterCreationResponse.data.vendorinEventId;
-        console.log("New VendorInEvent created and retrieved.", vendorInEventId);
-      }
-  
-      // Update booth status to "Booked"
-      await axios.put(
-        `https://esmpbe.id.vn/api/map`,
-        {
-          locationId: boothTypeDetails.locationId,
-          status: "Booked",
-        },
-        { headers: { Authorization: accessToken } }
-      );
-  
-      // Send payment data
-      await axios.post(
-        `https://esmpbe.id.vn/api/eventpayment`,
-        {
-          total: parseFloat(amount),
-          locationId: boothTypeDetails.locationId,
-          vendorinEventId: vendorInEventId,
-        },
-        { headers: { Authorization: accessToken } }
-      );
-  
-      console.log("Payment finalized successfully.", vendorInEventId);
-  
-      // Navigate to the next page
-      navigate(`/eventenrolled/${vendorId}/${eventId}`, {
-        state: { accessToken, eventId, vendorId, vendorInEventId},
-      });
+
+        const userid = hostResponse.data.userid;
+
+        if (userid) {
+            // Post notification
+            await axios.post(
+                `https://esmpbe.id.vn/api/notification`,
+                {
+                    userid: userid,
+                    source: `"${vendorName}" booked "${boothTypeDetails.typeName}" in ${eventName}`,
+                },
+                { headers: { Authorization: accessToken } }
+            );
+            console.log("Notification sent successfully.");
+        } else {
+            console.error("Could not retrieve userId from host data.");
+        }
+
+        console.log("Payment finalized successfully.", vendorInEventId);
+
+        // Navigate to the next page
+        navigate(`/eventenrolled/${vendorId}/${eventId}`, {
+            state: { accessToken, eventId, vendorId, vendorInEventId },
+        });
     } catch (error) {
-      console.error("Error during finalizing payment:", error);
-      toast({
-        title: "Error",
-        description: "There was an error finalizing your payment.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+        console.error("Error during finalizing payment:", error);
+        toast({
+            title: "Error",
+            description: "There was an error finalizing your payment.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+        });
     }
-  };
+};
+
   
 
   return (

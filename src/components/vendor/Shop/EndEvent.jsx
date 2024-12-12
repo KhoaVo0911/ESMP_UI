@@ -16,8 +16,8 @@ const EndEvent = ({
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false); // Xử lý trạng thái bấm nút
   const toast = useToast();
-
-  // Fetch VendorInEventId và Event Details
+  const vendorName = sessionStorage.getItem("vendorName");
+  const [eventName, setEventName] = useState(null);
   useEffect(() => {
     const fetchEventDetails = async () => {
       try {
@@ -32,7 +32,6 @@ const EndEvent = ({
           }
         );
 
-        // Lọc sự kiện hiện tại theo eventId
         const currentEvent = eventResponse.data.find(
           (event) => event.eventId === eventId
         );
@@ -49,10 +48,9 @@ const EndEvent = ({
           return;
         }
 
-        // Cập nhật trạng thái sự kiện
         setEventStatus(currentEvent.status);
-
-        // Lấy VendorInEventId nếu event tồn tại
+      
+        setEventName(currentEvent.name); 
         const vendorResponse = await axios.get(
           `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
           {
@@ -65,21 +63,7 @@ const EndEvent = ({
 
         if (vendorResponse.data && vendorResponse.data.vendorinEventId) {
           setVendorInEventId(vendorResponse.data.vendorinEventId);
-          
-          // Kiểm tra trạng thái vendorInEvent và cập nhật
-          const vendorStatus = vendorResponse.data.status;
-          setVendorInEventStatus(vendorStatus);
-
-          // if (eventStatus !== "finished" && vendorStatus !== "active") {            toast({
-          //     title: "Error",
-          //     description: `Vendor status is not active. Current status: ${vendorStatus}`,
-          //     status: "error",
-          //     duration: 3000,
-          //     isClosable: true,
-          //   });
-          //   setLoading(false); // Dừng tải dữ liệu nếu trạng thái không hợp lệ
-          //   return;
-          // }
+          setVendorInEventStatus(vendorResponse.data.status);
         } else {
           toast({
             title: "Error",
@@ -105,7 +89,6 @@ const EndEvent = ({
     fetchEventDetails();
   }, [hostId, eventId, vendorId, accessToken, toast]);
 
-  // Xử lý bấm nút "End Event"
   const handleEndEventClick = async () => {
     if (!vendorInEventId || eventStatus !== "finished") {
       toast({
@@ -132,14 +115,13 @@ const EndEvent = ({
     setActionLoading(true);
 
     try {
-      // Cập nhật trạng thái VendorInEvent
       await axios.put(
         `https://esmpbe.id.vn/api/vendorinevent/${vendorInEventId}`,
         {
           vendorinEventId: vendorInEventId,
           eventId: eventId,
           vendorId: vendorId,
-          status: "finished", // Cập nhật trạng thái thành "finished"
+          status: "finished",
         },
         {
           headers: {
@@ -149,12 +131,10 @@ const EndEvent = ({
         }
       );
 
-      // Gửi tổng doanh thu và trạng thái vào API event payment
       await axios.put(
         `https://esmpbe.id.vn/api/eventpayment/${vendorInEventId}`,
         {
-          
-          status: "Event Finished", // Trạng thái thanh toán
+          status: "Refunding Deposite",
         },
         {
           headers: {
@@ -164,22 +144,42 @@ const EndEvent = ({
         }
       );
 
+      const hostResponse = await axios.get(
+        `https://esmpbe.id.vn/api/host/${hostId}`,
+        { headers: { Authorization: accessToken } }
+      );
+
+      const userId = hostResponse.data.userid;
+
+      if (userId) {
+        await axios.post(
+          `https://esmpbe.id.vn/api/notification`,
+          {
+            userid: userId,
+            source: `"${vendorName}" ended the event: ${eventName}`,
+          },
+          { headers: { Authorization: accessToken } }
+        );
+        console.log("Notification sent successfully.");
+      } else {
+        console.error("Could not retrieve userId from host data.");
+      }
+
       toast({
         title: "Success",
-        description: "Event successfully ended and payment updated.",
+        description: "Event successfully ended, payment updated, and notification sent.",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
 
-      // Gọi callback để cập nhật trạng thái trong Shop
       if (onStatusUpdate) {
         onStatusUpdate("finished");
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to end event or update payment.",
+        description: "Failed to end event, update payment, or send notification.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -193,27 +193,24 @@ const EndEvent = ({
     return <Spinner size="lg" />;
   }
 
-  // Chỉ hiển thị nút nếu trạng thái sự kiện là "finished"
   return (
     <Box>
-    {eventStatus === "finished" ? (
-      <Button
-        colorScheme="green"
-        onClick={(e) => {
-          if (vendorInEventStatus !== "finished" && !actionLoading) {
-            handleEndEventClick(e); // Chỉ gọi handleEndEventClick khi nút không bị vô hiệu hóa
-          }
-        }}
-        isLoading={actionLoading} // Hiển thị spinner khi đang xử lý
-        disabled={vendorInEventStatus === "finished" || actionLoading} // Vô hiệu hóa nút nếu trạng thái là "finished" hoặc đang xử lý
-        cursor={vendorInEventStatus === "finished" || actionLoading ? "not-allowed" : "pointer"} // Đổi con trỏ thành "not-allowed" khi nút bị vô hiệu hóa
-      >
-        End Event
-      </Button>
-    ) : null}
-  </Box>
-  
-  
+      {eventStatus === "finished" ? (
+        <Button
+          colorScheme="green"
+          onClick={(e) => {
+            if (vendorInEventStatus !== "finished" && !actionLoading) {
+              handleEndEventClick(e);
+            }
+          }}
+          isLoading={actionLoading}
+          disabled={vendorInEventStatus === "finished" || actionLoading}
+          cursor={vendorInEventStatus === "finished" || actionLoading ? "not-allowed" : "pointer"}
+        >
+          End Event
+        </Button>
+      ) : null}
+    </Box>
   );
 };
 

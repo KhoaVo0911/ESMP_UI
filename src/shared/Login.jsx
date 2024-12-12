@@ -36,37 +36,40 @@ const LoginComponent = ({ onLoginSuccess }) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
-
+  
     try {
       console.log("Logging in with:", { username, password, hostCode, role });
-
+  
       // API URL construction
       const apiUrl = `https://esmpbe.id.vn/api/user/login/${role}`;
-
+  
       // Send POST request to login API
       const response = await axios.post(apiUrl, {
         username,
         password,
       });
-
+  
       const { accessToken, userInfo } = response.data;
-
+  
       // Log the full response to verify data structure
       console.log("Full User Info:", JSON.stringify(userInfo, null, 2));
-
+  
       // Extract necessary details from userInfo and hostInfo
       const { hostInfo } = userInfo;
-
+  
       const userid = userInfo.userid || "N/A";
+      const vendorName = userInfo.username || "N/A";
       const expiretime = hostInfo?.expiretime || "N/A";
       const bankingaccount = userInfo.bankingaccount || "N/A";
       const phone = userInfo.phone || "N/A";
       const email = hostInfo?.hostName || "N/A";
       const eventstoragetime = userInfo.eventstoragetime || "N/A";
       const hostid = hostInfo?.hostId || "N/A";
-
+      const userId = userInfo.userId || "N/A";
       // Save details in sessionStorage for later use
+      sessionStorage.setItem("vendorName", vendorName);
       sessionStorage.setItem("userid", userid);
+      sessionStorage.setItem("userId", userId);
       sessionStorage.setItem("expiretime", expiretime);
       sessionStorage.setItem("bankingaccount", bankingaccount);
       sessionStorage.setItem("phone", phone);
@@ -74,10 +77,10 @@ const LoginComponent = ({ onLoginSuccess }) => {
       sessionStorage.setItem("eventstoragetime", eventstoragetime);
       sessionStorage.setItem("hostid", hostid);
       sessionStorage.setItem("accessToken", accessToken); // Lưu accessToken
-
+  console.log("admin", userId)
       // Pass accessToken and userInfo on successful login
       onLoginSuccess(accessToken, userInfo);
-
+  
       // Show success toast
       toast({
         title: "Login Successfully",
@@ -89,22 +92,35 @@ const LoginComponent = ({ onLoginSuccess }) => {
       });
     } catch (err) {
       // Log the error response to the console
-      console.error("Login error:", err.response);
-
-      // Set error state and show error toast
-      setError("Login failed. Please check your credentials.");
-      toast({
-        title: "Login failed",
-        description: "Invalid username or password",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-        position: "top",
-      });
+      console.error("Login error:", err.response || err.message);
+  
+      // Kiểm tra nếu lỗi là "Account is blocked"
+      if (err.response?.data?.code === "AUTHENTICATE_ERROR" && err.response?.data?.message === "Account is blocked") {
+        toast({
+          title: "Account not activated",
+          description: "Your account is inactive. Please contact admin.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+          position: "top",
+        });
+      } else {
+        // Set error state and show error toast for other errors
+        setError(err.message || "Login failed. Please check your credentials.");
+        toast({
+          title: "Login failed",
+          description: err.message || "Invalid username or password",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+          position: "top",
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <Box display="flex" height="100vh" position="relative">
@@ -198,7 +214,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
           </Stack>
           <Divider my={4} />
 
-          {/* <Text fontSize="sm" color="gray.500" textAlign="center" mt={4}>
+          <Text fontSize="sm" color="gray.500" textAlign="center" mt={4}>
             Do you want to host an event?{" "}
             <Text
               as="span"
@@ -208,7 +224,7 @@ const LoginComponent = ({ onLoginSuccess }) => {
             >
               Create Account for Host
             </Text>
-          </Text> */}
+          </Text>
           <Text
             colorScheme="gray"
             cursor="pointer"

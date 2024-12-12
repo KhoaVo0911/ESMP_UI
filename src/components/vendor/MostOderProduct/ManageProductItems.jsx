@@ -156,18 +156,14 @@ const ManageProducts = () => {
       });
       return;
     }
-
+  
     const productItemData = {
-      // vendorId,
       name: data.productName,
       description: data.description || "Product item description",
       details,
       price: data.productPrice,
-      // status: true,
-      // createAt: new Date().toISOString(),
-      // updateAt: new Date().toISOString(),
     };
-
+  
     try {
       const newProductItemId = editingProductItem
         ? editingProductItem.productItemId
@@ -178,10 +174,13 @@ const ManageProducts = () => {
               headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
             }
           )).data.id;
-
-      const imageURL = await uploadImage(newProductItemId);
-      const updatedProductItem = { ...productItemData, productItemId: newProductItemId, imageURL };
-
+  
+      // Upload the image separately after the product creation/update
+      const imageURL = await uploadImage(newProductItemId); // This returns the new image URL
+  
+      // Update the product item (without the imageURL)
+      const updatedProductItem = { ...productItemData };
+  
       if (editingProductItem) {
         await axios.put(
           `https://esmpbe.id.vn/api/productitem/${vendorId}/${newProductItemId}`,
@@ -190,16 +189,20 @@ const ManageProducts = () => {
             headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
           }
         );
-
+  
+        // After the update, set the new image URL for the product item
+        const updatedProductItemWithImage = { ...updatedProductItem, imageURL };
+  
         setProductItems((prevItems) =>
           prevItems.map((item) =>
-            item.productItemId === editingProductItem.productItemId ? updatedProductItem : item
+            item.productItemId === editingProductItem.productItemId ? updatedProductItemWithImage : item
           )
         );
       } else {
-        setProductItems((prevItems) => [...prevItems, updatedProductItem]);
+        const updatedProductItemWithImage = { ...updatedProductItem, imageURL };
+        setProductItems((prevItems) => [...prevItems, updatedProductItemWithImage]);
       }
-
+  
       toast({
         title: "Success",
         description: editingProductItem ? "Product item updated successfully!" : "Product item created successfully!",
@@ -207,7 +210,7 @@ const ManageProducts = () => {
         duration: 3000,
         isClosable: true,
       });
-
+  
       resetForm();
     } catch (error) {
       console.error("Error saving product item:", error);
@@ -220,6 +223,7 @@ const ManageProducts = () => {
       });
     }
   };
+  
 
   const resetForm = () => {
     setDetails([]);
@@ -339,26 +343,37 @@ const ManageProducts = () => {
           {/* Display error message if validation fails */}
           {errors.productPrice && <Text color="red.500">{errors.productPrice.message}</Text>}
         </FormControl>
-
         <FormControl mt={4}>
-          <FormLabel>Product Image</FormLabel>
-          {imagePreview && <Text mb={2}>Image Name: {imagePreview.split('/').pop()}</Text>}
-          <Input type="file" accept="image/*" onChange={handleImageChange} />
-        </FormControl>
+  <FormLabel>Product Image</FormLabel>
+  {imagePreview && (
+    <Box mb={2} display="flex" justifyContent="center">
+      <Image
+        src={imagePreview}
+        alt="Selected Product Image"
+        boxSize="100px" // Adjust the size here as needed
+        objectFit="cover"
+        borderRadius="md"
+      />
+    </Box>
+  )}
+  <Input type="file" accept="image/*" onChange={handleImageChange} />
+</FormControl>
+
+
 
         <FormControl mt={4}>
           <FormLabel>Select Product and Quantity</FormLabel>
           <Select
-            placeholder="Select a product"
-            {...register("productId", { required: "Please select a product" })}
-          >
-            {products.map((product) => (
-              <option key={product.productId} value={product.productId}>
-                {product.productName}
-              </option>
-            ))}
-          </Select>
-          {errors.productId && <Text color="red.500">{errors.productId.message}</Text>}
+  placeholder="Select a product"
+  {...register("productId")} // Remove the required validation rule
+>
+  {products.map((product) => (
+    <option key={product.productId} value={product.productId}>
+      {product.productName}
+    </option>
+  ))}
+</Select>
+         
           
           <FormControl mt={2}>
             <FormLabel>Quantity</FormLabel>

@@ -274,7 +274,7 @@ const CourseList = () => {
                     _hover={{ bg: "#d4af37", color: "white" }}
                     onClick={() => handlePackageClick(item)}
                   >
-                    Mua
+                    Buy
                   </Button>
                 </Box>
               ))}
@@ -282,51 +282,52 @@ const CourseList = () => {
           </>
         )}
   
-        <Modal isOpen={isOpen} onClose={onClose}>
-          <ModalOverlay />
-          <ModalContent position="relative">
-            <ModalHeader textAlign="center">Mã QR thanh toán tự động</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody textAlign="center">
-              <Image
-                src={selectedPackage.qrUrl}
-                alt="QR Code"
-                mx="auto"
-                mb={4}
-                boxShadow="md"
-                width={["80%", "70%", "60%"]}
-              />
-              <Text fontSize="lg" mb={2} color="yellow.400">
-                Mã QR thanh toán tự động
-              </Text>
-              <Flex alignItems="center" justifyContent="space-between" width="100%">
-                <Text>Số tiền: {selectedPackage.price.toLocaleString()} VND</Text>
-                <Text>Nội dung: {selectedPackage.content}</Text>
-              </Flex>
-              <Box mt={4} p={2} borderTop="1px solid gray">
-                <Flex alignItems="center" justifyContent="space-between" width="100%">
-                  <Text>Đang chờ thanh toán</Text>
-                  <Text>
-                    Thời gian còn lại:{" "}
-                    {`${Math.floor(remainingTime / 60)}:${String(remainingTime % 60).padStart(2, "0")}`}
-                  </Text>
-                </Flex>
-                <Progress
-                  value={(remainingTime / 120) * 100}
-                  size="sm"
-                  colorScheme="yellow"
-                  mt={2}
-                  width="100%"
-                />
-              </Box>
-            </ModalBody>
-            <ModalFooter>
-              <Button colorScheme="blue" mr={3} onClick={onClose}>
-                Đóng
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+  <Modal isOpen={isOpen} onClose={onClose}>
+  <ModalOverlay />
+  <ModalContent position="relative">
+    <ModalHeader textAlign="center">Automatic Payment QR Code</ModalHeader>
+    <ModalCloseButton />
+    <ModalBody textAlign="center">
+      <Image
+        src={selectedPackage.qrUrl}
+        alt="QR Code"
+        mx="auto"
+        mb={4}
+        boxShadow="md"
+        width={["80%", "70%", "60%"]}
+      />
+      <Text fontSize="lg" mb={2} color="yellow.400">
+        Automatic Payment QR Code
+      </Text>
+      <Flex alignItems="center" justifyContent="space-between" width="100%">
+        <Text>Amount: {selectedPackage.price.toLocaleString()} VND</Text>
+        <Text>Content: {selectedPackage.content}</Text>
+      </Flex>
+      <Box mt={4} p={2} borderTop="1px solid gray">
+        <Flex alignItems="center" justifyContent="space-between" width="100%">
+          <Text>Waiting for payment</Text>
+          <Text>
+            Time remaining:{" "}
+            {`${Math.floor(remainingTime / 60)}:${String(remainingTime % 60).padStart(2, "0")}`}
+          </Text>
+        </Flex>
+        <Progress
+          value={(remainingTime / 120) * 100}
+          size="sm"
+          colorScheme="yellow"
+          mt={2}
+          width="100%"
+        />
+      </Box>
+    </ModalBody>
+    <ModalFooter>
+      <Button colorScheme="blue" mr={3} onClick={onClose}>
+        Close
+      </Button>
+    </ModalFooter>
+  </ModalContent>
+</Modal>
+
       </VStack>
     </Box>
   );

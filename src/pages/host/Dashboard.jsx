@@ -22,7 +22,6 @@ const Dashboard = () => {
       {/* <Text fontSize="3xl" fontWeight="bold" color="#1A202C" mb={6}>
         Dashboard
       </Text> */}
-
       {/* Grid với tỷ lệ 2/3 và 1/3 cho RevenueChart và StatisticsNumbers */}
       <Grid templateColumns="2fr 1fr" gap={6} mb={6}>
         <Box
