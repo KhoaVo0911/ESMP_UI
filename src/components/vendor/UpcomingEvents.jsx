@@ -89,68 +89,77 @@ const UpcomingEvents = () => {
 
   return (
     <div className="upcoming-events-container" style={{ width: "110%" }}>
-      {/* Search bar */}
-     
-      <Text
-        fontSize="22px"
-        fontWeight="700"
-        mb={4}
-        color="var(--chakra-colors-secondaryGray-900)"
-      >
-        UPCOMING EVENTS
-      </Text>
-      <Grid
-        templateColumns={{
-          base: "repeat(1, 1fr)", // 1 column on small screens
-          md: "repeat(2, 1fr)", // 2 columns on medium screens
-          lg: "repeat(3, 1fr)", // 3 columns on large screens
-        }}
-        gap={6}
-        mt={4}
-      >
-        {filteredEvents.length > 0 ? (
-          filteredEvents.map((event) => (
-            <GridItem
-              key={event.eventId}
-              onClick={() => handleEventClick(event)}
-              className="event-card"
-              style={{
-                maxWidth: "400px", // Increased max width of the card
-           
-              }}
-            >
-             
-                <Box className="event-card-cover">
-                  <Image
-                    src={event.imageURL || "https://via.placeholder.com/150"}
-                    alt={event.name}
-                    className="event-card-image"
-                    style={{ width: "100%", height: "auto", borderRadius: "8px" }}
-                  />
+    {/* Search bar */}
+    <Text
+      fontSize="22px"
+      fontWeight="700"
+      mb={4}
+      color="var(--chakra-colors-secondaryGray-900)"
+    >
+      UPCOMING EVENTS
+    </Text>
+    <Grid
+      templateColumns={{
+        base: "repeat(1, 1fr)", // 1 column on small screens
+        md: "repeat(2, 1fr)", // 2 columns on medium screens
+        lg: "repeat(3, 1fr)", // 3 columns on large screens
+      }}
+      gap={6}
+      mt={4}
+    >
+      {filteredEvents.length > 0 ? (
+        filteredEvents.map((event) => (
+          <GridItem
+            key={event.eventId}
+            onClick={() => handleEventClick(event)}
+            className="event-card"
+            style={{
+              maxWidth: "400px", // Increased max width of the card
+            }}
+          >
+            <Box className="event-card-cover">
+              <Image
+                src={event.imageURL || "https://via.placeholder.com/150"}
+                alt={event.name}
+                className="event-card-image"
+                style={{
+                  width: "100%", // Ensures it takes full width of container
+                  height: "200px", // Fixed height for uniformity
+                  objectFit: "cover", // Ensures images fill the space proportionally
+                  borderRadius: "8px",
+                }}
+              />
+            </Box>
+            <Box className="event-info-container" style={{ marginTop: "16px" }}>
+              <Box
+                className="event-title"
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "18px",
+                  marginBottom: "8px",
+                }}
+              >
+                {event.name}
+              </Box>
+              <Box className="event-dates" style={{ color: "#555", fontSize: "14px", gap: "10px" }}>
+                <Box>
+                  <CalendarIcon /> <strong>Start Date:</strong>{" "}
+                  {new Date(event.startDate).toLocaleDateString()}
                 </Box>
-                <Box className="event-info-container" style={{ marginTop: "16px" }}>
-                  <Box className="event-title" style={{ fontWeight: "bold", fontSize: "18px", marginBottom: "8px" }}>
-                    {event.name}
-                  </Box>
-                  <Box className="event-dates" style={{ color: "#555", fontSize: "14px", gap:"10px" }}>
-                    <Box>
-                      <CalendarIcon /> <strong>Start Date:</strong>{" "}
-                      {new Date(event.startDate).toLocaleDateString()}
-                    </Box>
-                    <Box>
-                      <CalendarIcon /> <strong>End Date:</strong>{" "}
-                      {new Date(event.endDate).toLocaleDateString()}
-                    </Box>
-                  </Box>
+                <Box>
+                  <CalendarIcon /> <strong>End Date:</strong>{" "}
+                  {new Date(event.endDate).toLocaleDateString()}
                 </Box>
-
-            </GridItem>
-          ))
-        ) : (
-          <Box>No upcoming events found.</Box>
-        )}
-      </Grid>
-    </div>
+              </Box>
+            </Box>
+          </GridItem>
+        ))
+      ) : (
+        <Box>No upcoming events found.</Box>
+      )}
+    </Grid>
+  </div>
+  
   );
 };
 
