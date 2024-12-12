@@ -2,9 +2,6 @@ import React, { useEffect, useState, useCallback } from "react";
 import {
   Tabs,
   Input,
-  Row,
-  Col,
-  Card,
   message,
 } from "antd";
 import { SearchOutlined, CalendarOutlined, InfoCircleOutlined } from "@ant-design/icons";
@@ -93,6 +90,11 @@ const EventVendor = () => {
             (event) => event.status?.toLowerCase() === "cancelled"
           );
           break;
+        case "3":
+          filtered = events.filter(
+            (event) => event.status?.toLowerCase() === "finished"
+          );
+          break;
         default:
           filtered = events;
       }
@@ -115,7 +117,7 @@ const EventVendor = () => {
 
   const handleEventClick = (event) => {
     navigate(`/events/${vendorId}/${event.eventId}`, {
-      state: { eventId: event.eventId, vendorId },
+      state: { eventId: event.eventId, vendorId, status: event.status},
     });
   };
 
@@ -133,7 +135,8 @@ const EventVendor = () => {
         <TabPane tab="Up Coming" key="0" />
         <TabPane tab="Running" key="1" />
         <TabPane tab="Cancelled" key="2" />
-        <TabPane tab="All" key="3" />
+        <TabPane tab="Finished" key="3" /> {/* Added Finished tab */}
+        <TabPane tab="All" key="4" />
       </Tabs>
 
       <Grid

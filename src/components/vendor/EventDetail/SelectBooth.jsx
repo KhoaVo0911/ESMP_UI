@@ -233,7 +233,7 @@ const SelectBooth = () => {
                 height="10px"
                 mr={2}
               />
-              <Text fontSize="sm">Booked</Text>
+              <Text fontSize="sm">On Hold</Text>
             </Flex>
             <Flex align="center">
               <Box
@@ -243,7 +243,7 @@ const SelectBooth = () => {
                 height="10px"
                 mr={2}
               />
-              <Text fontSize="sm">On Hold</Text>
+              <Text fontSize="sm">Booked</Text>
             </Flex>
           </Flex>
           </Flex>

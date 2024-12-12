@@ -14,6 +14,9 @@ const StaffSideBar = ({ collapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedMenuItem, setSelectedMenuItem] = useState("1");
+  const vendorId = location.state?.vendorId || sessionStorage.getItem("vendorId");
+  const eventId = location.state?.eventId || sessionStorage.getItem("eventId");
+  const staffId = location.state?.staffId || sessionStorage.getItem("staffId");
 
   // Update selectedMenuItem based on current URL
   useEffect(() => {
@@ -48,7 +51,7 @@ const StaffSideBar = ({ collapsed }) => {
     setSelectedMenuItem(e.key);
     switch (e.key) {
       case "1":
-        navigate("/eventStaff");
+        navigate(`/eventStaff/${vendorId}/${staffId}`);
         break;
       case "2":
         navigate("/productsList");
