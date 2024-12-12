@@ -66,18 +66,18 @@ const RegisterHostComponent = () => {
     event.preventDefault();
     setLoading(true);
     setError(null);
-
+  
     try {
       // Validate dữ liệu trước khi gửi
       await validationSchema.validate(formData, { abortEarly: false });
-
+  
       const currentDate = new Date();
       const expiretime = new Date(
         currentDate.setFullYear(currentDate.getFullYear() + 1)
       ).toISOString(); // Tính expiretime
-
+  
       const apiUrl = "https://esmpbe.id.vn/api/user/register";
-
+  
       // Gửi request đăng ký
       const response = await axios.post(apiUrl, {
         username: formData.username,
@@ -87,9 +87,15 @@ const RegisterHostComponent = () => {
         name: formData.name, // Truyền tên người dùng
         expiretime, // Thêm expiretime
       });
-
+  
       const { message } = response.data;
-
+  
+      // Sau khi đăng ký thành công, gọi API thông báo
+      const notificationApiUrl = `https://esmpbe.id.vn/api/user/notification`;
+      await axios.post(notificationApiUrl, {
+        source: `${formData.username} has successfully registered an account`, // Thông báo bằng tiếng Anh
+      });
+  
       toast({
         title: "Registration Successful",
         description: message || "Host account created successfully.",
@@ -98,7 +104,7 @@ const RegisterHostComponent = () => {
         isClosable: true,
         position: "top",
       });
-
+  
       navigate("/login");
     } catch (err) {
       if (err.name === "ValidationError") {
@@ -118,7 +124,7 @@ const RegisterHostComponent = () => {
       setLoading(false);
     }
   };
-
+  
   return (
     <Box display="flex" height="100vh" position="relative">
       

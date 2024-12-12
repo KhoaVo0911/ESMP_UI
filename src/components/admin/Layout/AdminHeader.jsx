@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Flex,
@@ -10,16 +10,29 @@ import {
   MenuList,
   MenuItem,
   Button,
+  Badge,
 } from "@chakra-ui/react";
 import { BellIcon } from "@chakra-ui/icons";
 import { ChevronDownIcon } from "@chakra-ui/icons";
-import { useLocation } from "react-router-dom";
-import { useAuth } from "../../../shared/auth/AuthContext";
 
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../shared/auth/AuthContext";
+import Notification from "./Notification";
 const AdminHeader = ({ collapsed }) => {
   const location = useLocation();
   const { logout } = useAuth();
+   const navigate = useNavigate();
+  const userId = sessionStorage.getItem("userId");
+  console.log("user",userId)
+  const [unreadCount, setUnreadCount] = useState(0);
+  const handleNewNotifications = (newCount) => {
+    setUnreadCount(newCount);
+  };
 
+  // Handle opening notifications (mark them as read)
+  const handleOpenNotifications = () => {
+    setUnreadCount(0); // Reset unread count
+  };
   const getPageTitle = () => {
     if (location.pathname.startsWith("/dashboard-admin")) {
       return "Dashboard";
@@ -61,16 +74,7 @@ const AdminHeader = ({ collapsed }) => {
         </Text>
       </Flex>
 
-      <Flex alignItems="center">
-        <IconButton
-          aria-label="Notifications"
-          icon={<BellIcon />}
-          variant="ghost"
-          fontSize="20px"
-          color="gray.600"
-          mr={4}
-        />
-
+      <Flex alignItems="center" position="relative">
         <Menu>
           <MenuButton
             as={Button}
@@ -88,14 +92,63 @@ const AdminHeader = ({ collapsed }) => {
             <MenuItem fontSize="md" fontWeight="700" color="gray.700">
               👋 Hey, Admin
             </MenuItem>
+        
             <MenuItem
               fontSize="md"
               fontWeight="700"
               color="red.500"
-              onClick={logout} // Call logout function from AuthContext
+              onClick={logout}
             >
               Log out
             </MenuItem>
+          </MenuList>
+        </Menu>
+
+        {/* Notifications Menu */}
+        <Menu>
+          <MenuButton
+            as={IconButton}
+            aria-label="Notifications"
+            icon={<BellIcon />}
+            variant="ghost"
+            fontSize="24px"
+            color="gray.600"
+            position="relative"
+          />
+          {unreadCount > 0 && (
+            <Badge
+              colorScheme="red"
+              borderRadius="full"
+              fontSize="12px"
+              position="absolute"
+              top="0"
+              right="-5px"
+              width="20px"
+              height="20px"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              fontWeight="bold"
+              backgroundColor="red.500"
+              color="white"
+            >
+              {unreadCount}
+            </Badge>
+          )}
+          <MenuList boxShadow="lg" borderRadius="lg" p={0}>
+            {userId ? (
+              <Notification
+                userId={userId}
+                onNewNotifications={handleNewNotifications}
+                onOpenNotifications={handleOpenNotifications}
+              />
+            ) : (
+              <Box p={4}>
+                <Text fontSize="sm" color="gray.500">
+                  Loading notifications...
+                </Text>
+              </Box>
+            )}
           </MenuList>
         </Menu>
       </Flex>

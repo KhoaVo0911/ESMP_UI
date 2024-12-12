@@ -3,7 +3,7 @@ import {
   Table, Thead, Tbody, Tr, Th, Td, IconButton, Modal,
   ModalOverlay, ModalContent, ModalHeader, ModalFooter,
   ModalBody, ModalCloseButton, useDisclosure, FormControl,
-  FormLabel, Input, Stack, Button, Box, InputGroup, InputLeftElement, FormErrorMessage, useToast
+  FormLabel, Input, Stack, Button, Box, InputGroup, InputLeftElement, FormErrorMessage, useToast, Select
 } from "@chakra-ui/react";
 import { EditIcon, DeleteIcon, ViewIcon, SearchIcon } from "@chakra-ui/icons";
 import axios from "axios";
@@ -92,8 +92,6 @@ const AdminAccountManagement = () => {
   // Validation function
   const validateForm = () => {
     const newError = {};
-
-    // Check for empty fields
     if (!newAccount.username) newError.username = "Username is required";
     if (!newAccount.password) newError.password = "Password is required";
     if (!newAccount.name) newError.name = "Name is required";
@@ -117,7 +115,7 @@ const AdminAccountManagement = () => {
   // Update account details
   const updateAccount = () => {
     if (!selectedAccount) return;
-  
+
     const updatedData = {
       name: selectedAccount.account.name,
       phone: selectedAccount.account.phone,
@@ -125,12 +123,12 @@ const AdminAccountManagement = () => {
       expiretime: selectedAccount.expiretime,
       eventstoragetime: selectedAccount.eventstoragetime,
       bankingaccount: selectedAccount.bankingaccount,
-      apibanking: selectedAccount.apibanking
+      apibanking: selectedAccount.apibanking,
+      status: selectedAccount.account.status  // Update status field
     };
-  
+
     axios.put(`https://esmpbe.id.vn/api/host/${selectedAccount.hostid}`, updatedData)
       .then((response) => {
-        // Show success toast
         toast({
           title: "Account Updated.",
           description: "The account has been updated successfully.",
@@ -138,12 +136,12 @@ const AdminAccountManagement = () => {
           duration: 5000,
           isClosable: true,
         });
-  
+
         // Fetch the updated account list after the update
         axios.get("https://esmpbe.id.vn/api/host")
           .then((response) => {
-            setAccounts(response.data);  // Update the accounts state with the latest data
-            setFilteredAccounts(response.data);  // Update the filtered accounts as well
+            setAccounts(response.data);
+            setFilteredAccounts(response.data);
           })
           .catch((error) => {
             console.error("Error fetching updated accounts:", error);
@@ -155,15 +153,13 @@ const AdminAccountManagement = () => {
               isClosable: true,
             });
           });
-  
+
         // Close the modal and reset the selected account
         setSelectedAccount(null);
         onEditClose();
       })
       .catch((error) => {
         console.error(error);
-  
-        // Show error toast
         toast({
           title: "Error Updating Account.",
           description: "There was an error updating the account. Please try again.",
@@ -173,16 +169,6 @@ const AdminAccountManagement = () => {
         });
       });
   };
-  
-  // Delete account
-  // const deleteAccount = (hostid) => {
-  //   axios.delete(`https://esmpbe.id.vn/api/host/${hostid}`)
-  //     .then(() => {
-  //       setAccounts(accounts.filter(acc => acc.account.hostid !== hostid));
-  //       setFilteredAccounts(filteredAccounts.filter(acc => acc.account.hostid !== hostid));
-  //     })
-  //     .catch((error) => console.error(error));
-  // };
 
   // View account details and open the modal
   const viewDetails = (account) => {
@@ -210,13 +196,12 @@ const AdminAccountManagement = () => {
       </InputGroup>
 
       {/* Create Account Button */}
-     
+      {/* <Button colorScheme="teal" onClick={onCreateOpen} mb={4} size="sm">
+        Create Account
+      </Button> */}
 
       {/* Table displaying accounts */}
       <Box border="1px" borderColor="gray.200" borderRadius="md" boxShadow="lg" p={4}>
-      <Button colorScheme="teal" onClick={onCreateOpen} mb={4} size="sm">
-        Create Account
-      </Button>
         <Table variant="striped" size="md" colorScheme="gray" borderRadius="md">
           <Thead>
             <Tr>
@@ -254,14 +239,15 @@ const AdminAccountManagement = () => {
                     mx={1}
                   />
                   {/* Delete account button */}
-                  {/* <IconButton
+                  <IconButton
                     icon={<DeleteIcon />}
                     aria-label="Delete account"
-                    onClick={() => deleteAccount(account.account.hostid)}
+                    onClick={() => {}}
                     variant="ghost"
                     size="sm"
                     mx={1}
-                  /> */}
+                    isDisabled
+                  />
                 </Td>
               </Tr>
             ))}
@@ -270,74 +256,16 @@ const AdminAccountManagement = () => {
       </Box>
 
       {/* Pagination */}
-      <Box display="flex" justifyContent="center" mt={4}>
-        <Button
-          onClick={() => paginate(currentPage - 1)}
-          isDisabled={currentPage === 1}
-          mr={2}
-        >
-          Prev
-        </Button>
-        {[...Array(Math.ceil(filteredAccounts.length / accountsPerPage))].map((_, index) => (
-          <Button
-            key={index}
-            onClick={() => paginate(index + 1)}
-            variant={index + 1 === currentPage ? "solid" : "outline"}
-            colorScheme="teal"
-            mx={1}
-          >
-            {index + 1}
-          </Button>
-        ))}
-        <Button
-          onClick={() => paginate(currentPage + 1)}
-          isDisabled={currentPage === Math.ceil(filteredAccounts.length / accountsPerPage)}
-          ml={2}
-        >
-          Next
-        </Button>
+      <Box textAlign="center" mt={4}>
+        <Button onClick={() => paginate(currentPage - 1)} isDisabled={currentPage === 1}>Previous</Button>
+        <Button onClick={() => paginate(currentPage + 1)} isDisabled={currentPage === Math.ceil(filteredAccounts.length / accountsPerPage)}>Next</Button>
       </Box>
-      <Modal isOpen={isDetailOpen} onClose={onDetailClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Account Details</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl>
-              <FormLabel>Name</FormLabel>
-              <Input value={selectedAccount?.account?.name} isReadOnly />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Phone</FormLabel>
-              <Input value={selectedAccount?.account?.phone} isReadOnly />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Email</FormLabel>
-              <Input value={selectedAccount?.account?.email} isReadOnly />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Expire Time</FormLabel>
-              <Input value={selectedAccount?.expiretime ? new Date(selectedAccount.expiretime).toLocaleDateString() : ''} isReadOnly />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Event Storage Time</FormLabel>
-              <Input value={selectedAccount?.eventstoragetime ? new Date(selectedAccount.eventstoragetime).toLocaleDateString() : ''} isReadOnly />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Banking Account</FormLabel>
-              <Input value={selectedAccount?.bankingaccount} isReadOnly />
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" onClick={onDetailClose}>Close</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+
       {/* Create Account Modal */}
       <Modal isOpen={isCreateOpen} onClose={onCreateClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Create Account</ModalHeader>
+          <ModalHeader>Create New Account</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl isInvalid={error.username}>
@@ -348,16 +276,15 @@ const AdminAccountManagement = () => {
               />
               <FormErrorMessage>{error.username}</FormErrorMessage>
             </FormControl>
-            <FormControl mt={4} isInvalid={error.password}>
+            <FormControl isInvalid={error.password}>
               <FormLabel>Password</FormLabel>
               <Input
-                type="password"
                 value={newAccount.password}
                 onChange={(e) => setNewAccount({ ...newAccount, password: e.target.value })}
               />
               <FormErrorMessage>{error.password}</FormErrorMessage>
             </FormControl>
-            <FormControl mt={4} isInvalid={error.name}>
+            <FormControl isInvalid={error.name}>
               <FormLabel>Name</FormLabel>
               <Input
                 value={newAccount.name}
@@ -365,7 +292,7 @@ const AdminAccountManagement = () => {
               />
               <FormErrorMessage>{error.name}</FormErrorMessage>
             </FormControl>
-            <FormControl mt={4} isInvalid={error.phone}>
+            <FormControl isInvalid={error.phone}>
               <FormLabel>Phone</FormLabel>
               <Input
                 value={newAccount.phone}
@@ -373,7 +300,7 @@ const AdminAccountManagement = () => {
               />
               <FormErrorMessage>{error.phone}</FormErrorMessage>
             </FormControl>
-            <FormControl mt={4} isInvalid={error.email}>
+            <FormControl isInvalid={error.email}>
               <FormLabel>Email</FormLabel>
               <Input
                 value={newAccount.email}
@@ -382,12 +309,15 @@ const AdminAccountManagement = () => {
               <FormErrorMessage>{error.email}</FormErrorMessage>
             </FormControl>
           </ModalBody>
+
           <ModalFooter>
+            <Button colorScheme="blue" onClick={createAccount}>Create</Button>
             <Button variant="ghost" onClick={onCreateClose}>Cancel</Button>
-            <Button colorScheme="teal" onClick={createAccount}>Create Account</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Edit Account Modal */}
       <Modal isOpen={isEditOpen} onClose={onEditClose}>
         <ModalOverlay />
         <ModalContent>
@@ -395,52 +325,68 @@ const AdminAccountManagement = () => {
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
+              <FormLabel>Username</FormLabel>
+              <Input value={selectedAccount?.account.username} readOnly />
+            </FormControl>
+            <FormControl>
               <FormLabel>Name</FormLabel>
               <Input
-                value={selectedAccount?.account?.name}
+                value={selectedAccount?.account.name}
                 onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, name: e.target.value } })}
               />
             </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Phone</FormLabel>
-              <Input
-                value={selectedAccount?.account?.phone}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, phone: e.target.value } })}
-              />
-            </FormControl>
-            <FormControl mt={4}>
+            <FormControl>
               <FormLabel>Email</FormLabel>
               <Input
-                value={selectedAccount?.account?.email}
+                value={selectedAccount?.account.email}
                 onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, email: e.target.value } })}
               />
             </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Expire Time</FormLabel>
-              <Input value={selectedAccount?.expiretime ? new Date(selectedAccount.expiretime).toLocaleDateString() : ''} isReadOnly />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Event Storage Time</FormLabel>
-              <Input value={selectedAccount?.eventstoragetime ? new Date(selectedAccount.eventstoragetime).toLocaleDateString() : ''} isReadOnly />
-            </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>Banking Account</FormLabel>
+            <FormControl>
+              <FormLabel>Phone</FormLabel>
               <Input
-                value={selectedAccount?.bankingaccount}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount, bankingaccount: e.target.value } })}
+                value={selectedAccount?.account.phone}
+                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, phone: e.target.value } })}
               />
             </FormControl>
-            <FormControl mt={4}>
-              <FormLabel>API BANKING</FormLabel>
-              <Input
-                value={selectedAccount?.apibanking}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount, apibanking: e.target.value } })}
-              />
+            <FormControl>
+              <FormLabel>Status</FormLabel>
+              <Select
+                value={selectedAccount?.account.status ? "active" : "inactive"}
+                onChange={(e) => setSelectedAccount({
+                  ...selectedAccount,
+                  account: { ...selectedAccount.account, status: e.target.value === "active" }
+                })}
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </Select>
             </FormControl>
           </ModalBody>
+
           <ModalFooter>
+            <Button colorScheme="blue" onClick={updateAccount}>Update</Button>
             <Button variant="ghost" onClick={onEditClose}>Cancel</Button>
-            <Button colorScheme="teal" onClick={updateAccount}>Save Changes</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* View Account Modal */}
+      <Modal isOpen={isDetailOpen} onClose={onDetailClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Account Details</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <p>Username: {selectedAccount?.account.username}</p>
+            <p>Name: {selectedAccount?.account.name}</p>
+            <p>Email: {selectedAccount?.account.email}</p>
+            <p>Phone: {selectedAccount?.account.phone}</p>
+            <p>Status: {selectedAccount?.account.status ? "Active" : "Inactive"}</p>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button variant="ghost" onClick={onDetailClose}>Close</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
