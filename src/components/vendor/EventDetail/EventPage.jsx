@@ -246,6 +246,8 @@ const EventDetail = () => {
           <Button
             colorScheme="blue"
             size="md"
+            isDisabled={eventDetail.status === "finished"}
+            title={eventDetail.status === "finished" ? "Event is finished" : ""}
             onClick={() =>
               navigate(`/selectbooth/${vendorId}`, {
                 state: { eventId, vendorId, accessToken },
