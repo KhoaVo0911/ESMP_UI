@@ -36,51 +36,33 @@ const LoginComponent = ({ onLoginSuccess }) => {
     event.preventDefault();
     setLoading(true);
     setError(null);
-  
+
     try {
       console.log("Logging in with:", { username, password, hostCode, role });
-  
+
       // API URL construction
       const apiUrl = `https://esmpbe.id.vn/api/user/login/${role}`;
-  
+
       // Send POST request to login API
       const response = await axios.post(apiUrl, {
         username,
         password,
       });
-  
+
       const { accessToken, userInfo } = response.data;
-  
-      // Log the full response to verify data structure
-      console.log("Full User Info:", JSON.stringify(userInfo, null, 2));
-  
-      // Extract necessary details from userInfo and hostInfo
+
+      // Save necessary details in sessionStorage
       const { hostInfo } = userInfo;
-  
-      const userid = userInfo.userid || "N/A";
-      const vendorName = userInfo.username || "N/A";
-      const expiretime = hostInfo?.expiretime || "N/A";
-      const bankingaccount = userInfo.bankingaccount || "N/A";
-      const phone = userInfo.phone || "N/A";
-      const email = hostInfo?.hostName || "N/A";
-      const eventstoragetime = userInfo.eventstoragetime || "N/A";
-      const hostid = hostInfo?.hostId || "N/A";
-      const userId = userInfo.userId || "N/A";
-      // Save details in sessionStorage for later use
-      sessionStorage.setItem("vendorName", vendorName);
-      sessionStorage.setItem("userid", userid);
-      sessionStorage.setItem("userId", userId);
-      sessionStorage.setItem("expiretime", expiretime);
-      sessionStorage.setItem("bankingaccount", bankingaccount);
-      sessionStorage.setItem("phone", phone);
-      sessionStorage.setItem("email", email);
-      sessionStorage.setItem("eventstoragetime", eventstoragetime);
-      sessionStorage.setItem("hostid", hostid);
-      sessionStorage.setItem("accessToken", accessToken); // Lưu accessToken
-  console.log("admin", userId)
-      // Pass accessToken and userInfo on successful login
+      sessionStorage.setItem("accessToken", accessToken);
+      sessionStorage.setItem("vendorName", userInfo.username || "N/A");
+      sessionStorage.setItem("userid", userInfo.userid || "N/A");
+      sessionStorage.setItem("hostid", hostInfo?.hostId || "N/A");
+
+      console.log("Logged in as:", userInfo);
+
+      // Pass accessToken and userInfo to parent
       onLoginSuccess(accessToken, userInfo);
-  
+
       // Show success toast
       toast({
         title: "Login Successfully",
@@ -91,36 +73,58 @@ const LoginComponent = ({ onLoginSuccess }) => {
         position: "top",
       });
     } catch (err) {
-      // Log the error response to the console
       console.error("Login error:", err.response || err.message);
-  
-      // Kiểm tra nếu lỗi là "Account is blocked"
-      if (err.response?.data?.code === "AUTHENTICATE_ERROR" && err.response?.data?.message === "Account is blocked") {
-        toast({
-          title: "Account not activated",
-          description: "Your account is inactive. Please contact admin.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-          position: "top",
-        });
+
+      // Handle specific error cases
+      if (err.response) {
+        const { status, data } = err.response;
+        if (status === 401) {
+          // Unauthorized: Invalid username or password
+          toast({
+            title: "Login failed",
+            description: "Invalid username or password. Please try again.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+            position: "top",
+          });
+        } else if (data?.message === "Account is blocked") {
+          // Account is blocked
+          toast({
+            title: "Account not activated",
+            description: "Your account is inactive. Please contact admin.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+            position: "top",
+          });
+        } else {
+          // Other errors
+          toast({
+            title: "Login failed",
+            description: data?.message || "An unexpected error occurred.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+            position: "top",
+          });
+        }
       } else {
-        // Set error state and show error toast for other errors
-        setError(err.message || "Login failed. Please check your credentials.");
+        // Network or unexpected errors
         toast({
           title: "Login failed",
-          description: err.message || "Invalid username or password",
+          description: err.message || "An unexpected error occurred.",
           status: "error",
           duration: 3000,
           isClosable: true,
           position: "top",
         });
       }
+      setError(err.message || "Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
   };
-  
 
   return (
     <Box display="flex" height="100vh" position="relative">

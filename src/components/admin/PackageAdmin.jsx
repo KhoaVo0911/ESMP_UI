@@ -81,9 +81,11 @@ const PackageAdmin = () => {
 
     if (!formData.name) newErrors.name = "Name is required";
     if (!formData.price) newErrors.price = "Price is required";
-    if (!formData.description) newErrors.description = "Description is required";
+    if (!formData.description)
+      newErrors.description = "Description is required";
     if (!formData.expiretime) newErrors.expiretime = "Expire time is required";
-    if (!formData.eventstoragetime) newErrors.eventstoragetime = "Event storage time is required";
+    if (!formData.eventstoragetime)
+      newErrors.eventstoragetime = "Event storage time is required";
 
     setErrors(newErrors);
     return Object.values(newErrors).every((error) => error === "");
@@ -118,7 +120,10 @@ const PackageAdmin = () => {
       });
     } catch (error) {
       console.error("Error creating package:", error);
-      alert("Error creating package: " + error.response?.data?.message || error.message);
+      alert(
+        "Error creating package: " + error.response?.data?.message ||
+          error.message
+      );
     }
   };
 
@@ -153,7 +158,10 @@ const PackageAdmin = () => {
       setEditId(null);
     } catch (error) {
       console.error("Error updating package:", error);
-      alert("Error updating package: " + error.response?.data?.message || error.message);
+      alert(
+        "Error updating package: " + error.response?.data?.message ||
+          error.message
+      );
     }
   };
 
@@ -197,7 +205,7 @@ const PackageAdmin = () => {
   return (
     <Box p={8} bg="gray.50" minH="100vh">
       <Flex justify="space-between" align="center" mb={6}>
-        <Text fontSize="3xl" fontWeight="bold" color="teal.600">
+        <Text fontSize="3xl" fontWeight="bold" color="blue">
           Package Management
         </Text>
         <Button
@@ -237,15 +245,21 @@ const PackageAdmin = () => {
                 {pkg.name}
               </Text>
               <Text fontSize="sm" color="gray.600">
-                Expiry Time: <strong>{pkg.expiretime} Month{pkg.expiretime > 1 ? "s" : ""}</strong>
+                Expiry Time:{" "}
+                <strong>
+                  {pkg.expiretime} Month{pkg.expiretime > 1 ? "s" : ""}
+                </strong>
               </Text>
               <Text>
                 Storage Time:{" "}
                 <strong>
-                  {pkg.eventstoragetime} {pkg.eventstoragetime > 1 ? "Months" : "Month"}
+                  {pkg.eventstoragetime}{" "}
+                  {pkg.eventstoragetime > 1 ? "Months" : "Month"}
                 </strong>
               </Text>
-              <Text>Description: {pkg.description || "No description provided."}</Text>
+              <Text>
+                Description: {pkg.description || "No description provided."}
+              </Text>
               <Text fontSize="lg" fontWeight="bold" color="teal.800">
                 {pkg.price} VND
               </Text>
@@ -282,7 +296,9 @@ const PackageAdmin = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{isEditing ? "Edit Package" : "Create New Package"}</ModalHeader>
+          <ModalHeader>
+            {isEditing ? "Edit Package" : "Create New Package"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl mt={4} isInvalid={!!errors.name}>
@@ -293,7 +309,9 @@ const PackageAdmin = () => {
                 value={formData.name}
                 onChange={handleInputChange}
               />
-              {errors.name && <FormErrorMessage>{errors.name}</FormErrorMessage>}
+              {errors.name && (
+                <FormErrorMessage>{errors.name}</FormErrorMessage>
+              )}
             </FormControl>
 
             <FormControl mt={4} isInvalid={!!errors.price}>
@@ -305,7 +323,9 @@ const PackageAdmin = () => {
                 value={formData.price}
                 onChange={handleInputChange}
               />
-              {errors.price && <FormErrorMessage>{errors.price}</FormErrorMessage>}
+              {errors.price && (
+                <FormErrorMessage>{errors.price}</FormErrorMessage>
+              )}
             </FormControl>
 
             <FormControl mt={4} isInvalid={!!errors.description}>
@@ -316,7 +336,9 @@ const PackageAdmin = () => {
                 value={formData.description}
                 onChange={handleInputChange}
               />
-              {errors.description && <FormErrorMessage>{errors.description}</FormErrorMessage>}
+              {errors.description && (
+                <FormErrorMessage>{errors.description}</FormErrorMessage>
+              )}
             </FormControl>
 
             <FormControl mt={4} isInvalid={!!errors.expiretime}>
@@ -328,7 +350,9 @@ const PackageAdmin = () => {
                 value={formData.expiretime}
                 onChange={handleInputChange}
               />
-              {errors.expiretime && <FormErrorMessage>{errors.expiretime}</FormErrorMessage>}
+              {errors.expiretime && (
+                <FormErrorMessage>{errors.expiretime}</FormErrorMessage>
+              )}
             </FormControl>
 
             <FormControl mt={4} isInvalid={!!errors.eventstoragetime}>
@@ -340,15 +364,22 @@ const PackageAdmin = () => {
                 value={formData.eventstoragetime}
                 onChange={handleInputChange}
               />
-              {errors.eventstoragetime && <FormErrorMessage>{errors.eventstoragetime}</FormErrorMessage>}
+              {errors.eventstoragetime && (
+                <FormErrorMessage>{errors.eventstoragetime}</FormErrorMessage>
+              )}
             </FormControl>
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" onClick={isEditing ? handleEditPackage : handleCreatePackage}>
+            <Button
+              colorScheme="blue"
+              onClick={isEditing ? handleEditPackage : handleCreatePackage}
+            >
               {isEditing ? "Update Package" : "Create Package"}
             </Button>
-            <Button onClick={onClose} ml={3}>Cancel</Button>
+            <Button onClick={onClose} ml={3}>
+              Cancel
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

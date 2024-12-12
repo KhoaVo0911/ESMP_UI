@@ -1253,7 +1253,7 @@ const BoothPlan = () => {
       });
       const deleteshapeIds = shapes.map((shape) => {
         // Log toàn bộ booth trước khi chuyển đổi
-        console.log("Booth Data:", shape);
+        console.log("Shape Data:", shape);
         if (shape.shapeType !== "shape") {
           return shape.location; // Trả về locationId để xóa
         }
@@ -1366,10 +1366,6 @@ const BoothPlan = () => {
         setBooths((prevBooths) =>
           prevBooths.filter((booth) => booth.location !== location)
         );
-      } else if (selectedElement.shapeType === "shape") {
-        setShapes((prevShapes) =>
-          prevShapes.filter((shape) => shape.location !== location)
-        );
       } else if (selectedElement.shapeType === "image") {
         setImageElements((prevImages) =>
           prevImages.filter((image) => image.location !== location)
@@ -1377,6 +1373,10 @@ const BoothPlan = () => {
       } else if (selectedElement.shapeType === "text") {
         setTextElements((prevTexts) =>
           prevTexts.filter((text) => text.location !== location)
+        );
+      } else {
+        setShapes((prevShapes) =>
+          prevShapes.filter((shape) => shape.location !== location)
         );
       }
       await deleteLocationMap(location);

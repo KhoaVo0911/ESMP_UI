@@ -83,7 +83,9 @@ const EventEnrolled = () => {
   if (error) {
     return (
       <Box p={10} textAlign="center">
-        <Text fontSize="xl" color="red.500">{error}</Text>
+        <Text fontSize="xl" color="red.500">
+          {error}
+        </Text>
       </Box>
     );
   }
@@ -91,21 +93,34 @@ const EventEnrolled = () => {
   if (!eventDetail) {
     return (
       <Box p={10} textAlign="center">
-        <Text fontSize="xl" color="gray.500">No event details available</Text>
+        <Text fontSize="xl" color="gray.500">
+          No event details available
+        </Text>
       </Box>
     );
   }
 
   return (
-    <Box padding="20px" bgGradient="linear(to-r, #d4f1f4, #f0e5d8)" minH="100vh">
+    <Box
+      padding="20px"
+      bgGradient="linear(to-r, #d4f1f4, #f0e5d8)"
+      minH="100vh"
+    >
       <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap={10} mb={10}>
         <VStack align="flex-start" spacing={10}>
           <Text fontSize="4xl" fontWeight="bold" color="black">
             {eventDetail.name}
           </Text>
-          <div style={{ width: "45%", display: "flex", justifyContent: "space-between" }}>
+          <div
+            style={{
+              width: "45%",
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
             <Text fontSize="lg" fontWeight="bold" color="gray.600">
-              {new Date(eventDetail.startDate).toLocaleDateString()} - {new Date(eventDetail.endDate).toLocaleDateString()}
+              {new Date(eventDetail.startDate).toLocaleDateString()} -{" "}
+              {new Date(eventDetail.endDate).toLocaleDateString()}
             </Text>
             <Text fontSize="lg" fontWeight="bold" color="gray.600">
               {eventDetail.time}
@@ -126,7 +141,10 @@ const EventEnrolled = () => {
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
       <Text fontSize="md" color="gray.600" mb={10}>
-        Welcome to the <strong>{eventDetail.name}</strong>, where we come together to celebrate the full moon and immerse ourselves in the warm, vibrant atmosphere of autumn. This year's event promises to bring you and your family a culturally rich and meaningful experience.
+        Welcome to the <strong>{eventDetail.name}</strong>, where we come
+        together to celebrate the full moon and immerse ourselves in the warm,
+        vibrant atmosphere of autumn. This year's event promises to bring you
+        and your family a culturally rich and meaningful experience.
       </Text>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
@@ -135,10 +153,7 @@ const EventEnrolled = () => {
         Select Booth
       </Text>
       <Box>
-        <SelectBooth
-          boothData={boothData}
-          setBoothData={setBoothData}
-        />
+        <SelectBooth boothData={boothData} setBoothData={setBoothData} />
       </Box>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />

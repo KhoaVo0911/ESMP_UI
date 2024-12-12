@@ -23,15 +23,23 @@ const StaffShop = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const accessToken = location.state?.accessToken || sessionStorage.getItem("accessToken") || "";
-  const vendorId = location.state?.vendorId || sessionStorage.getItem("vendorId") || "";
-  const eventId = location.state?.eventId || sessionStorage.getItem("eventId") || "";
-  const staffId = location.state?.staffId|| sessionStorage.getItem("staffId") || "";
+  const accessToken =
+    location.state?.accessToken || sessionStorage.getItem("accessToken") || "";
+  const vendorId =
+    location.state?.vendorId || sessionStorage.getItem("vendorId") || "";
+  const eventId =
+    location.state?.eventId || sessionStorage.getItem("eventId") || "";
+  const staffId =
+    location.state?.staffId || sessionStorage.getItem("staffId") || "";
   const [cart, setCart] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [productItems, setProductItems] = useState([]);
   const [products, setProducts] = useState([]);
-  const { isOpen: isCartOpen, onOpen: onOpenCart, onClose: onCloseCart } = useDisclosure();
+  const {
+    isOpen: isCartOpen,
+    onOpen: onOpenCart,
+    onClose: onCloseCart,
+  } = useDisclosure();
 
   const fetchProductItems = async () => {
     try {
@@ -78,7 +86,9 @@ const StaffShop = () => {
           },
         }
       );
-      const productItemIds = response.data.productItemIds.map((item) => item.productItemId);
+      const productItemIds = response.data.productItemIds.map(
+        (item) => item.productItemId
+      );
 
       const enrichedProductItems = productItems
         .filter((item) => productItemIds.includes(item.productItemId))
@@ -86,7 +96,9 @@ const StaffShop = () => {
           return {
             ...item,
             details: item.details.map((detail) => {
-              const productDetails = products.find((product) => product.productId === detail.productId);
+              const productDetails = products.find(
+                (product) => product.productId === detail.productId
+              );
               return {
                 ...detail,
                 name: productDetails ? productDetails.productName : "Unknown",
@@ -143,12 +155,26 @@ const StaffShop = () => {
   };
 
   return (
-    <Box p={5} bgGradient="linear(to-r, blue.100, pink.100)" minH="100vh" textAlign="center">
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={5}>
-        <Text fontSize="3xl" fontWeight="bold">Product List</Text>
+    <Box
+      p={5}
+      bgGradient="linear(to-r, blue.100, pink.100)"
+      minH="100vh"
+      textAlign="center"
+    >
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={5}
+      >
+        <Text fontSize="3xl" fontWeight="bold">
+          Product List
+        </Text>
 
         <Box display="flex" alignItems="center">
-          <Button mr={4} colorScheme="blue" onClick={handleGoToOrderedList}>Order History</Button>
+          <Button mr={4} colorScheme="blue" onClick={handleGoToOrderedList}>
+            Order History
+          </Button>
           <IconButton
             icon={<ShoppingCartIcon />}
             onClick={onOpenCartWithSessionData}
@@ -161,7 +187,11 @@ const StaffShop = () => {
         <Box maxHeight="600px" overflowY="auto">
           <SimpleGrid columns={[2, null, 5]} spacing="20px">
             {allProducts.map((product) => (
-              <ProductCard key={product.productItemId} product={product} addToCart={addToCart} />
+              <ProductCard
+                key={product.productItemId}
+                product={product}
+                addToCart={addToCart}
+              />
             ))}
           </SimpleGrid>
         </Box>
@@ -170,7 +200,7 @@ const StaffShop = () => {
       )}
 
       <Drawer isOpen={isCartOpen} placement="right" onClose={onCloseCart}>
-      <DrawerOverlay>
+        <DrawerOverlay>
           <DrawerContent maxWidth="700px">
             <DrawerHeader>Cart</DrawerHeader>
             <DrawerBody>
@@ -189,10 +219,13 @@ const StaffShop = () => {
               />
             </DrawerBody>
             <DrawerFooter>
-              <Button colorScheme="teal" onClick={onCloseCart}>Close Cart</Button>
+              <Button colorScheme="blue" onClick={onCloseCart}>
+                Close Cart
+              </Button>
             </DrawerFooter>
           </DrawerContent>
-        </DrawerOverlay>      </Drawer>
+        </DrawerOverlay>{" "}
+      </Drawer>
     </Box>
   );
 };

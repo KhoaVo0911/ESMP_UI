@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -26,8 +25,8 @@ import { storage } from "../../../shared/firebase/firebaseConfig";
 import SelectBooth from "./SelectBooth";
 import { Pagination } from "antd";
 import ViewBoothMap from "./ViewBoothMap";
-import CancelEventButton from "./CancelEventButton"; 
-
+import CancelEventButton from "./CancelEventButton";
+import MapboxComponent from "../../../components/MapBox/MapboxComponent";
 
 const BASE_URL = "https://esmpbe.id.vn/api/event";
 const LOCATION_TYPE_URL = "https://esmpbe.id.vn/api/map/locationType";
@@ -49,8 +48,8 @@ const EventEnrolled = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(5); // Number of items per page
   const navigate = useNavigate();
-const vendorinEventId = state?.vendorInEventId;
-  console.log("gi ki vay", vendorinEventId )
+  const vendorinEventId = state?.vendorInEventId;
+  console.log("gi ki vay", vendorinEventId);
 
   useEffect(() => {
     if (!eventId) {
@@ -211,10 +210,13 @@ const vendorinEventId = state?.vendorInEventId;
             </Text>
           </HStack>
           <HStack paddingBottom={8}>
-          <Button colorScheme="blue" size="lg" onClick={handleShopClick}>
-            Shop
-          </Button>
-          <CancelEventButton vendorinEventId={vendorinEventId} eventId={eventId}/>
+            <Button colorScheme="blue" size="lg" onClick={handleShopClick}>
+              Shop
+            </Button>
+            <CancelEventButton
+              vendorinEventId={vendorinEventId}
+              eventId={eventId}
+            />
           </HStack>
         </VStack>
         <Image
@@ -237,10 +239,10 @@ const vendorinEventId = state?.vendorInEventId;
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
       <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
-       Booth Map
+        Booth Map
       </Text>
       <Box>
-      <ViewBoothMap/>
+        <ViewBoothMap />
       </Box>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
@@ -341,17 +343,19 @@ const vendorinEventId = state?.vendorInEventId;
       <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
         Location
       </Text>
-      <Box width="100%" height="300px" mb={10}>
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.6100105370224!2d106.8073080746704!3d10.84112758931162!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752731176b07b1%3A0xb752b24b379bae5e!2sFPT%20University%20HCMC!5e0!3m2!1sen!2s!4v1726308048313!5m2!1sen!2s"
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          allowFullScreen=""
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          title="FPT University HCMC Map"
+      <Box mb={10}>
+        <MapboxComponent
+          eventId={eventId}
+          eventData={eventDetail}
+          onSaveCoordinates={(updatedCoordinates) =>
+            setEventDetail({ ...eventDetail, coordinates: updatedCoordinates })
+          }
         />
+        {eventDetail.coordinates && (
+          <Text mt={4} color="gray.600">
+            Current Coordinates: {eventDetail.coordinates}
+          </Text>
+        )}
       </Box>
     </Box>
   );

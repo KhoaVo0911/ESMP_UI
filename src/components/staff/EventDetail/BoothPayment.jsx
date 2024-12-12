@@ -13,11 +13,7 @@ import {
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import axios from "axios";
 
-const BoothPayment = ({
-  boothTypeDetails,
-  onBackToPolicy,
-  eventId,
-}) => {
+const BoothPayment = ({ boothTypeDetails, onBackToPolicy, eventId }) => {
   const [remainingTime, setRemainingTime] = useState(900); // Countdown timer: 15 minutes
   const [qrUrl, setQrUrl] = useState(""); // QR Code URL
   const countdownIntervalRef = useRef(null); // Countdown interval reference
@@ -65,11 +61,7 @@ const BoothPayment = ({
     const startTime = new Date();
     transactionCheckIntervalRef.current = setInterval(() => {
       console.log("Checking payment...");
-      checkPaid(
-        boothTypeDetails.price,
-        boothTypeDetails.typeName,
-        startTime
-      );
+      checkPaid(boothTypeDetails.price, boothTypeDetails.typeName, startTime);
     }, 5000); // Check every 5 seconds
 
     // Cleanup intervals on component unmount
@@ -238,7 +230,7 @@ const BoothPayment = ({
         <Progress
           value={(remainingTime / 900) * 100}
           size="sm"
-          colorScheme="teal"
+          colorScheme="blue"
           mt={2}
           width="100%"
         />

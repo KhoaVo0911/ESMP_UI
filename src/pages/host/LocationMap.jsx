@@ -721,7 +721,7 @@ const LocationMap = () => {
               {booth.name}
             </div>
           ))}
-          {shapes.map((shape) => (
+          {/* {shapes.map((shape) => (
             <div
               key={shape.location.locationId}
               style={{
@@ -737,7 +737,77 @@ const LocationMap = () => {
             >
               {shape.name}
             </div>
-          ))}
+          ))} */}
+
+          {shapes.map((shape) => {
+            const location = shape.location;
+            if (
+              !location ||
+              location.x === undefined ||
+              location.y === undefined
+            ) {
+              console.warn("Invalid shape data:", shape); // Log cảnh báo nếu dữ liệu shape không hợp lệ
+              return null;
+            }
+
+            const renderShape = () => {
+              switch (shape.name) {
+                case "rectangle":
+                  return (
+                    <rect
+                      x={location.x}
+                      y={location.y}
+                      width={location.width}
+                      height={location.height}
+                      fill="lightgray"
+                      stroke="black"
+                    />
+                  );
+                case "circle":
+                  return (
+                    <circle
+                      cx={location.x + location.width / 2}
+                      cy={location.y + location.height / 2}
+                      r={Math.min(location.width, location.height) / 2}
+                      fill="lightgray"
+                      stroke="black"
+                    />
+                  );
+                case "triangle":
+                  return (
+                    <polygon
+                      points={`${location.x},${location.y + location.height} ${
+                        location.x + location.width / 2
+                      },${location.y} ${location.x + location.width},${
+                        location.y + location.height
+                      }`}
+                      fill="lightgray"
+                      stroke="black"
+                    />
+                  );
+                default:
+                  console.warn("Unsupported shape:", shape.name);
+                  return null;
+              }
+            };
+
+            return (
+              <svg
+                key={location.locationId}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  width: "100%",
+                  height: "100%",
+                  overflow: "visible",
+                }}
+              >
+                {renderShape()}
+              </svg>
+            );
+          })}
+
           {textElements.map((text) => (
             <div
               key={text.location.locationId}

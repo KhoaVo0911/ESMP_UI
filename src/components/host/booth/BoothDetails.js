@@ -259,7 +259,7 @@ const BoothDetails = ({ isOpen, onClose, onSave, locationTypes = [] }) => {
         <ModalCloseButton />
         <ModalBody>
           <FormControl mb={4}>
-            <FormLabel>Hãy nhập số lượng booth mà bạn muốn</FormLabel>
+            <FormLabel>Please enter the number of booths you want</FormLabel>
             <Input
               type="number"
               value={quantity}

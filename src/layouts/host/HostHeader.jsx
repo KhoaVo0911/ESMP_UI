@@ -42,7 +42,7 @@ const HostHeader = ({ collapsed }) => {
         const response = await axios.get(
           `https://esmpbe.id.vn/api/host/${hostId}`
         );
-        
+
         console.log("API Response:", response.data); // Log full response to verify data
 
         if (response.data && response.data.userid) {
@@ -68,7 +68,6 @@ const HostHeader = ({ collapsed }) => {
     setUnreadCount(0); // Reset unread count
   };
 
-
   const getPageTitle = () => {
     if (location.pathname.startsWith(`/${hostId}/dashboard`)) {
       return "Dashboard";
@@ -90,27 +89,29 @@ const HostHeader = ({ collapsed }) => {
       return "Packages";
     } else if (location.pathname.includes("/extensionEvent")) {
       return "Extension Event";
+    } else if (location.pathname.includes("/package-trans")) {
+      return "Packages Transaction History";
     }
     return "Event Information";
   };
 
   return (
     <Box
-    as="header"
-    bg="rgba(255, 255, 255, 0.2)"
-    boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
-    padding="16px"
-    display="flex"
-    justifyContent="space-between"
-    alignItems="center"
-    position="sticky"
-    top="0"
-    zIndex="1000"
-    border="1px solid rgba(200, 200, 200, 0.3)"
-    backdropFilter="blur(12px)"
-    borderRadius="16px"
-    marginLeft="40px"
-    width="calc(100% - 75px)"
+      as="header"
+      bg="rgba(255, 255, 255, 0.2)"
+      boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
+      padding="16px"
+      display="flex"
+      justifyContent="space-between"
+      alignItems="center"
+      position="sticky"
+      top="0"
+      zIndex="1000"
+      border="1px solid rgba(200, 200, 200, 0.3)"
+      backdropFilter="blur(12px)"
+      borderRadius="16px"
+      marginLeft="40px"
+      width="calc(100% - 75px)"
     >
       <Flex direction="column" alignItems="flex-start" ml={8}>
         <Text fontSize="sm" fontWeight="medium" color="gray.500" mb="2px">
@@ -122,8 +123,6 @@ const HostHeader = ({ collapsed }) => {
       </Flex>
 
       <Flex alignItems="center" position="relative">
-     
-
         <Menu>
           <MenuButton
             as={Button}

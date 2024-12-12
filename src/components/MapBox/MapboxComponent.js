@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Map, { Marker } from "react-map-gl";
 import MapboxGeocoder from "@mapbox/mapbox-sdk/services/geocoding";
 import {
@@ -28,7 +28,17 @@ const MapboxComponent = ({ eventId, eventData = {}, onSaveCoordinates }) => {
   const [searchValue, setSearchValue] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
-  const [coordinates, setCoordinates] = useState(eventData?.coordinates || "");
+  const [coordinates, setCoordinates] = useState("");
+
+  useEffect(() => {
+    if (eventData?.coordinates) {
+      const [latitude, longitude] = eventData.coordinates
+        .split(",")
+        .map(parseFloat);
+      setViewport({ latitude, longitude, zoom: 15 });
+      setCoordinates(eventData.coordinates);
+    }
+  }, [eventData]);
 
   const geocoder = MapboxGeocoder({ accessToken: MAPBOX_TOKEN });
 
@@ -72,28 +82,11 @@ const MapboxComponent = ({ eventId, eventData = {}, onSaveCoordinates }) => {
     }
 
     try {
-      // const payload = {
-      //   name: eventData?.name,
-      //   description: eventData?.description,
-      //   startDate: eventData?.startDate || new Date().toISOString(),
-      //   endDate: eventData?.endDate || new Date().toISOString(),
-      //   deposit: parseFloat(eventData?.deposit) || 0, // Ensure deposit is a number
-      //   status: eventData?.status,
-      //   stageValue: eventData?.stageValue,
-      //   coordinates,
-      //   onWed: eventData?.onWeb || false,
-      // };
-
       const payload = {
-        name: "Sample Event",
-        description: "This is a detailed description of the event.",
-        startDate: "2024-12-01T07:00:00Z",
-        endDate: "2024-12-01T15:00:00Z",
-        deposit: 11,
-        status: "Upcoming",
-        stageValue: "chovao",
-        coordinates: "10.763188,106.69317649999999",
-        onWed: true,
+        ...eventData,
+        coordinates,
+        deposit: parseFloat(eventData?.deposit) || 0, // Ensure deposit is a number
+        onWed: eventData.onWeb, // Map onWeb to onWed as requested
       };
 
       console.log("Sending updated event data to backend:", payload);
@@ -102,12 +95,11 @@ const MapboxComponent = ({ eventId, eventData = {}, onSaveCoordinates }) => {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getAccessToken()}`,
+          Authorization: `${getAccessToken()}`,
         },
         body: JSON.stringify(payload),
       });
-      console.log(response, "response");
-      console.log(response.ok, "ok");
+
       if (response.ok) {
         alert("Coordinates updated successfully!");
         if (onSaveCoordinates) onSaveCoordinates(coordinates);
@@ -153,13 +145,12 @@ const MapboxComponent = ({ eventId, eventData = {}, onSaveCoordinates }) => {
           )}
         </Box>
 
-        {selectedLocation && (
+        {coordinates && selectedLocation && (
           <Box>
             <Text fontWeight="bold" mb={2}>
-              Selected Location:
+              Current Coordinates:
             </Text>
-            <Text>{selectedLocation.place_name}</Text>
-            <Text>Coordinates: {coordinates}</Text>
+            <Text>{coordinates}</Text>
             <Link
               href={`https://www.google.com/maps?q=${coordinates}`}
               isExternal
