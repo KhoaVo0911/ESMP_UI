@@ -431,6 +431,7 @@ import { storage } from "../../../shared/firebase/firebaseConfig";
 import { Box, Grid, GridItem, Image } from "@chakra-ui/react";
 import { CalendarIcon, InfoIcon } from "@chakra-ui/icons";
 import { sendNotification } from "../../../shared/notificationService";
+import { Tooltip } from "antd";
 
 const { TabPane } = Tabs;
 const { TextArea } = Input;
@@ -450,6 +451,40 @@ const Event = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [themes, setThemes] = useState([]);
   const [form] = Form.useForm();
+  const [canCreateEvent, setCanCreateEvent] = useState(false); // Kiểm tra quyền tạo event
+
+  const fetchHostExpireTime = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `https://esmpbe.id.vn/api/host/${hostId}`,
+        {
+          headers: { Authorization: getAccessToken() },
+        }
+      );
+
+      const { expiretime } = response.data;
+
+      // Kiểm tra nếu expiretime còn hạn
+      const currentTime = new Date();
+      const expireDate = new Date(expiretime);
+      const isEventCreationAllowed = expireDate > currentTime;
+      setCanCreateEvent(isEventCreationAllowed);
+
+      // Console log để kiểm tra trạng thái
+      console.log("Host ID:", hostId);
+      console.log("Current Time:", currentTime.toISOString());
+      console.log("Expire Time:", expireDate.toISOString());
+      console.log(`Can create event: ${isEventCreationAllowed ? "YES" : "NO"}`);
+    } catch (error) {
+      console.error("Error fetching host expiretime:", error);
+      message.error("Error fetching host data.");
+      setCanCreateEvent(false);
+    }
+  }, [hostId]);
+
+  useEffect(() => {
+    fetchHostExpireTime(); // Kiểm tra expiretime khi component load
+  }, [fetchHostExpireTime]);
 
   const fetchEvents = useCallback(async () => {
     if (!hostId) {
@@ -743,7 +778,7 @@ const Event = () => {
 
   return (
     <div>
-      <div className="header-container">
+      {/* <div className="header-container">
         <h1 className="headername">Events Management</h1>
         <Button
           type="primary"
@@ -752,6 +787,25 @@ const Event = () => {
         >
           Create Event
         </Button>
+      </div> */}
+      <div className="header-container">
+        <h1 className="headername">Events Management</h1>
+        <Tooltip
+          title={
+            canCreateEvent
+              ? ""
+              : "Your package has expired, please renew to create an event."
+          }
+        >
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => canCreateEvent && setModalVisible(true)} // Chỉ mở modal khi được phép
+            disabled={!canCreateEvent} // Vô hiệu hóa nút khi không được phép
+          >
+            Create Event
+          </Button>
+        </Tooltip>
       </div>
 
       <Input

@@ -24,6 +24,8 @@ import {
   ModalBody,
   ModalCloseButton,
   useDisclosure,
+  Flex,
+  Tooltip,
   useToast,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
@@ -35,6 +37,7 @@ const ThemeEventSection = () => {
   const [editingTheme, setEditingTheme] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const [canCreateTheme, setCanCreateTheme] = useState(false);
 
   const hostId = sessionStorage.getItem("hostId") || "";
   const accessToken = sessionStorage.getItem("accessToken") || "";
@@ -65,6 +68,33 @@ const ThemeEventSection = () => {
   useEffect(() => {
     fetchThemes();
   }, [themes]);
+
+  // Fetch Host Expire Time
+  const fetchHostExpireTime = async () => {
+    try {
+      const response = await axios.get(
+        `https://esmpbe.id.vn/api/host/${hostId}`,
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const { expiretime } = response.data;
+      const currentTime = new Date();
+      const expireDate = new Date(expiretime);
+      setCanCreateTheme(expireDate > currentTime); // Update canCreateTheme based on expiretime
+    } catch (error) {
+      console.error("Error fetching host expiretime:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchThemes();
+    fetchHostExpireTime();
+  }, []);
 
   // Open the modal to add or edit a theme
   const openModal = (theme = null) => {
@@ -178,21 +208,33 @@ const ThemeEventSection = () => {
 
   return (
     <Box mb={10}>
-      <Heading size="lg" fontWeight="bold" color="blue.600" mb={6}>
-        Theme Event
-      </Heading>
-
-      <Button
-        colorScheme="blue"
-        onClick={() => openModal()}
-        size="md"
-        mb={4}
-        float="right"
-        mr={4}
-        leftIcon={<AddIcon />}
-      >
-        Create New Theme
-      </Button>
+      <Flex justify="space-between" align="center" mb={6}>
+        <Heading size="lg" fontWeight="bold" color="blue.600">
+          Theme Event
+        </Heading>
+        <Tooltip
+          label={
+            canCreateTheme
+              ? ""
+              : "Your package has expired, please renew to create a theme."
+          }
+          shouldWrapChildren
+        >
+          <Button
+            colorScheme="blue"
+            onClick={() => openModal()}
+            size="md"
+            leftIcon={<AddIcon />}
+            disabled={!canCreateTheme} // Disable button if package expired
+            style={{
+              cursor: canCreateTheme ? "pointer" : "not-allowed",
+              opacity: canCreateTheme ? 1 : 0.6,
+            }}
+          >
+            Create New Theme
+          </Button>
+        </Tooltip>
+      </Flex>
 
       <Table
         variant="simple"
@@ -221,21 +263,41 @@ const ThemeEventSection = () => {
                 </Badge>
               </Td>
               <Td>
-                <Button
-                  colorScheme="blue"
-                  size="sm"
-                  mr={2}
-                  onClick={() => openModal(theme)}
+                <Tooltip
+                  label={
+                    canCreateTheme
+                      ? ""
+                      : "Your package has expired, you cannot edit this theme."
+                  }
+                  shouldWrapChildren
                 >
-                  Edit
-                </Button>
-                <Button
-                  colorScheme="red"
-                  size="sm"
-                  onClick={() => handleDeleteTheme(theme.themeId)}
+                  <Button
+                    colorScheme="blue"
+                    size="sm"
+                    mr={2}
+                    onClick={() => openModal(theme)}
+                    isDisabled={!canCreateTheme} // Disable if package expired
+                  >
+                    Edit
+                  </Button>
+                </Tooltip>
+                <Tooltip
+                  label={
+                    canCreateTheme
+                      ? ""
+                      : "Your package has expired, you cannot delete this theme."
+                  }
+                  shouldWrapChildren
                 >
-                  Delete
-                </Button>
+                  <Button
+                    colorScheme="red"
+                    size="sm"
+                    onClick={() => handleDeleteTheme(theme.themeId)}
+                    isDisabled={!canCreateTheme} // Disable if package expired
+                  >
+                    Delete
+                  </Button>
+                </Tooltip>
               </Td>
             </Tr>
           ))}

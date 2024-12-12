@@ -219,23 +219,50 @@ const CalendarChart = () => {
   }, [hostId]);
 
   // Hàm điều hướng khi click vào sự kiện
-  const handleEventClick = (event, services) => {
-    // Lưu dữ liệu vào sessionStorage
-    sessionStorage.setItem("selectedEvent", JSON.stringify(event));
-    sessionStorage.setItem("eventServices", JSON.stringify(services || []));
+  // const handleEventClick = (event, services) => {
+  //   // Lưu dữ liệu vào sessionStorage
+  //   sessionStorage.setItem("selectedEvent", JSON.stringify(event));
+  //   sessionStorage.setItem("eventServices", JSON.stringify(services || []));
 
-    // Điều hướng đến trang chi tiết sự kiện với state chứa event và services
-    navigate(`/event-detail/${event.eventId}`, { state: { event, services } });
+  //   // Điều hướng đến trang chi tiết sự kiện với state chứa event và services
+  //   navigate(`/event-detail/${event.eventId}`, { state: { event, services } });
+  // };
+
+  // if (loading || loadingEvent) {
+  //   return (
+  //     <VStack spacing={4} align="center" p={6}>
+  //       <Spinner size="xl" color="blue.500" />
+  //       <Text>Loading...</Text>
+  //     </VStack>
+  //   );
+  // }
+
+  const handleEventClick = (info) => {
+    const eventId = info.event.extendedProps.eventId;
+
+    if (!eventId) {
+      console.error("Event ID is missing in clicked data:", info);
+      return; // Không tiếp tục nếu không có `eventId`
+    }
+
+    // Fetch chi tiết sự kiện bằng `eventId`
+    axios
+      .get(`${BASE_URL}/${eventId}`, {
+        headers: { Authorization: getAccessToken() },
+      })
+      .then((response) => {
+        const event = response.data;
+
+        // Lưu dữ liệu vào `sessionStorage`
+        sessionStorage.setItem("selectedEvent", JSON.stringify(event));
+
+        // Điều hướng đến trang chi tiết sự kiện
+        navigate(`/event-detail/${event.eventId}`, { state: { event } });
+      })
+      .catch((error) => {
+        console.error("Error fetching event details:", error);
+      });
   };
-
-  if (loading || loadingEvent) {
-    return (
-      <VStack spacing={4} align="center" p={6}>
-        <Spinner size="xl" color="blue.500" />
-        <Text>Loading...</Text>
-      </VStack>
-    );
-  }
 
   return (
     <div className="calendar-container">
@@ -264,7 +291,7 @@ const CalendarChart = () => {
             </Tooltip>
           );
         }}
-        eventClick={handleEventClick}
+        eventClick={handleEventClick} // Cập nhật logic xử lý click
       />
     </div>
   );

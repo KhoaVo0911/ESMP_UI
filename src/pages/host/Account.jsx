@@ -41,6 +41,7 @@ import { useForm } from "react-hook-form";
 const API_GET_VENDORS = "https://esmpbe.id.vn/api/vendor/host";
 const API_VENDOR = "https://esmpbe.id.vn/api/vendor";
 const API_SEND_EMAIL = "https://esmpbe.id.vn/api/mail/send-email";
+const API_HOST = "https://esmpbe.id.vn/api/host";
 
 const AccountManagement = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -59,6 +60,7 @@ const AccountManagement = () => {
   const [formSubmitting, setFormSubmitting] = useState(false); // For form submission
   const [deleting, setDeleting] = useState(false); // For deleting accounts
   const [sendingEmail, setSendingEmail] = useState(false); // For sending email
+  const [canCreateAccount, setCanCreateAccount] = useState(false);
 
   const hostId = sessionStorage.getItem("hostId") || "";
   const accessToken = sessionStorage.getItem("accessToken") || "";
@@ -206,6 +208,43 @@ const AccountManagement = () => {
     }
   };
 
+  // Fetch Host Expire Time
+  const fetchHostExpireTime = async () => {
+    try {
+      const response = await axios.get(`${API_HOST}/${hostId}`, {
+        headers: {
+          Authorization: `${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const { expiretime } = response.data;
+
+      // Check if expiretime is valid
+      const currentTime = new Date();
+      const expireDate = new Date(expiretime);
+      const isAccountCreationAllowed = expireDate > currentTime;
+      setCanCreateAccount(isAccountCreationAllowed);
+
+      // Debugging via console log
+      console.log("Host ID:", hostId);
+      console.log("Current Time:", currentTime.toISOString());
+      console.log("Expire Time:", expireDate.toISOString());
+      console.log(
+        `Can create account: ${isAccountCreationAllowed ? "YES" : "NO"}`
+      );
+    } catch (error) {
+      console.error("Error fetching host expiretime:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (hostId && accessToken) {
+      fetchVendors();
+      fetchHostExpireTime();
+    }
+  }, [hostId, accessToken]);
+
   const resetForm = () => {
     reset({
       username: "",
@@ -270,17 +309,30 @@ const AccountManagement = () => {
           <Heading size="lg" fontWeight="bold" color="blue.600">
             Vendor Management
           </Heading>
-          <Button
-            colorScheme="blue"
-            leftIcon={<AddIcon />}
-            onClick={() => {
-              setIsEditing(false);
-              resetForm();
-              onOpen();
-            }}
+          <Tooltip
+            label={
+              canCreateAccount
+                ? ""
+                : "Your package has expired, please renew to create an account."
+            }
+            shouldWrapChildren
           >
-            Create New Account
-          </Button>
+            <Button
+              colorScheme="blue"
+              leftIcon={<AddIcon />}
+              onClick={() => {
+                resetForm();
+                onOpen();
+              }}
+              disabled={!canCreateAccount} // Disable the button when package is expired
+              style={{
+                cursor: canCreateAccount ? "pointer" : "not-allowed", // Change cursor style
+                opacity: canCreateAccount ? 1 : 0.6, // Adjust opacity to indicate disabled state
+              }}
+            >
+              Create New Account
+            </Button>
+          </Tooltip>
         </Flex>
 
         <Table
@@ -323,37 +375,77 @@ const AccountManagement = () => {
                     </Badge>
                   </Td>
                   <Td textAlign="center">
-                    <Button
-                      size="sm"
-                      colorScheme="blue"
-                      mr={2}
-                      onClick={() => openDetailModal(account)}
+                    <Tooltip
+                      label={
+                        canCreateAccount
+                          ? ""
+                          : "Your package has expired, you cannot view details."
+                      }
+                      shouldWrapChildren
                     >
-                      Details
-                    </Button>
-                    <Button
-                      size="sm"
-                      colorScheme="yellow"
-                      mr={2}
-                      onClick={() => openEditModal(account)}
+                      <Button
+                        size="sm"
+                        colorScheme="blue"
+                        mr={2}
+                        onClick={() => openDetailModal(account)}
+                        isDisabled={!canCreateAccount} // Use isDisabled instead of disabled
+                      >
+                        Details
+                      </Button>
+                    </Tooltip>
+                    <Tooltip
+                      label={
+                        canCreateAccount
+                          ? ""
+                          : "Your package has expired, you cannot edit this account."
+                      }
+                      shouldWrapChildren
                     >
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      colorScheme="teal"
-                      mr={2}
-                      onClick={() => handleSendEmail(account)}
+                      <Button
+                        size="sm"
+                        colorScheme="yellow"
+                        mr={2}
+                        onClick={() => openEditModal(account)}
+                        isDisabled={!canCreateAccount} // Use isDisabled instead of disabled
+                      >
+                        Edit
+                      </Button>
+                    </Tooltip>
+                    <Tooltip
+                      label={
+                        canCreateAccount
+                          ? ""
+                          : "Your package has expired, you cannot send an email."
+                      }
+                      shouldWrapChildren
                     >
-                      Email
-                    </Button>
-                    <Button
-                      size="sm"
-                      colorScheme="red"
-                      onClick={() => handleDeleteAccount(account.vendorId)}
+                      <Button
+                        size="sm"
+                        colorScheme="teal"
+                        mr={2}
+                        onClick={() => handleSendEmail(account)}
+                        isDisabled={!canCreateAccount} // Use isDisabled instead of disabled
+                      >
+                        Email
+                      </Button>
+                    </Tooltip>
+                    <Tooltip
+                      label={
+                        canCreateAccount
+                          ? ""
+                          : "Your package has expired, you cannot delete this account."
+                      }
+                      shouldWrapChildren
                     >
-                      Delete
-                    </Button>
+                      <Button
+                        size="sm"
+                        colorScheme="red"
+                        onClick={() => handleDeleteAccount(account.vendorId)}
+                        isDisabled={!canCreateAccount} // Use isDisabled instead of disabled
+                      >
+                        Delete
+                      </Button>
+                    </Tooltip>
                   </Td>
                 </Tr>
               ))

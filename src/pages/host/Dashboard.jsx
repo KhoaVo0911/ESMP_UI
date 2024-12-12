@@ -53,7 +53,7 @@ const Dashboard = () => {
       </Grid>
 
       {/* Phần các bảng xếp hạng */}
-      <Grid templateColumns="2fr" gap={6} mb={6}>
+      {/* <Grid templateColumns="2fr" gap={6} mb={6}>
         <Box
           bg="white"
           borderRadius="20px"
@@ -61,9 +61,8 @@ const Dashboard = () => {
           boxShadow="0px 4px 12px rgba(0, 0, 0, 0.05)"
         >
           <ProfitBarChart hostId={hostId} />
-          {/* <EventLocationSlider /> */}
         </Box>
-      </Grid>
+      </Grid> */}
       <Grid templateColumns="(1fr)" mt={10} gap={8}>
         <Box
           bg="white"

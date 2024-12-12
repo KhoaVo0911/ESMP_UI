@@ -460,10 +460,10 @@ import React, { useEffect, useState } from "react";
 import { Box, Flex, Text, Button, useColorModeValue } from "@chakra-ui/react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import SelectBooth from "../../components/vendor/EventDetail/SelectBooth"; // Assuming SelectBooth is a separate component
-import BoothDetails from "../../components/vendor/EventDetail/BoothDetails"; // Import BoothDetails
+import BoothDetailsHost from "../../components/host/booth/BoothDetailsHost";
 
 const BASE_URL = "https://esmpbe.id.vn/api";
+const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const LocationMap = () => {
   const location = useLocation();
@@ -482,6 +482,7 @@ const LocationMap = () => {
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
   const navigate = useNavigate();
   const [eventName, setEventName] = useState("");
+  const [locationTypes, setLocationTypes] = useState([]);
 
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -554,6 +555,24 @@ const LocationMap = () => {
     }
   }, [eventId, hostId, accessToken]);
 
+  useEffect(() => {
+    const fetchLocationTypes = async () => {
+      try {
+        const response = await axios.get(
+          `${BASE_URL}/map/locationType/${hostId}/${eventId}`,
+          {
+            headers: { Authorization: accessToken },
+          }
+        );
+        setLocationTypes(response.data);
+      } catch (error) {
+        console.error("Error fetching location types:", error);
+      }
+    };
+
+    fetchLocationTypes();
+  }, [hostId, eventId, accessToken]);
+
   const handleCreateMap = () => {
     navigate(`/event/${eventId}/booth-plan/create`);
   };
@@ -562,16 +581,41 @@ const LocationMap = () => {
     navigate(`/event/${eventId}/booth-plan/edit`);
   };
 
-  const handleBoothClick = (booth) => {
-    setSelectedBooth(booth);
+  const handleBoothClick = async (booth) => {
+    console.log("Clicked booth:", booth); // Log thông tin booth khi click
 
-    // Fetch booth type details based on selected booth
-    const boothDetails = boothData.find(
-      (b) => b.location.typeId === booth.location.typeId
-    );
-    setBoothTypeDetails(boothDetails ? boothDetails.location : null);
+    if (booth.location.status === "Booked") {
+      try {
+        console.log("Fetching details for booked booth..."); // Log khi đang fetch dữ liệu
+        // Gọi API để lấy thông tin chi tiết booth đã Booked
+        const response = await axios.get(
+          `${BASE_URL}/eventpayment/location/${booth.location.locationId}`,
+          {
+            headers: {
+              Authorization: getAccessToken(),
+            },
+          }
+        );
+        const boothDetails = response.data;
 
-    setIsModalOpen(true); // Open the modal to show booth details
+        console.log("Booth details fetched:", boothDetails); // Log chi tiết booth nhận được
+
+        // Cập nhật thông tin của booth được click
+        setSelectedBooth({
+          ...booth,
+          vendor: boothDetails.vendor || "N/A",
+          name: boothDetails.name || booth.name || "N/A",
+          status: boothDetails.status || booth.location.status || "N/A",
+          price: boothDetails.price || "0",
+        });
+
+        setIsModalOpen(true); // Hiển thị modal
+      } catch (error) {
+        console.error("Error fetching booth details:", error); // Log lỗi khi fetch dữ liệu thất bại
+      }
+    } else {
+      console.log("Booth is not booked. No details to show."); // Log nếu booth không phải trạng thái "Booked"
+    }
   };
 
   const bgColor = useColorModeValue("white", "gray.800");
@@ -670,10 +714,7 @@ const LocationMap = () => {
                 textAlign: "center",
                 lineHeight: `${booth.location.height}px`,
                 border: "1px solid black",
-                cursor:
-                  booth.location.status === "Booked"
-                    ? "not-allowed"
-                    : "pointer",
+                cursor: "pointer",
               }}
               onClick={() => handleBoothClick(booth)} // Call the function on booth click
             >
@@ -732,12 +773,20 @@ const LocationMap = () => {
       )}
 
       {/* Render SelectBooth Component if there is a booth selected */}
-      {selectedBooth && boothTypeDetails && isModalOpen && (
-        <BoothDetails
-          selectedBooth={selectedBooth}
-          boothTypeDetails={boothTypeDetails}
-          onBookBooth={() => {}}
+      {/* {selectedBooth && isModalOpen && (
+        <BoothDetailsHost
+          locationId={selectedBooth.location.locationId}
+          onClose={() => setIsModalOpen(false)}
         />
+      )} */}
+      {selectedBooth && isModalOpen && (
+        <>
+          <BoothDetailsHost
+            locationId={selectedBooth.location.locationId}
+            onClose={() => setIsModalOpen(false)}
+          />
+          {console.log("Selected Booth for modal:", selectedBooth)}
+        </>
       )}
     </Flex>
   );

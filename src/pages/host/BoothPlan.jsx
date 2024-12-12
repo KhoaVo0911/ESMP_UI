@@ -1448,26 +1448,56 @@ const BoothPlan = () => {
     setTextElements([...textElements, newText]);
   };
 
+  // const handleAddBooth = (newBoothDetails) => {
+  //   // Lấy typeId từ locationTypes hoặc đặt giá trị mặc định
+  //   const defaultTypeId =
+  //     locationTypes.length > 0 ? locationTypes[0].typeId : null; // Không nên sử dụng 'defaultTypeId' nếu không có booth nào
+
+  //   if (!defaultTypeId) {
+  //     console.error("No available booth types in locationTypes.");
+  //     return; // Nếu không có loại booth, không thêm booth mới
+  //   }
+  //   const newBooth = {
+  //     ...newBoothDetails,
+  //     location: uuidv4(),
+  //     locationTypeId: newBoothDetails.typeId || defaultTypeId,
+  //     rotation: 0,
+  //     status: "Available",
+  //     // type: "booth",
+  //     shapeType: "booth",
+  //   };
+  //   // setBooths([...booths, newBooth]);
+  //   setBooths((prevBooths) => [...prevBooths, ...newBooths]);
+  //   console.log(newBooth.id, "new");
+  // };
+
   const handleAddBooth = (newBoothDetails) => {
-    // Lấy typeId từ locationTypes hoặc đặt giá trị mặc định
+    if (!Array.isArray(newBoothDetails)) {
+      console.error("Invalid input: Expected an array of booth details.");
+      return;
+    }
+
     const defaultTypeId =
-      locationTypes.length > 0 ? locationTypes[0].typeId : null; // Không nên sử dụng 'defaultTypeId' nếu không có booth nào
+      locationTypes.length > 0 ? locationTypes[0].typeId : null;
 
     if (!defaultTypeId) {
       console.error("No available booth types in locationTypes.");
-      return; // Nếu không có loại booth, không thêm booth mới
+      return;
     }
-    const newBooth = {
-      ...newBoothDetails,
-      location: uuidv4(),
-      locationTypeId: newBoothDetails.typeId || defaultTypeId,
-      rotation: 0,
-      status: "Available",
-      // type: "booth",
+
+    const newBooths = newBoothDetails.map((details, index) => ({
+      ...details,
+      location: uuidv4(), // Ensure a unique locationId
+      x: details.x + index * (details.width + 10), // Adjust X-axis to avoid overlapping
+      y: details.y, // Keep the Y-axis consistent
+      locationTypeId: details.typeId || defaultTypeId, // Use typeId or default
       shapeType: "booth",
-    };
-    setBooths([...booths, newBooth]);
-    console.log(newBooth.id, "new");
+      status: "Available",
+      rotation: 0,
+    }));
+
+    setBooths((prevBooths) => [...prevBooths, ...newBooths]);
+    console.log("Added Booths:", newBooths);
   };
 
   const handleAddShape = (shapeName) => {
@@ -1696,7 +1726,11 @@ const BoothPlan = () => {
           isOpen={isAdd5BoothsModalOpen}
           onClose={() => setIsAdd5BoothsModalOpen(false)}
           onSave={handleAdd5Booths}
+          onDelete={handleDelete} // Truyền handleDelete ở đây
+          selectedElement={selectedElement}
           locationTypes={locationTypes}
+          booths={booths} // Truyền danh sách booth
+          setBooths={setBooths} // Truyền hàm cập nhật booths
         />
         <Box flex="1" position="relative" bg="white" p={4}>
           {memoizedElements}

@@ -739,6 +739,17 @@ const EventDetails = () => {
         </Text>
         <MapboxComponent
           eventId={event?.eventId}
+          eventData={{
+            name: event?.name || "Default Event Name",
+            description: event?.description || "Default Event Description",
+            startDate: event?.startDate || new Date().toISOString(),
+            endDate: event?.endDate || new Date().toISOString(),
+            deposit: parseFloat(event?.deposit) || 0, // Ensure deposit is a number
+            status: event?.status || "Upcoming",
+            stageValue: event?.stageValue || "defaultStage",
+            coordinates: event?.coordinates || "10.8231,106.6297",
+            onWeb: event?.onWeb || false,
+          }}
           onSaveCoordinates={(updatedCoordinates) =>
             setEvent({ ...event, coordinates: updatedCoordinates })
           }

@@ -19,7 +19,7 @@ const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 const MAPBOX_TOKEN =
   "pk.eyJ1IjoibWluaGRxMjUxMiIsImEiOiJjbTNvcng0Y3MwNmJpMmxxdWl3aDVjYXU0In0.aL5rtwlAjXrvQ_lRfnSXNQ";
 
-const MapboxComponent = ({ eventId, onSaveCoordinates }) => {
+const MapboxComponent = ({ eventId, eventData = {}, onSaveCoordinates }) => {
   const [viewport, setViewport] = useState({
     latitude: 10.8231,
     longitude: 106.6297,
@@ -28,7 +28,7 @@ const MapboxComponent = ({ eventId, onSaveCoordinates }) => {
   const [searchValue, setSearchValue] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
-  const [coordinates, setCoordinates] = useState("");
+  const [coordinates, setCoordinates] = useState(eventData?.coordinates || "");
 
   const geocoder = MapboxGeocoder({ accessToken: MAPBOX_TOKEN });
 
@@ -72,13 +72,31 @@ const MapboxComponent = ({ eventId, onSaveCoordinates }) => {
     }
 
     try {
-      const [latitude, longitude] = coordinates.split(",");
+      // const payload = {
+      //   name: eventData?.name,
+      //   description: eventData?.description,
+      //   startDate: eventData?.startDate || new Date().toISOString(),
+      //   endDate: eventData?.endDate || new Date().toISOString(),
+      //   deposit: parseFloat(eventData?.deposit) || 0, // Ensure deposit is a number
+      //   status: eventData?.status,
+      //   stageValue: eventData?.stageValue,
+      //   coordinates,
+      //   onWed: eventData?.onWeb || false,
+      // };
 
       const payload = {
-        coordinates: `${latitude},${longitude}`,
+        name: "Sample Event",
+        description: "This is a detailed description of the event.",
+        startDate: "2024-12-01T07:00:00Z",
+        endDate: "2024-12-01T15:00:00Z",
+        deposit: 11,
+        status: "Upcoming",
+        stageValue: "chovao",
+        coordinates: "10.763188,106.69317649999999",
+        onWed: true,
       };
 
-      console.log("Sending coordinates to backend:", payload);
+      console.log("Sending updated event data to backend:", payload);
 
       const response = await fetch(`${BASE_URL}/${eventId}`, {
         method: "PUT",
@@ -88,17 +106,19 @@ const MapboxComponent = ({ eventId, onSaveCoordinates }) => {
         },
         body: JSON.stringify(payload),
       });
-
+      console.log(response, "response");
+      console.log(response.ok, "ok");
       if (response.ok) {
         alert("Coordinates updated successfully!");
         if (onSaveCoordinates) onSaveCoordinates(coordinates);
       } else {
-        console.error("Failed to update coordinates:", await response.text());
-        alert("Failed to update coordinates.");
+        const errorResponse = await response.json();
+        console.error("Failed to update event data:", errorResponse);
+        alert(`Error: ${errorResponse.message}`);
       }
     } catch (error) {
-      console.error("Error updating coordinates:", error);
-      alert("An error occurred while updating coordinates.");
+      console.error("Error updating event data:", error);
+      alert("An error occurred while updating event data.");
     }
   };
 
@@ -157,11 +177,7 @@ const MapboxComponent = ({ eventId, onSaveCoordinates }) => {
           </Text>
           <Map
             mapboxAccessToken={MAPBOX_TOKEN}
-            initialViewState={{
-              latitude: viewport.latitude,
-              longitude: viewport.longitude,
-              zoom: viewport.zoom,
-            }}
+            initialViewState={viewport}
             style={{ width: "100%", height: "400px" }}
             mapStyle="mapbox://styles/mapbox/streets-v11"
             onMove={(evt) => setViewport(evt.viewState)}

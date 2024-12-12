@@ -155,7 +155,7 @@ const Sidebar = ({
           <Text>Booth</Text>
         </Box>
         {/* Add 5 Booths Button */}
-        <Box
+        {/* <Box
           as="button"
           onClick={openAdd5BoothsModal}
           display="flex"
@@ -164,7 +164,7 @@ const Sidebar = ({
         >
           <Icon as={MdAddBox} boxSize={6} />
           <Text>Add 5 Booths</Text>
-        </Box>
+        </Box> */}
 
         <Box
           as="button"
