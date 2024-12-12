@@ -246,6 +246,7 @@ const EventDetail = () => {
   const [pageSize] = useState(5); // Number of items per page
   const navigate = useNavigate();
 
+
   useEffect(() => {
     if (!eventId) {
       console.error("Missing eventId");
@@ -447,16 +448,19 @@ const EventDetail = () => {
             </Text>
           </HStack>
           <Button
-            colorScheme="blue"
-            size="md"
-            onClick={() =>
-              navigate(`/selectbooth/${vendorId}`, {
-                state: { eventId, vendorId, accessToken},
-              })
-            }
-          >
-            Register Now
-          </Button>
+  colorScheme="blue"
+  size="md"
+  isDisabled={eventDetail.status === "finished"}
+  title={eventDetail.status === "finished" ? "Event is finished" : ""}
+  onClick={() =>
+    navigate(`/selectbooth/${vendorId}`, {
+      state: { eventId, vendorId, accessToken },
+    })
+  }
+>
+  Register Now
+</Button>
+
         </VStack>
         <Image
           src={eventDetail.logo}

@@ -31,7 +31,13 @@ const StaffAccountManager = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
-  const [newStaff, setNewStaff] = useState({ username: "", password: "", name: "" });
+  const [newStaff, setNewStaff] = useState({
+    username: "",
+    password: "",
+    name: "",
+    phone: "",
+    email: "",
+  });
   const toast = useToast();
 
   const vendorId = sessionStorage.getItem("vendorId") || "dummyVendorId"; // Replace with actual vendorId
@@ -69,10 +75,10 @@ const StaffAccountManager = () => {
   // Update staff account
   const handleUpdateStaff = async () => {
     try {
-      const { password, name, status } = selectedStaff; // Only send these fields
+      const { password, name, phone, email, status } = selectedStaff; // Send all necessary fields
       await axios.put(
         `${BASE_URL}/staff/${selectedStaff.staffId}`,
-        { password, name, status },
+        { password, name, phone, email, status },
         {
           headers: { Authorization: `${accessToken}` },
         }
@@ -101,10 +107,12 @@ const StaffAccountManager = () => {
   // Toggle staff status
   const handleStatusToggle = async (staff) => {
     try {
-      const { password, name } = staff; // Only send these fields with updated status
+      const { password, name, phone, email } = staff; // Send necessary fields with updated status
       const updatedStaff = {
         password,
         name,
+        phone,
+        email,
         status: !staff.status, // Toggle status
       };
       await axios.put(`${BASE_URL}/staff/${staff.staffId}`, updatedStaff, {
@@ -133,10 +141,10 @@ const StaffAccountManager = () => {
   // Create new staff account
   const handleCreateStaff = async () => {
     try {
-      const { username, password, name } = newStaff; // Only send these fields
+      const { username, password, name, phone, email } = newStaff; // Send all necessary fields
       await axios.post(
         `${BASE_URL}/staff/${vendorId}`,
-        { username, password, name },
+        { username, password, name, phone, email },
         {
           headers: { Authorization: `${accessToken}` },
         }
@@ -180,6 +188,8 @@ const StaffAccountManager = () => {
             <Th>Username</Th>
             <Th>Password</Th>
             <Th>Name</Th>
+            <Th>Phone</Th>
+            <Th>Email</Th>
             <Th>Status</Th>
             <Th>Actions</Th>
           </Tr>
@@ -190,6 +200,8 @@ const StaffAccountManager = () => {
               <Td>{staff.username}</Td>
               <Td>{staff.password}</Td>
               <Td>{staff.name}</Td>
+              <Td>{staff.phone}</Td> {/* Added Phone */}
+              <Td>{staff.email}</Td> {/* Added Email */}
               <Td>
                 <Switch
                   isChecked={staff.status}
@@ -235,6 +247,22 @@ const StaffAccountManager = () => {
               }
               mb={3}
             />
+            <Input
+              placeholder="Phone"
+              value={selectedStaff?.phone || ""}
+              onChange={(e) =>
+                setSelectedStaff((prev) => ({ ...prev, phone: e.target.value }))
+              }
+              mb={3}
+            />
+            <Input
+              placeholder="Email"
+              value={selectedStaff?.email || ""}
+              onChange={(e) =>
+                setSelectedStaff((prev) => ({ ...prev, email: e.target.value }))
+              }
+              mb={3}
+            />
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleUpdateStaff}>
@@ -276,6 +304,22 @@ const StaffAccountManager = () => {
               value={newStaff.name}
               onChange={(e) =>
                 setNewStaff((prev) => ({ ...prev, name: e.target.value }))
+              }
+              mb={3}
+            />
+            <Input
+              placeholder="Phone"
+              value={newStaff.phone}
+              onChange={(e) =>
+                setNewStaff((prev) => ({ ...prev, phone: e.target.value }))
+              }
+              mb={3}
+            />
+            <Input
+              placeholder="Email"
+              value={newStaff.email}
+              onChange={(e) =>
+                setNewStaff((prev) => ({ ...prev, email: e.target.value }))
               }
               mb={3}
             />
