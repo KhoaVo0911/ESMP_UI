@@ -56,6 +56,7 @@ import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import RegisterHostComponent from "./pages/RegisterHost.jsx";
 import DashboardAdmin from "./components/admin/AdminDashboard.jsx";
+import VendorProfile from "./components/vendor/Layout/VendorProfile.jsx";
 
 const AppRoutes = () => {
   return (
@@ -86,6 +87,17 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <VendorLayout>
               <BoothPlanView />
+            </VendorLayout>
+          </ProtectedRoute>
+        }
+      />
+
+<Route
+        path="/vendor-profile"
+        element={
+          <ProtectedRoute>
+            <VendorLayout>
+              <VendorProfile />
             </VendorLayout>
           </ProtectedRoute>
         }

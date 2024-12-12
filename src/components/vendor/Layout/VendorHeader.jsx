@@ -136,7 +136,9 @@ const VendorHeader = ({ collapsed }) => {
             </Flex>
           </MenuButton>
           <MenuList boxShadow="lg" borderRadius="lg" padding="12px">
-            <MenuItem fontSize="md" fontWeight="700" color="gray.700">
+            <MenuItem fontSize="md" fontWeight="700" color="gray.700"  onClick={() => navigate("/vendor-profile",{
+                state: { vendorId: vendorId},
+              })}>
               👋 Hey, {vendorName}
             </MenuItem>
             <MenuItem
