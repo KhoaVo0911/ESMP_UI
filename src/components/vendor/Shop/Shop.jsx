@@ -128,6 +128,16 @@ const Shop = () => {
       console.error("Error fetching products", error);
     }
   };
+  const clearCart = () => {
+    setCart([]); // Xóa tất cả các sản phẩm trong giỏ hàng
+    toast({
+      title: "Cart Cleared",
+      description: "All items have been removed from the cart.",
+      status: "info",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
 
   const fetchMenuItems = async () => {
     try {
@@ -187,21 +197,36 @@ const Shop = () => {
     await fetchVendorInEventStatus();
   };
 
-  const addToCart = (product) => {
+  const addToCart = (product,productItemIds) => {
     setCart((prevCart) => {
       const existingProductIndex = prevCart.findIndex(
         (cartItem) => cartItem.productItemId === product.productItemId
       );
-
+  
       if (existingProductIndex !== -1) {
         const updatedCart = [...prevCart];
         updatedCart[existingProductIndex].quantity += product.quantity;
+        toast({
+          title: "Product Updated",
+          description: `Increased quantity of ${product.name} by ${product.quantity}.`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
         return updatedCart;
       } else {
+        toast({
+          title: "Product Added",
+          description: `Added ${product.quantity} x ${product.name} to the cart.`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
         return [...prevCart, { ...product }];
       }
     });
   };
+  
 
   const onOpenCartWithSessionData = () => {
     if (vendorInEventStatus !== "finished") {
@@ -382,19 +407,21 @@ const Shop = () => {
           <DrawerContent maxWidth="700px">
             <DrawerHeader>Cart</DrawerHeader>
             <DrawerBody>
-              <Cart
-                cartItems={cart}
-                updateQuantity={(index, newQuantity) =>
-                  setCart((prevCart) => {
-                    const updatedCart = [...prevCart];
-                    updatedCart[index].quantity = newQuantity;
-                    return updatedCart;
-                  })
-                }
-                removeItem={(index) =>
-                  setCart((prevCart) => prevCart.filter((_, i) => i !== index))
-                }
-              />
+            <Cart
+  cartItems={cart}
+  updateQuantity={(index, newQuantity) =>
+    setCart((prevCart) => {
+      const updatedCart = [...prevCart];
+      updatedCart[index].quantity = newQuantity;
+      return updatedCart;
+    })
+  }
+  removeItem={(index) =>
+    setCart((prevCart) => prevCart.filter((_, i) => i !== index))
+  }
+  clearCart={clearCart} // Gọi hàm clearCart
+/>
+
             </DrawerBody>
             <DrawerFooter>
               <Button colorScheme="teal" onClick={onCloseCart}>

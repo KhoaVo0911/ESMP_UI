@@ -14,7 +14,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ref, getDownloadURL } from "firebase/storage";
 import { storage } from "./../../../shared/firebase/firebaseConfig";
 
-const Cart = ({ cartItems, updateQuantity, removeItem }) => {
+const Cart = ({ cartItems, updateQuantity, removeItem, clearCart }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -123,10 +123,18 @@ const Cart = ({ cartItems, updateQuantity, removeItem }) => {
       </Box>
 
       <HStack justify="center" mt={8}>
-        <Button colorScheme="blue" onClick={handleConfirm}>
+        <Button
+          colorScheme="blue"
+          onClick={handleConfirm}
+          isDisabled={cartItems.length === 0}
+        >
           Confirm
         </Button>
-        <Button colorScheme="red" onClick={() => removeItem()}>
+        <Button
+          colorScheme="red"
+          onClick={clearCart}
+          isDisabled={cartItems.length === 0}
+        >
           Clear All
         </Button>
       </HStack>

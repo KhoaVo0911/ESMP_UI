@@ -12,17 +12,22 @@ import {
   Image,
   IconButton,
   Tooltip,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
   FormErrorMessage,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { InfoIcon } from "@chakra-ui/icons";
-import * as Yup from "yup"; // Import Yup
-import regiser from "../assets/images/register.png";
-import projectLogo from "../assets/images/trans_bg.png";
+import { InfoIcon, CheckIcon } from "@chakra-ui/icons";
+import * as Yup from "yup";
 import tree from "../assets/images/tree.png";
 
-// Schema validation với Yup
+// Schema validation with Yup
 const validationSchema = Yup.object({
   name: Yup.string().required("Full name is required."),
   username: Yup.string()
@@ -31,9 +36,7 @@ const validationSchema = Yup.object({
       "Username must be between 8 - 40 characters and start with only letters and contain only letters, numbers, and hyphens."
     )
     .required("Username is required."),
-  email: Yup.string()
-    .email("Invalid email format")
-    .required("Email is required."),
+  email: Yup.string().email("Invalid email format").required("Email is required."),
   phone: Yup.string().required("Phone number is required."),
   password: Yup.string()
     .matches(
@@ -53,10 +56,10 @@ const RegisterHostComponent = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   const navigate = useNavigate();
 
-  // Hàm để kiểm tra và cập nhật giá trị form
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
@@ -66,36 +69,33 @@ const RegisterHostComponent = () => {
     event.preventDefault();
     setLoading(true);
     setError(null);
-  
+
     try {
-      // Validate dữ liệu trước khi gửi
       await validationSchema.validate(formData, { abortEarly: false });
-  
+
       const currentDate = new Date();
       const expiretime = new Date(
         currentDate.setFullYear(currentDate.getFullYear() + 1)
-      ).toISOString(); // Tính expiretime
-  
+      ).toISOString();
+
       const apiUrl = "https://esmpbe.id.vn/api/user/register";
-  
-      // Gửi request đăng ký
+
       const response = await axios.post(apiUrl, {
         username: formData.username,
         password: formData.password,
         email: formData.email,
         phone: formData.phone,
-        name: formData.name, // Truyền tên người dùng
-        expiretime, // Thêm expiretime
+        name: formData.name,
+        expiretime,
       });
-  
+
       const { message } = response.data;
-  
-      // Sau khi đăng ký thành công, gọi API thông báo
+
       const notificationApiUrl = `https://esmpbe.id.vn/api/user/notification`;
       await axios.post(notificationApiUrl, {
-        source: `${formData.username} has successfully registered an account`, // Thông báo bằng tiếng Anh
+        source: `${formData.username} has successfully registered an account`,
       });
-  
+
       toast({
         title: "Registration Successful",
         description: message || "Host account created successfully.",
@@ -104,8 +104,8 @@ const RegisterHostComponent = () => {
         isClosable: true,
         position: "top",
       });
-  
-      navigate("/login");
+
+      onOpen(); // Open the confirmation modal
     } catch (err) {
       if (err.name === "ValidationError") {
         setError(err.errors);
@@ -124,11 +124,9 @@ const RegisterHostComponent = () => {
       setLoading(false);
     }
   };
-  
+
   return (
     <Box display="flex" height="100vh" position="relative">
-      
-
       <Box
         flex="1"
         display="flex"
@@ -138,7 +136,6 @@ const RegisterHostComponent = () => {
         boxShadow="lg"
         borderRadius="lg"
         padding={8}
-        position="relative"
       >
         <Box width="100%" maxWidth="400px">
           <Text fontSize="2xl" fontWeight="bold" mb={2}>
@@ -254,7 +251,7 @@ const RegisterHostComponent = () => {
           <Divider my={4} />
 
           <Text fontSize="sm" color="gray.500" textAlign="center" mt={4}>
-            Already have an account?{" "}
+            Already have an account? {" "}
             <Text
               as="span"
               color="blue.500"
@@ -276,6 +273,41 @@ const RegisterHostComponent = () => {
           maxWidth="150px"
         />
       </Box>
+
+      {/* Confirmation Modal */}
+      <Modal isOpen={isOpen} onClose={() => {}} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Account Registration Successful</ModalHeader>
+          <ModalBody>
+            <Text fontSize="lg" mb={4}>
+              Your account has been successfully registered and forwarded to the
+              Admin.
+            </Text>
+            <Text fontSize="md" mb={6}>
+              Please contact the Admin to activate your account.
+            </Text>
+            <Box textAlign="center" mb={4}>
+              <IconButton
+                icon={<CheckIcon />}
+                aria-label="Success"
+                colorScheme="green"
+                size="lg"
+                isRound
+              />
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="blue"
+              onClick={() => navigate("/login")}
+              width="100%"
+            >
+              OK
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

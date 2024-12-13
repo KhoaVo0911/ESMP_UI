@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Image, Text, IconButton, VStack, HStack } from "@chakra-ui/react";
+import { Box, Image, Text, IconButton, VStack, HStack, Input } from "@chakra-ui/react";
 import { AddIcon, MinusIcon } from "@chakra-ui/icons";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { storage } from "./../../../shared/firebase/firebaseConfig";
@@ -7,7 +7,6 @@ import { ref, getDownloadURL } from "firebase/storage";
 
 const ProductCard = ({ product, addToCart }) => {
   const [selectedQuantity, setSelectedQuantity] = useState(1);
-  const [selected, setSelected] = useState(false);
   const [imageUrl, setImageUrl] = useState(product.imageUrl || "https://via.placeholder.com/150");
 
   useEffect(() => {
@@ -38,8 +37,6 @@ const ProductCard = ({ product, addToCart }) => {
     }
   };
 
-  const toggleSelected = () => setSelected(!selected);
-
   const handleAddToCart = (e) => {
     e.stopPropagation();
     addToCart({ ...product, quantity: selectedQuantity });
@@ -54,83 +51,84 @@ const ProductCard = ({ product, addToCart }) => {
 
   return (
     <Box
-      maxW="sm"
+      maxW="250px"
       borderWidth="1px"
       borderRadius="lg"
       overflow="hidden"
       p="4"
       textAlign="center"
-      background={selected ? "linear-gradient(135deg,#3B5284 1%, #5BA8A0 120%)" : "white"}
-      boxShadow="md"
-      transition="all 0.3s ease"
-      onClick={toggleSelected}
+      bg="white"
+      boxShadow="lg"
+      transition="transform 0.3s ease, box-shadow 0.3s ease"
+    
       cursor="pointer"
-      maxHeight="400px" // Đặt chiều cao tối đa cho các thẻ
       display="flex"
       flexDirection="column"
       justifyContent="space-between"
-      position="relative"
-      width="200px"
+      alignItems="center"
     >
       <Image
         src={imageUrl}
         alt={product.name}
-        boxSize="120px"
-        borderRadius="full"
-        mx="auto"
-        my={2}
+        boxSize="150px"
+        borderRadius="md"
+        objectFit="cover"
+        mb={4}
       />
-      <Text fontWeight="bold" fontSize="xl" color={selected ? "white" : "black"} mt={3}>
-        {product.name}
-      </Text>
-      <Text fontWeight="bold" fontSize="lg" color={selected ? "white" : "gray.600"}>
-        {formatPrice(product.price)}
-      </Text>
+      <VStack spacing={2} alignItems="center">
+        <Text fontWeight="bold" fontSize="lg" color="gray.700">
+          {product.name}
+        </Text>
+        <Text fontWeight="semibold" fontSize="md" color="gray.500">
+          {formatPrice(product.price)}
+        </Text>
+      </VStack>
 
-      {/* Phần chi tiết có overflowY để cuộn nếu quá dài */}
-      <VStack align="start" spacing={1} mt={2} maxHeight="100px" overflowY="auto">
-        <Text fontWeight="bold" color={selected ? "white" : "gray.700"}>Details:</Text>
+      <VStack align="start" spacing={1} mt={4} maxHeight="80px" overflowY="auto" width="100%">
+        <Text fontWeight="bold" fontSize="sm" color="gray.600">
+          Details:
+        </Text>
         {product.details.map((detail, index) => (
-          <Text key={index} fontSize="sm" color={selected ? "white" : "gray.600"}>
+          <Text key={index} fontSize="sm" color="gray.600">
             - {detail.name} x {detail.quantity} {detail.unit}
           </Text>
         ))}
       </VStack>
 
-      {selected ? (
-        <HStack spacing={2} justifyContent="center" mt={4}>
-          <IconButton
-            icon={<MinusIcon boxSize={4} />}
-            size="sm"
-            onClick={handleRemove}
-            aria-label="Decrease quantity"
-            background="none"
-            color="white"
-            _hover={{ bg: "whiteAlpha.300" }}
-          />
-          <Text fontSize="lg" color="white">{selectedQuantity}</Text>
-          <IconButton
-            icon={<AddIcon boxSize={4} />}
-            size="sm"
-            onClick={handleAdd}
-            aria-label="Increase quantity"
-            background="none"
-            color="white"
-            _hover={{ bg: "whiteAlpha.300" }}
-          />
-          <IconButton
-            icon={<ShoppingCartIcon style={{ fontSize: "20px" }} />}
-            size="sm"
-            onClick={handleAddToCart}
-            aria-label="Add to Cart"
-            background="none"
-            color="white"
-            _hover={{ bg: "whiteAlpha.300" }}
-          />
-        </HStack>
-      ) : (
-        <Box height="40px" />
-      )}
+      <HStack spacing={2} justifyContent="center" mt={4} width="100%">
+        <IconButton
+          icon={<MinusIcon boxSize={4} />}
+          size="sm"
+          onClick={handleRemove}
+          aria-label="Decrease quantity"
+          background="gray.200"
+        
+        />
+        <Input
+          type="number"
+          value={selectedQuantity}
+          onChange={(e) => setSelectedQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+          width="60px"
+          textAlign="center"
+          borderColor="gray.300"
+        />
+        <IconButton
+          icon={<AddIcon boxSize={4} />}
+          size="sm"
+          onClick={handleAdd}
+          aria-label="Increase quantity"
+     
+        />
+        <IconButton
+          icon={<ShoppingCartIcon style={{ fontSize: "20px" }} />}
+          size="sm"
+          onClick={handleAddToCart}
+          aria-label="Add to Cart"
+          background="teal.500"
+          color="white"
+         
+        />
+      </HStack>
     </Box>
   );
 };
