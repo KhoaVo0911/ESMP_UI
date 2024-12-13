@@ -283,6 +283,7 @@ import {
   Heading,
   useToast,
   Tooltip,
+  Select,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 
@@ -290,15 +291,14 @@ const CategorySection = () => {
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [categoryStatus, setCategoryStatus] = useState(true);
   const [canCreateCategory, setCanCreateCategory] = useState(false); // Check package status
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
-  // Retrieve hostId and accessToken from session storage
   const hostId = sessionStorage.getItem("hostId") || "";
   const accessToken = sessionStorage.getItem("accessToken") || "";
 
-  // Fetch categories from API
   const fetchCategories = async () => {
     try {
       const response = await axios.get(
@@ -322,7 +322,6 @@ const CategorySection = () => {
     }
   };
 
-  // Fetch Host Expire Time
   const fetchHostExpireTime = async () => {
     try {
       const response = await axios.get(
@@ -338,7 +337,7 @@ const CategorySection = () => {
       const { expiretime } = response.data;
       const currentTime = new Date();
       const expireDate = new Date(expiretime);
-      setCanCreateCategory(expireDate > currentTime); // Update canCreateCategory based on expiretime
+      setCanCreateCategory(expireDate > currentTime);
     } catch (error) {
       console.error("Error fetching host expiretime:", error);
     }
@@ -350,25 +349,26 @@ const CategorySection = () => {
   }, []);
 
   const handleOpenCreateCategory = () => {
-    if (!canCreateCategory) return; // Prevent opening modal if package expired
+    if (!canCreateCategory) return;
     setSelectedCategory(null);
     setNewCategory("");
+    setCategoryStatus(true);
     onOpen();
   };
 
   const handleOpenEditCategory = (category) => {
     setSelectedCategory(category);
     setNewCategory(category.categoryName);
+    setCategoryStatus(category.status);
     onOpen();
   };
 
   const handleSaveCategory = async () => {
     try {
       if (selectedCategory) {
-        // Update existing category
         await axios.put(
           `https://esmpbe.id.vn/api/category/${selectedCategory.categoryId}`,
-          { categoryName: newCategory, status: selectedCategory.status },
+          { categoryName: newCategory, status: categoryStatus },
           {
             headers: {
               Authorization: `${accessToken}`,
@@ -383,10 +383,9 @@ const CategorySection = () => {
           isClosable: true,
         });
       } else {
-        // Create new category
         await axios.post(
           "https://esmpbe.id.vn/api/category",
-          { categoryName: newCategory, hostid: hostId, status: true },
+          { categoryName: newCategory, hostid: hostId, status: categoryStatus },
           {
             headers: {
               Authorization: `${accessToken}`,
@@ -432,14 +431,23 @@ const CategorySection = () => {
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error deleting category:", error);
-      toast({
-        title: "Error deleting category",
-        description: "Could not delete the category.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      if (error.response && error.response.status === 400) {
+        toast({
+          title: "Error deleting category",
+          description: "Could not delete the category.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Cannot delete category",
+          description: "This category has been used and cannot be deleted.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
   };
 
@@ -461,7 +469,7 @@ const CategorySection = () => {
             colorScheme="blue"
             leftIcon={<AddIcon />}
             onClick={handleOpenCreateCategory}
-            disabled={!canCreateCategory} // Disable the button when package is expired
+            disabled={!canCreateCategory}
             style={{
               cursor: canCreateCategory ? "pointer" : "not-allowed",
               opacity: canCreateCategory ? 1 : 0.6,
@@ -545,13 +553,23 @@ const CategorySection = () => {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <FormControl>
+            <FormControl mb={4}>
               <FormLabel>Category Name</FormLabel>
               <Input
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
                 placeholder="Enter category name"
               />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Status</FormLabel>
+              <Select
+                value={categoryStatus}
+                onChange={(e) => setCategoryStatus(e.target.value === "true")}
+              >
+                <option value="true">ACTIVE</option>
+                <option value="false">INACTIVE</option>
+              </Select>
             </FormControl>
           </ModalBody>
           <ModalFooter>

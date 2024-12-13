@@ -37,6 +37,7 @@ import {
 } from "@chakra-ui/icons";
 import axios from "axios";
 import { useForm } from "react-hook-form";
+import { useToast } from "@chakra-ui/react";
 
 const API_GET_VENDORS = "https://esmpbe.id.vn/api/vendor/host";
 const API_VENDOR = "https://esmpbe.id.vn/api/vendor";
@@ -44,6 +45,7 @@ const API_SEND_EMAIL = "https://esmpbe.id.vn/api/mail/send-email";
 const API_HOST = "https://esmpbe.id.vn/api/host";
 
 const AccountManagement = () => {
+  const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isDetailOpen,
@@ -83,6 +85,7 @@ const AccountManagement = () => {
           "Content-Type": "application/json",
         },
       });
+
       setAccounts(response.data);
     } catch (error) {
       console.error("Error fetching vendors:", error);
@@ -201,13 +204,29 @@ const AccountManagement = () => {
           },
         }
       );
+      toast({
+        title: "Email sent successfully.",
+        description: `An email has been sent to ${account.email}.`,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
     } catch (error) {
       console.error("Error sending email:", error);
+
+      // Show error toast
+      toast({
+        title: "Failed to send email.",
+        description:
+          "There was an error while sending the email. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setSendingEmail(false);
     }
   };
-
   // Fetch Host Expire Time
   const fetchHostExpireTime = async () => {
     try {

@@ -1,4 +1,3 @@
-// src/components/ThemeEventSection.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -67,9 +66,8 @@ const ThemeEventSection = () => {
 
   useEffect(() => {
     fetchThemes();
-  }, [themes]);
+  }, []);
 
-  // Fetch Host Expire Time
   const fetchHostExpireTime = async () => {
     try {
       const response = await axios.get(
@@ -85,7 +83,7 @@ const ThemeEventSection = () => {
       const { expiretime } = response.data;
       const currentTime = new Date();
       const expireDate = new Date(expiretime);
-      setCanCreateTheme(expireDate > currentTime); // Update canCreateTheme based on expiretime
+      setCanCreateTheme(expireDate > currentTime);
     } catch (error) {
       console.error("Error fetching host expiretime:", error);
     }
@@ -96,10 +94,9 @@ const ThemeEventSection = () => {
     fetchHostExpireTime();
   }, []);
 
-  // Open the modal to add or edit a theme
   const openModal = (theme = null) => {
     if (theme) {
-      setEditingTheme(theme); // Set the theme to be edited
+      setEditingTheme(theme);
       setNewTheme(theme.name);
       setStatus(theme.status.toString());
     } else {
@@ -114,7 +111,6 @@ const ThemeEventSection = () => {
     if (newTheme.trim()) {
       try {
         if (editingTheme) {
-          // Update existing theme
           await axios.put(
             `https://esmpbe.id.vn/api/theme/${editingTheme.themeId}`,
             {
@@ -137,7 +133,6 @@ const ThemeEventSection = () => {
             isClosable: true,
           });
         } else {
-          // Create a new theme
           await axios.post(
             "https://esmpbe.id.vn/api/theme",
             {
@@ -161,8 +156,8 @@ const ThemeEventSection = () => {
           });
         }
 
-        fetchThemes(); // Refresh the themes list
-        onClose(); // Close the modal
+        fetchThemes();
+        onClose();
         setNewTheme("");
         setStatus("true");
         setEditingTheme(null);
@@ -196,13 +191,23 @@ const ThemeEventSection = () => {
         isClosable: true,
       });
     } catch (error) {
-      toast({
-        title: "Error deleting theme",
-        description: "Could not delete theme.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      if (error.response && error.response.status === 400) {
+        toast({
+          title: "Error deleting theme",
+          description: "Could not delete theme.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Cannot delete theme",
+          description: "This theme has been used and cannot be deleted.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
   };
 
@@ -225,7 +230,7 @@ const ThemeEventSection = () => {
             onClick={() => openModal()}
             size="md"
             leftIcon={<AddIcon />}
-            disabled={!canCreateTheme} // Disable button if package expired
+            disabled={!canCreateTheme}
             style={{
               cursor: canCreateTheme ? "pointer" : "not-allowed",
               opacity: canCreateTheme ? 1 : 0.6,
@@ -276,7 +281,7 @@ const ThemeEventSection = () => {
                     size="sm"
                     mr={2}
                     onClick={() => openModal(theme)}
-                    isDisabled={!canCreateTheme} // Disable if package expired
+                    isDisabled={!canCreateTheme}
                   >
                     Edit
                   </Button>
@@ -293,7 +298,7 @@ const ThemeEventSection = () => {
                     colorScheme="red"
                     size="sm"
                     onClick={() => handleDeleteTheme(theme.themeId)}
-                    isDisabled={!canCreateTheme} // Disable if package expired
+                    isDisabled={!canCreateTheme}
                   >
                     Delete
                   </Button>
@@ -304,7 +309,6 @@ const ThemeEventSection = () => {
         </Tbody>
       </Table>
 
-      {/* Modal for Add/Edit */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -325,8 +329,8 @@ const ThemeEventSection = () => {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
-                <option value="true">Available</option>
-                <option value="false">Inactive</option>
+                <option value="true">ACTIVE</option>
+                <option value="false">INACTIVE</option>
               </Select>
             </FormControl>
           </ModalBody>

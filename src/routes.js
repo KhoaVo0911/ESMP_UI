@@ -57,6 +57,8 @@ import ResetPassword from "./pages/ResetPassword.jsx";
 import RegisterHostComponent from "./pages/RegisterHost.jsx";
 import DashboardAdmin from "./components/admin/AdminDashboard.jsx";
 import VendorProfile from "./components/vendor/Layout/VendorProfile.jsx";
+import Page403 from "./shared/Page403.jsx";
+import Page404 from "./shared/Page404.jsx";
 
 const AppRoutes = () => {
   return (
@@ -71,10 +73,13 @@ const AppRoutes = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/register-host" element={<RegisterHostComponent />} />
       {/* <Route path="/reset-password/:accountId" element={<ResetPassword />} /> */}
+      <Route path="/403" element={<Page403 />} />
+      <Route path="*" element={<Page404 />} />
+
       <Route
         path="/manage-product/:vendorId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <ManageProducts />
             </VendorLayout>
@@ -84,7 +89,7 @@ const AppRoutes = () => {
       <Route
         path="/map-sample"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <BoothPlanView />
             </VendorLayout>
@@ -92,10 +97,10 @@ const AppRoutes = () => {
         }
       />
 
-<Route
+      <Route
         path="/vendor-profile"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <VendorProfile />
             </VendorLayout>
@@ -105,7 +110,7 @@ const AppRoutes = () => {
       <Route
         path="/listEventEnrolled/:vendorId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <ListEventEnrolled />
             </VendorLayout>
@@ -115,7 +120,7 @@ const AppRoutes = () => {
       <Route
         path="/staff-account-manager/:vendorId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <StaffAccountManager />
             </VendorLayout>
@@ -125,7 +130,7 @@ const AppRoutes = () => {
       <Route
         path="/selectbooth/:vendorId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <SelectBoothPage />
             </VendorLayout>
@@ -135,7 +140,7 @@ const AppRoutes = () => {
       <Route
         path="/:vendorId/dashboardVendor"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <DashboardVendor />
           </ProtectedRoute>
         }
@@ -143,7 +148,7 @@ const AppRoutes = () => {
       <Route
         path="/qrcodecodecode"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <TestQRCODE />
             </VendorLayout>
@@ -153,7 +158,7 @@ const AppRoutes = () => {
       <Route
         path="/:hostId/dashboard"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <Dashboard />
             </HostLayout>
@@ -167,7 +172,7 @@ const AppRoutes = () => {
       <Route
         path="/events/:vendorId/:eventId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <EventPage />
             </VendorLayout>
@@ -177,7 +182,7 @@ const AppRoutes = () => {
       <Route
         path="/productsList/:vendorId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <ListProducts />
             </VendorLayout>
@@ -188,7 +193,7 @@ const AppRoutes = () => {
       <Route
         path="/accountList"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <AdminAccountManagement />
             </AdminLayout>
@@ -198,7 +203,7 @@ const AppRoutes = () => {
       <Route
         path="/adtransaction"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <AdminTransactionHistory />
             </AdminLayout>
@@ -208,7 +213,7 @@ const AppRoutes = () => {
       <Route
         path="/ManageProductItems"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <ManageProductItems />
             </VendorLayout>
@@ -218,7 +223,7 @@ const AppRoutes = () => {
       <Route
         path="/events/host/:hostId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <Event />
             </HostLayout>
@@ -228,7 +233,7 @@ const AppRoutes = () => {
       <Route
         path="/event-detail/:eventId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <EventDetails />
             </HostLayout>
@@ -238,7 +243,7 @@ const AppRoutes = () => {
       <Route
         path="/eventsVendor/:vendorId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <EventVendor />
             </VendorLayout>
@@ -248,7 +253,7 @@ const AppRoutes = () => {
       <Route
         path="/eventStaff/:vendorId/:staffId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["staff"]}>
             <StaffLayout>
               <EventStaff />
             </StaffLayout>
@@ -258,7 +263,7 @@ const AppRoutes = () => {
       <Route
         path="/eventStaff/:vendorId/:staffId/:eventId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["staff"]}>
             <StaffLayout>
               <EventPageStaff />
             </StaffLayout>
@@ -268,7 +273,7 @@ const AppRoutes = () => {
       <Route
         path="/transaction"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <Transaction />
             </VendorLayout>
@@ -278,7 +283,7 @@ const AppRoutes = () => {
       <Route
         path="/eventenrolled/:vendorId/:eventId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <EventEnrolled />
             </VendorLayout>
@@ -288,7 +293,7 @@ const AppRoutes = () => {
       <Route
         path="/Shop/:vendorId/:eventId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <Shop />
             </VendorLayout>
@@ -298,7 +303,7 @@ const AppRoutes = () => {
       <Route
         path="/StaffShop/:vendorId/:staffId/:eventId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["staff"]}>
             <StaffLayout>
               <StaffShop />
             </StaffLayout>
@@ -308,7 +313,7 @@ const AppRoutes = () => {
       <Route
         path="/staff-payment/:vendorId/:staffId/:eventId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["staff"]}>
             <StaffLayout>
               <StaffPayment />
             </StaffLayout>
@@ -318,7 +323,7 @@ const AppRoutes = () => {
       <Route
         path="/staff-ordered-list/:vendorId/:staffId/:eventId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["staff"]}>
             <StaffLayout>
               <StaffOrderedList />
             </StaffLayout>
@@ -328,7 +333,7 @@ const AppRoutes = () => {
       <Route
         path="/admin-package"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <PackageAdmin />
             </AdminLayout>
@@ -338,7 +343,7 @@ const AppRoutes = () => {
       <Route
         path="/host-package-info"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostPackageInfo />
           </ProtectedRoute>
         }
@@ -346,7 +351,7 @@ const AppRoutes = () => {
       <Route
         path="/ordered-list/:vendorId/:eventId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <OrderedList />
             </VendorLayout>
@@ -356,7 +361,7 @@ const AppRoutes = () => {
       <Route
         path="/payment/:vendorId/:eventId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["vendor"]}>
             <VendorLayout>
               <Payment />
             </VendorLayout>
@@ -366,7 +371,7 @@ const AppRoutes = () => {
       <Route
         path="/eventpayment/:eventId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <Transaction />
             </HostLayout>
@@ -376,7 +381,7 @@ const AppRoutes = () => {
       <Route
         path="/package-trans"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <PackageTransactionHistory />
             </HostLayout>
@@ -386,7 +391,7 @@ const AppRoutes = () => {
       <Route
         path="/manage-product"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <ManageProduct />
             </HostLayout>
@@ -396,7 +401,7 @@ const AppRoutes = () => {
       <Route
         path="/event/:eventId/booth-plan"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <LocationMap />
             </HostLayout>
@@ -406,7 +411,7 @@ const AppRoutes = () => {
       <Route
         path="/event/:eventId/booth-plan/:mode"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <BoothPlan />
             </HostLayout>
@@ -416,7 +421,7 @@ const AppRoutes = () => {
       <Route
         path="/event/:eventId/location-type"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <LocationTypePage />
             </HostLayout>
@@ -426,7 +431,7 @@ const AppRoutes = () => {
       <Route
         path="/eventconfig"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <EventConfigPage />
             </HostLayout>
@@ -436,7 +441,7 @@ const AppRoutes = () => {
       <Route
         path="/event/:eventId/extensionEvent"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <ExtensionEvent />
             </HostLayout>
@@ -446,7 +451,7 @@ const AppRoutes = () => {
       <Route
         path="/accounts"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <AccountManagement />
             </HostLayout>
@@ -456,7 +461,7 @@ const AppRoutes = () => {
       <Route
         path="/settings/:hostId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <Settings />
             </HostLayout>
@@ -466,7 +471,7 @@ const AppRoutes = () => {
       <Route
         path="/packages"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <PackagePage />
             </HostLayout>
@@ -476,7 +481,7 @@ const AppRoutes = () => {
       <Route
         path="/view-website"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["host"]}>
             <HostLayout>
               <ViewWebsitePage />
             </HostLayout>
@@ -486,13 +491,14 @@ const AppRoutes = () => {
       <Route
         path="/dashboard-admin"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["admin"]}>
             <AdminLayout>
               <DashboardAdmin />
             </AdminLayout>
           </ProtectedRoute>
-        } />
-        </Routes>
+        }
+      />
+    </Routes>
   );
 };
 

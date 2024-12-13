@@ -278,9 +278,10 @@ import {
   FormErrorMessage,
   Flex,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
-import { ChromePicker } from "react-color"; // Import react-color library
+import { ChromePicker } from "react-color";
 
 const API_BASE_URL = "https://esmpbe.id.vn/api/map";
 
@@ -289,20 +290,19 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
   const [editingType, setEditingType] = useState(null);
   const [typeName, setTypeName] = useState("");
   const [price, setPrice] = useState("");
-  const [color, setColor] = useState("#ffffff"); // Default to white color
+  const [color, setColor] = useState("#ffffff");
   const [status, setStatus] = useState("active");
   const [errors, setErrors] = useState({
     typeName: "",
     price: "",
     color: "",
   });
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const typesPerPage = 3; // Show 5 items per page
+  const typesPerPage = 3;
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
-
-  // Fetch Location Types
   const fetchLocationTypes = async () => {
     if (eventId && hostId) {
       try {
@@ -316,7 +316,14 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
         );
         setLocationTypes(response.data);
       } catch (error) {
-        console.error("Error fetching location types:", error);
+        toast({
+          title: "Error fetching location types",
+          description:
+            error.response?.data?.message || "Could not load location types.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
     }
   };
@@ -325,20 +332,18 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
     fetchLocationTypes();
   }, [eventId, hostId]);
 
-  // Calculate total pages and slice the data for pagination
   const totalPages = Math.ceil(locationTypes.length / typesPerPage);
   const indexOfLastType = currentPage * typesPerPage;
   const indexOfFirstType = indexOfLastType - typesPerPage;
   const currentTypes = locationTypes.slice(indexOfFirstType, indexOfLastType);
 
-  // Check if the color already exists in the location types
   const isColorDuplicate = (color) => {
     return locationTypes.some((type) => type.color === color);
   };
 
-  // Handle form validation and save
   const handleSave = async () => {
     let formErrors = {};
+
     if (!typeName) {
       formErrors.typeName = "Type name is required.";
     }
@@ -353,14 +358,13 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
 
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
-      return; // Stop saving if there are errors
+      return;
     }
 
     try {
       if (editingType) {
-        // Edit Location Type (PUT)
         await axios.put(
-          `${API_BASE_URL}/locationType/${editingType.typeId}`, // Update URL with typeId
+          `${API_BASE_URL}/locationType/${editingType.typeId}`,
           { typeName, price: parseFloat(price), color, status },
           {
             headers: {
@@ -369,8 +373,14 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
             },
           }
         );
+        toast({
+          title: "Location type updated",
+          description: "The location type has been updated successfully.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
       } else {
-        // Create New Location Type (POST)
         await axios.post(
           `${API_BASE_URL}/locationType/${hostId}/${eventId}`,
           { typeName, price: parseFloat(price), color, status },
@@ -381,28 +391,54 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
             },
           }
         );
+        toast({
+          title: "Location type created",
+          description: "A new location type has been created successfully.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
       }
       fetchLocationTypes();
       onClose();
       resetForm();
     } catch (error) {
-      console.error("Error saving location type:", error);
+      toast({
+        title: "Error saving location type",
+        description:
+          error.response?.data?.message || "Could not save the location type.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
   const handleDelete = async (typeId) => {
     try {
-      await axios.delete(
-        `${API_BASE_URL}/locationType/${hostId}/${eventId}/${typeId}`,
-        {
-          headers: {
-            Authorization: sessionStorage.getItem("accessToken"),
-          },
-        }
-      );
+      await axios.delete(`${API_BASE_URL}/locationType/${typeId}`, {
+        headers: {
+          Authorization: sessionStorage.getItem("accessToken"),
+        },
+      });
       fetchLocationTypes();
+      toast({
+        title: "Location type deleted",
+        description: "The location type has been deleted successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
-      console.error("Error deleting location type:", error);
+      toast({
+        title: "Error deleting location type",
+        description:
+          error.response?.data?.message ||
+          "Could not delete the location type.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -410,7 +446,7 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
     setEditingType(type);
     setTypeName(type.typeName);
     setPrice(type.price);
-    setColor(type.color); // Set current color when editing
+    setColor(type.color);
     setStatus(type.status);
     onOpen();
   };
@@ -419,7 +455,7 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
     setEditingType(null);
     setTypeName("");
     setPrice("");
-    setColor("#ffffff"); // Reset to default color (white)
+    setColor("#ffffff");
     setStatus("active");
     setErrors({
       typeName: "",
@@ -485,7 +521,6 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
         </Tbody>
       </Table>
 
-      {/* Pagination */}
       <Flex justifyContent="flex-end" mt={4}>
         {Array.from({ length: totalPages }, (_, i) => (
           <Button
@@ -499,7 +534,6 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
         ))}
       </Flex>
 
-      {/* Popup Form */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent maxHeight="80vh" overflow="hidden">

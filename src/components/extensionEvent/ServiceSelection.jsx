@@ -20,6 +20,7 @@ import {
   FormLabel,
   Input,
   FormErrorMessage,
+  useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
 
@@ -32,23 +33,17 @@ const ServiceManagement = ({ eventId }) => {
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
 
-  // State to track errors
   const [serviceNameError, setServiceNameError] = useState("");
   const [priceError, setPriceError] = useState("");
   const [quantityError, setQuantityError] = useState("");
 
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
 
   const [currentPage, setCurrentPage] = useState(1);
-  const typesPerPage = 3; // Show 5 items per page
+  const typesPerPage = 3;
 
-  // Fetch services list
   const fetchServices = async () => {
-    if (!eventId) {
-      alert("Event ID is required.");
-      return;
-    }
-
     try {
       const response = await axios.get(`${API_BASE_URL}/${eventId}`, {
         headers: {
@@ -57,12 +52,18 @@ const ServiceManagement = ({ eventId }) => {
       });
       setServices(response.data);
     } catch (error) {
-      console.error("Error fetching services:", error);
+      toast({
+        title: "Error fetching services",
+        description: "Could not load services.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
   useEffect(() => {
-    fetchServices();
+    if (eventId) fetchServices();
   }, [eventId]);
 
   const totalPages = Math.ceil(services.length / typesPerPage);
@@ -73,12 +74,10 @@ const ServiceManagement = ({ eventId }) => {
   const handleSave = async () => {
     let valid = true;
 
-    // Clear previous errors
     setServiceNameError("");
     setPriceError("");
     setQuantityError("");
 
-    // Validation checks
     if (!serviceName) {
       setServiceNameError("Service name is required.");
       valid = false;
@@ -98,7 +97,6 @@ const ServiceManagement = ({ eventId }) => {
 
     try {
       if (editingService) {
-        // Update service
         await axios.put(
           `${API_BASE_URL}/${editingService.serviceId}`,
           {
@@ -113,8 +111,14 @@ const ServiceManagement = ({ eventId }) => {
             },
           }
         );
+        toast({
+          title: "Service updated",
+          description: "The service has been updated successfully.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
       } else {
-        // Add new service
         await axios.post(
           `${API_BASE_URL}/${eventId}`,
           {
@@ -129,16 +133,26 @@ const ServiceManagement = ({ eventId }) => {
             },
           }
         );
+        toast({
+          title: "Service created",
+          description: "A new service has been created successfully.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
       }
-      await fetchServices(); // Fetch the updated list of services
-
-      // Save the latest service list to sessionStorage
-      sessionStorage.setItem("eventServices", JSON.stringify(services));
-
+      fetchServices();
       onClose();
       resetForm();
     } catch (error) {
-      console.error("Error saving service:", error);
+      toast({
+        title: "Error saving service",
+        description:
+          error.response?.data?.message || "Could not save the service.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -149,10 +163,23 @@ const ServiceManagement = ({ eventId }) => {
           Authorization: sessionStorage.getItem("accessToken"),
         },
       });
-      alert("Service deleted successfully!");
       fetchServices();
+      toast({
+        title: "Service deleted",
+        description: "The service has been deleted successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
-      console.error("Error deleting service:", error);
+      toast({
+        title: "Error deleting service",
+        description:
+          error.response?.data?.message || "Could not delete the service.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -191,34 +218,30 @@ const ServiceManagement = ({ eventId }) => {
           </Tr>
         </Thead>
         <Tbody>
-          {currentTypes.map(
-            (
-              service // Thay từ services.map thành currentTypes.map
-            ) => (
-              <Tr key={service.serviceId}>
-                <Td>{service.name}</Td>
-                <Td>{service.price}</Td>
-                <Td>{service.quantity}</Td>
-                <Td>
-                  <Button
-                    size="sm"
-                    colorScheme="teal"
-                    mr={2}
-                    onClick={() => handleEdit(service)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    colorScheme="red"
-                    onClick={() => handleDelete(service.serviceId)}
-                  >
-                    Delete
-                  </Button>
-                </Td>
-              </Tr>
-            )
-          )}
+          {currentTypes.map((service) => (
+            <Tr key={service.serviceId}>
+              <Td>{service.name}</Td>
+              <Td>{service.price}</Td>
+              <Td>{service.quantity}</Td>
+              <Td>
+                <Button
+                  size="sm"
+                  colorScheme="teal"
+                  mr={2}
+                  onClick={() => handleEdit(service)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme="red"
+                  onClick={() => handleDelete(service.serviceId)}
+                >
+                  Delete
+                </Button>
+              </Td>
+            </Tr>
+          ))}
         </Tbody>
       </Table>
 
@@ -235,7 +258,6 @@ const ServiceManagement = ({ eventId }) => {
         ))}
       </Flex>
 
-      {/* Popup Form */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
