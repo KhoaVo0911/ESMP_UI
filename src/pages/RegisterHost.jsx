@@ -305,7 +305,7 @@ import {
 } from "@chakra-ui/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { InfoIcon } from "@chakra-ui/icons";
+import { InfoIcon, CheckIcon } from "@chakra-ui/icons";
 import * as Yup from "yup"; // Import Yup
 import { useFormik } from "formik"; // Import Formik
 import regiser from "../assets/images/register.png";
@@ -393,6 +393,8 @@ const RegisterHostComponent = () => {
       }
     },
   });
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
     <Box display="flex" height="100vh" position="relative">
