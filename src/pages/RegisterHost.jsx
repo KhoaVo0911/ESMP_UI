@@ -294,6 +294,13 @@ import {
   Image,
   IconButton,
   Tooltip,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
   FormErrorMessage,
 } from "@chakra-ui/react";
 import axios from "axios";
@@ -305,7 +312,7 @@ import regiser from "../assets/images/register.png";
 import projectLogo from "../assets/images/trans_bg.png";
 import tree from "../assets/images/tree.png";
 
-// Schema validation với Yup
+// Schema validation with Yup
 const validationSchema = Yup.object({
   name: Yup.string().required("Full name is required."),
   username: Yup.string()
@@ -398,7 +405,6 @@ const RegisterHostComponent = () => {
         boxShadow="lg"
         borderRadius="lg"
         padding={8}
-        position="relative"
       >
         <Box width="100%" maxWidth="400px">
           <Text fontSize="2xl" fontWeight="bold" mb={2}>
@@ -486,6 +492,41 @@ const RegisterHostComponent = () => {
           maxWidth="150px"
         />
       </Box>
+
+      {/* Confirmation Modal */}
+      <Modal isOpen={isOpen} onClose={() => {}} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Account Registration Successful</ModalHeader>
+          <ModalBody>
+            <Text fontSize="lg" mb={4}>
+              Your account has been successfully registered and forwarded to the
+              Admin.
+            </Text>
+            <Text fontSize="md" mb={6}>
+              Please contact the Admin to activate your account.
+            </Text>
+            <Box textAlign="center" mb={4}>
+              <IconButton
+                icon={<CheckIcon />}
+                aria-label="Success"
+                colorScheme="green"
+                size="lg"
+                isRound
+              />
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="blue"
+              onClick={() => navigate("/login")}
+              width="100%"
+            >
+              OK
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

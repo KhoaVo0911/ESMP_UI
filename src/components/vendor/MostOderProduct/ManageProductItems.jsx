@@ -36,58 +36,58 @@ const ManageProducts = () => {
   const [productItems, setProductItems] = useState([]);
   const [details, setDetails] = useState([]);
   const [editingProductItem, setEditingProductItem] = useState(null);
-  const { register, handleSubmit, reset, setValue, formState: { errors }  } = useForm();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm();
   const toast = useToast();
   const accessToken = sessionStorage.getItem("accessToken") || "";
   const vendorId = sessionStorage.getItem("vendorId") || "";
   const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(""); // Image preview
-  const handleImageChange = (e) => {
-    if (e.target.files[0]) {
-      setImageFile(e.target.files[0]);
-      setImagePreview(URL.createObjectURL(e.target.files[0])); // Preview ảnh mới khi chọn
-    }
+  const [imagePreview, setImagePreview] = useState("");
+
+  // Reset modal and state
+  const resetForm = () => {
+    setDetails([]);
+    reset();
+    setImageFile(null);
+    setImagePreview("");
+    setEditingProductItem(null);
+    onClose();
   };
 
-  const uploadImage = async (productItemId) => {
-    if (!imageFile) return editingProductItem?.imageURL || null;
-    const imageRef = ref(storage, `${vendorId}/${productItemId}`);
-
-    // Xóa ảnh cũ nếu tồn tại
-    try {
-      await deleteObject(imageRef);
-    } catch (error) {
-      console.log("No existing image to delete or error deleting image:", error);
-    }
-
-    // Upload ảnh mới
-    await uploadBytes(imageRef, imageFile);
-    return await getDownloadURL(imageRef); // Trả về URL mới của ảnh
+  // Handle opening for adding a new product
+  const handleAddNewProduct = () => {
+    resetForm();
+    setValue("productName", "");
+    setValue("productPrice", "");
+    onOpen();
   };
 
-  const fetchImageURL = async (productItemId) => {
-    try {
-      const imageRef = ref(storage, `${vendorId}/${productItemId}`);
-      return await getDownloadURL(imageRef); // Lấy URL ảnh để hiển thị
-    } catch (error) {
-      console.error("Error fetching image URL:", error);
-      return "https://via.placeholder.com/150";
-    }
+  // Handle opening for editing a product
+  const handleEdit = (productItem) => {
+    setEditingProductItem(productItem);
+    setValue("productName", productItem.name);
+    setValue("productPrice", productItem.price);
+    setDetails(productItem.details);
+    setImagePreview(productItem.imageURL);
+    onOpen();
   };
 
+  // Fetch data for products and product items
   const fetchData = async () => {
     try {
-      const response = await axios.get(
-        `https://esmpbe.id.vn/api/product/${vendorId}`,
-        {
-          headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
-        }
-      );
+      const response = await axios.get(`https://esmpbe.id.vn/api/product/${vendorId}`, {
+        headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
+      });
       setProducts(response.data);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to fetch products from API.",
+        description: "Failed to fetch products.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -97,12 +97,9 @@ const ManageProducts = () => {
 
   const fetchProductItems = async () => {
     try {
-      const response = await axios.get(
-        `https://esmpbe.id.vn/api/productitem/${vendorId}`,
-        {
-          headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
-        }
-      );
+      const response = await axios.get(`https://esmpbe.id.vn/api/productitem/${vendorId}`, {
+        headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
+      });
 
       const itemsWithImages = await Promise.all(
         response.data.map(async (item) => {
@@ -115,7 +112,7 @@ const ManageProducts = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to fetch product items from API.",
+        description: "Failed to fetch product items.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -128,23 +125,72 @@ const ManageProducts = () => {
     fetchProductItems();
   }, []);
 
-  const addProductToDetails = (selectedProductId, selectedQuantity) => {
-    const quantity = Math.max(1, selectedQuantity);
-    const selectedProduct = products.find((p) => p.productId === selectedProductId);
-    if (selectedProduct && !details.find((d) => d.productId === selectedProduct.productId)) {
-      setDetails([...details, { productId: selectedProduct.productId, quantity, unit: "" }]);
-      setValue("productName", selectedProduct.productName);
-      setValue("productPrice", "");
+  const fetchImageURL = async (productItemId) => {
+    try {
+      const imageRef = ref(storage, `${vendorId}/${productItemId}`);
+      return await getDownloadURL(imageRef);
+    } catch (error) {
+      return "https://via.placeholder.com/150";
     }
   };
 
-  const removeProductFromDetails = (productId) => {
-    const updatedDetails = details.filter((d) => d.productId !== productId);
-    setDetails(updatedDetails);
-    setValue("productName", updatedDetails[0]?.productName || "");
-    setValue("productPrice", "");
+  const handleImageChange = (e) => {
+    if (e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+      setImagePreview(URL.createObjectURL(e.target.files[0]));
+    }
   };
 
+  const addProductToDetails = (selectedProductId, selectedQuantity) => {
+    const quantity = Math.max(1, selectedQuantity);
+    const selectedProduct = products.find((p) => p.productId === selectedProductId);
+  
+    if (selectedProduct) {
+      const existingDetail = details.find((d) => d.productId === selectedProduct.productId);
+  
+      // Reset tên sản phẩm một lần duy nhất nếu danh sách hiện tại trống
+      if (details.length === 0) {
+        setValue("productName", selectedProduct.productName);
+      } else if (details.length === 1) {
+        // Nếu đã có một sản phẩm, xóa trường Product Name
+        setValue("productName", "");
+      }
+  
+      if (!existingDetail) {
+        setDetails([...details, { productId: selectedProduct.productId, quantity, unit: "" }]);
+      } else {
+        setDetails((prevDetails) =>
+          prevDetails.map((d) =>
+            d.productId === selectedProduct.productId
+              ? { ...d, quantity: d.quantity + quantity }
+              : d
+          )
+        );
+      }
+    }
+  };
+  
+
+  const removeProductFromDetails = (productId) => {
+    setDetails(details.filter((d) => d.productId !== productId));
+  };
+
+  const uploadImage = async (productItemId) => {
+    if (!imageFile) return editingProductItem?.imageURL || null;
+    const imageRef = ref(storage, `${vendorId}/${productItemId}`);
+  
+    try {
+      await deleteObject(imageRef); // Xóa ảnh cũ nếu tồn tại
+    } catch (error) {
+      console.error("Error deleting previous image:", error);
+    }
+  
+    await uploadBytes(imageRef, imageFile);
+    const newImageURL = await getDownloadURL(imageRef); // URL ảnh mới
+    setImagePreview(newImageURL); // Cập nhật preview ngay sau khi tải lên
+    return newImageURL;
+  };
+  
   const onSubmit = async (data) => {
     if (details.length === 0) {
       toast({
@@ -167,45 +213,42 @@ const ManageProducts = () => {
     try {
       const newProductItemId = editingProductItem
         ? editingProductItem.productItemId
-        : (await axios.post(
-            `https://esmpbe.id.vn/api/productitem/${vendorId}`,
-            productItemData,
-            {
+        : (
+            await axios.post(`https://esmpbe.id.vn/api/productitem/${vendorId}`, productItemData, {
               headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
-            }
-          )).data.id;
+            })
+          ).data.id;
   
-      // Upload the image separately after the product creation/update
-      const imageURL = await uploadImage(newProductItemId); // This returns the new image URL
-  
-      // Update the product item (without the imageURL)
-      const updatedProductItem = { ...productItemData };
+      // Xử lý imageURL nhưng không thêm vào updatedProductItem
+      const imageURL = imageFile
+        ? await uploadImage(newProductItemId)
+        : editingProductItem?.imageURL || "https://via.placeholder.com/150";
   
       if (editingProductItem) {
         await axios.put(
           `https://esmpbe.id.vn/api/productitem/${vendorId}/${newProductItemId}`,
-          updatedProductItem,
+          productItemData, // Không bao gồm imageURL
           {
             headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
           }
         );
-  
-        // After the update, set the new image URL for the product item
-        const updatedProductItemWithImage = { ...updatedProductItem, imageURL };
-  
         setProductItems((prevItems) =>
           prevItems.map((item) =>
-            item.productItemId === editingProductItem.productItemId ? updatedProductItemWithImage : item
+            item.productItemId === editingProductItem.productItemId
+              ? { ...item, ...productItemData, imageURL } // Thêm imageURL trực tiếp vào state
+              : item
           )
         );
       } else {
-        const updatedProductItemWithImage = { ...updatedProductItem, imageURL };
-        setProductItems((prevItems) => [...prevItems, updatedProductItemWithImage]);
+        setProductItems((prevItems) => [
+          ...prevItems,
+          { ...productItemData, imageURL }, // Thêm imageURL khi tạo mới
+        ]);
       }
   
       toast({
         title: "Success",
-        description: editingProductItem ? "Product item updated successfully!" : "Product item created successfully!",
+        description: editingProductItem ? "Product updated successfully!" : "Product added successfully!",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -213,10 +256,9 @@ const ManageProducts = () => {
   
       resetForm();
     } catch (error) {
-      console.error("Error saving product item:", error);
       toast({
         title: "Error",
-        description: "Failed to save product item!",
+        description: "Failed to save product.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -224,35 +266,17 @@ const ManageProducts = () => {
     }
   };
   
-
-  const resetForm = () => {
-    setDetails([]);
-    reset();
-    setImageFile(null);
-    setImagePreview(""); // Clear image preview
-    onClose();
-    setEditingProductItem(null);
-  };
-
-  const handleEdit = (productItem) => {
-    setEditingProductItem(productItem);
-    setValue("productName", productItem.name);
-    setValue("productPrice", productItem.price);
-    setDetails(productItem.details);
-    setImagePreview(productItem.imageURL); // Preview hiện tại khi edit
-    onOpen();
-  };
+  
 
   return (
     <Box p={5}>
-      <Button colorScheme="blue" onClick={onOpen}>
+      <Button colorScheme="blue" onClick={handleAddNewProduct}>
         Add New Product
       </Button>
 
       <Grid templateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={6} mt={10}>
-        {productItems.length > 0 ? (
-          productItems.map((productItem) => (
-            <GridItem
+        {productItems.map((productItem) => (
+          <GridItem
             key={productItem.productItemId}
             border="1px solid #e0e0e0"
             borderRadius="lg"
@@ -260,184 +284,162 @@ const ManageProducts = () => {
             boxShadow="lg"
             _hover={{ boxShadow: "2xl", transform: "scale(1.05)" }}
             transition="all 0.3s ease"
-            display="flex"
-            flexDirection="column"
-            justifyContent="space-between"
-            height="350px"
-            maxWidth="250px" // Giới hạn chiều ngang của card
           >
-          
-              <Image
-                src={productItem.imageURL || "https://via.placeholder.com/150"}
-                alt={productItem.name}
-                objectFit="cover"
-                width="100%"
-                height="150px"
-              />
-              <Box p={4} flex="1" overflow="hidden">
-                <Text fontWeight="bold" fontSize="lg" color="blue.600">
-                  {productItem.name}
-                </Text>
-                <Text color="gray.500" mb={2}>{productItem.price} VND</Text>
-                <Box overflowY="auto" maxHeight="60px">
-                  {productItem.details.map((detail, index) => (
-                    <Text key={index} fontSize="sm">
-                      - {products.find((p) => p.productId === detail.productId)?.productName || "Unknown"} x {detail.quantity} {detail.unit}
-                    </Text>
-                  ))}
-                </Box>
+            <Image
+              src={productItem.imageURL || "https://via.placeholder.com/150"}
+              alt={productItem.name}
+              objectFit="cover"
+              width="100%"
+              height="150px"
+            />
+            <Box p={4}>
+              <Text fontWeight="bold" fontSize="lg" color="blue.600">
+                {productItem.name}
+              </Text>
+              <Text color="gray.500" mb={2}>{productItem.price} VND</Text>
+              <Box>
+                {productItem.details.map((detail, index) => (
+                  <Text key={index} fontSize="sm">
+                    - {products.find((p) => p.productId === detail.productId)?.productName || "Unknown"} x {detail.quantity}
+                  </Text>
+                ))}
               </Box>
-              <Box p={4} display="flex" justifyContent="center">
-                <Button leftIcon={<FaEdit />} size="sm" colorScheme="teal" variant="outline" onClick={() => handleEdit(productItem)}>
-                  Edit
-                </Button>
-              </Box>
-            </GridItem>
-          ))
-        ) : (
-          <Text>No products available</Text>
-        )}
+            </Box>
+            <Box p={4} textAlign="center">
+              <Button
+                leftIcon={<FaEdit />}
+                size="sm"
+                colorScheme="teal"
+                variant="outline"
+                onClick={() => handleEdit(productItem)}
+              >
+                Edit
+              </Button>
+            </Box>
+          </GridItem>
+        ))}
       </Grid>
 
-    
+      <Modal isOpen={isOpen} onClose={resetForm} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>{editingProductItem ? "Edit Product" : "Add Product"}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <FormControl mt={4}>
+                <FormLabel>Product Name</FormLabel>
+                <Input
+                  {...register("productName", { required: "Product name is required!" })}
+                  placeholder="Enter product name"
+                />
+                {errors.productName && <Text color="red.500">{errors.productName.message}</Text>}
+              </FormControl>
 
-<Modal isOpen={isOpen} onClose={onClose} isCentered>
-  <ModalOverlay />
-  <ModalContent>
-    <ModalHeader>{editingProductItem ? "Edit Product" : "Add Product"}</ModalHeader>
-    <ModalCloseButton />
-    <ModalBody>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        onReset={() => {
-          // Reset form fields and other states on cancel
-          reset();
-          setImagePreview(null); // Clear image preview
-          setDetails([]); // Clear details array
-        }}
-      >
-        <FormControl mt={4}>
-          <FormLabel>Product Name</FormLabel>
-          <Input
-            {...register("productName", { required: "Product name is required!" })}
-            placeholder="Enter name"
-          />
-          {/* Display error message if validation fails */}
-          {errors.productName && <Text color="red.500">{errors.productName.message}</Text>}
-        </FormControl>
+              <FormControl mt={4}>
+                <FormLabel>Price</FormLabel>
+                <Input
+                  {...register("productPrice", {
+                    required: "Price is required!",
+                    valueAsNumber: true,
+                    min: { value: 0.01, message: "Price must be greater than 0" },
+                  })}
+                  type="number"
+                  placeholder="Enter price"
+                />
+                {errors.productPrice && <Text color="red.500">{errors.productPrice.message}</Text>}
+              </FormControl>
 
-        <FormControl mt={4}>
-          <FormLabel>Price</FormLabel>
-          <Input
-            {...register("productPrice", {
-              required: "Price is required!",
-              valueAsNumber: true,
-              min: {
-                value: 0.01,
-                message: "Price must be greater than 0"
-              }
-            })}
-            type="number"
-            placeholder="Enter price"
-          />
-          {/* Display error message if validation fails */}
-          {errors.productPrice && <Text color="red.500">{errors.productPrice.message}</Text>}
-        </FormControl>
-        <FormControl mt={4}>
-  <FormLabel>Product Image</FormLabel>
-  {imagePreview && (
-    <Box mb={2} display="flex" justifyContent="center">
-      <Image
-        src={imagePreview}
-        alt="Selected Product Image"
-        boxSize="100px" // Adjust the size here as needed
-        objectFit="cover"
-        borderRadius="md"
-      />
-    </Box>
-  )}
-  <Input type="file" accept="image/*" onChange={handleImageChange} />
-</FormControl>
+              <FormControl mt={4}>
+                <FormLabel>Product Image</FormLabel>
+                {imagePreview && (
+                 <Box mb={2} display="flex" justifyContent="center" alignItems="center">
+                 <Image
+                   src={imagePreview}
+                   alt="Product Image Preview"
+                   boxSize="150px"
+                   objectFit="cover"
+                   borderRadius="md"
+                   margin="10px"
+                 />
+               </Box>
+               
+                )}
+                <Input type="file" accept="image/*" onChange={handleImageChange} />
+              </FormControl>
 
+              <FormControl mt={4}>
+                <FormLabel>Select Product and Quantity</FormLabel>
+                <Select placeholder="Select a product" {...register("productId")}>
+                  {products.map((product) => (
+                    <option key={product.productId} value={product.productId}>
+                      {product.productName}
+                    </option>
+                  ))}
+                </Select>
 
+                <FormControl mt={2}>
+                  <FormLabel>Quantity</FormLabel>
+                  <Input
+                    type="number"
+                    {...register("productQuantity", {
+                      valueAsNumber: true,
+                      min: { value: 1, message: "Quantity must be at least 1" },
+                    })}
+                    defaultValue={1}
+                    placeholder="Enter quantity"
+                  />
+                </FormControl>
 
-        <FormControl mt={4}>
-          <FormLabel>Select Product and Quantity</FormLabel>
-          <Select
-  placeholder="Select a product"
-  {...register("productId")} // Remove the required validation rule
->
-  {products.map((product) => (
-    <option key={product.productId} value={product.productId}>
-      {product.productName}
-    </option>
-  ))}
-</Select>
-         
-          
-          <FormControl mt={2}>
-            <FormLabel>Quantity</FormLabel>
-            <Input
-              type="number"
-              {...register("productQuantity", {
-                required: "Quantity is required!",
-                valueAsNumber: true,
-                min: {
-                  value: 1,
-                  message: "Quantity must be greater than 1"
-                }
-              })}
-              defaultValue={1}
-              min={1}
-              placeholder="Enter quantity"
-            />
-            {/* Display error message if validation fails */}
-            {errors.productQuantity && <Text color="red.500">{errors.productQuantity.message}</Text>}
-          </FormControl>
+                <Button
+                  mt={2}
+                  colorScheme="teal"
+                  onClick={() =>
+                    addProductToDetails(
+                      document.querySelector("select[name=productId]").value,
+                      document.querySelector("input[name=productQuantity]").value
+                    )
+                  }
+                >
+                  Add Product
+                </Button>
+              </FormControl>
 
-          <Button
-            mt={2}
-            colorScheme="teal"
-            onClick={() =>
-              addProductToDetails(
-                document.querySelector("select[name=productId]").value,
-                document.querySelector("input[name=productQuantity]").value
-              )
-            }
-          >
-            Add Product
-          </Button>
-        </FormControl>
+              {details.length > 0 && (
+                <Box mt={4}>
+                  <Text>Selected Products:</Text>
+                  <List>
+                    {details.map((detail, index) => (
+                      <ListItem key={index}>
+                        <Flex justifyContent="space-between" alignItems="center">
+                          <Text>
+                            {products.find((p) => p.productId === detail.productId)?.productName || "Unknown"} x {detail.quantity}
+                          </Text>
+                          <IconButton
+                            icon={<FaTrash />}
+                            size="sm"
+                            colorScheme="red"
+                            onClick={() => removeProductFromDetails(detail.productId)}
+                          />
+                        </Flex>
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+              )}
 
-        {details.length > 0 && (
-          <Box mt={4}>
-            <Text>Selected Products:</Text>
-            <List>
-              {details.map((detail, index) => (
-                <ListItem key={index}>
-                  <Flex justifyContent="space-between" alignItems="center">
-                    <Text>
-                      {products.find((p) => p.productId === detail.productId)?.productName} x {detail.quantity} {detail.unit}
-                    </Text>
-                    <IconButton icon={<FaTrash />} size="sm" colorScheme="red" onClick={() => removeProductFromDetails(detail.productId)} />
-                  </Flex>
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        )}
-
-        <ModalFooter>
-          <Button colorScheme="blue" mr={3} type="submit">
-            Save
-          </Button>
-          <Button onClick={onClose} type="reset">Cancel</Button>
-        </ModalFooter>
-      </form>
-    </ModalBody>
-  </ModalContent>
-</Modal>
-
+              <ModalFooter>
+                <Button colorScheme="blue" mr={3} type="submit">
+                  Save
+                </Button>
+                <Button onClick={resetForm} type="button">
+                  Cancel
+                </Button>
+              </ModalFooter>
+            </form>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

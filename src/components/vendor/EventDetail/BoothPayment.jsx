@@ -273,7 +273,6 @@ console.log("tiền", amount);
                 total: parseFloat(amount),
                 locationId: boothTypeDetails.locationId,
                 vendorinEventId: vendorInEventId,
-                status: "Deposite success",
             },
             { headers: { Authorization: accessToken } }
         );
