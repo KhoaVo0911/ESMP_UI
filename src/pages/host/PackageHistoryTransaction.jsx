@@ -71,13 +71,13 @@ const TransactionHistory = () => {
         setLoading(false);
       } catch (error) {
         console.error("Error fetching transactions or packages:", error);
-        toast({
-          title: "Error",
-          description: "Unable to load transaction history. Please try again.",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
+        // toast({
+        //   title: "Error",
+        //   description: "Unable to load transaction history. Please try again.",
+        //   status: "error",
+        //   duration: 5000,
+        //   isClosable: true,
+        // });
         setLoading(false);
       }
     };

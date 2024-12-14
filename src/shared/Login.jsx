@@ -300,49 +300,65 @@ const LoginComponent = ({ onLoginSuccess }) => {
     try {
       const apiUrl = `https://esmpbe.id.vn/api/user/login/${role}`;
       const response = await axios.post(apiUrl, { username, password });
+      console.log("Sending API request to:", apiUrl);
 
       const { accessToken, userInfo } = response.data;
-      const userRole = userInfo.role || "";
 
+      // Kiểm tra thông tin role
+      const userRole = userInfo.role || "";
+      const hostId = userInfo.hostInfo?.hostId || "";
+      const vendorId = userInfo.vendorInfo?.vendorId || "";
+      const staffId = userInfo.staffInfo?.staffId || "";
+
+      // Lưu dữ liệu vào sessionStorage
       sessionStorage.setItem("accessToken", accessToken);
       sessionStorage.setItem("role", userRole);
+      sessionStorage.setItem("hostId", hostId);
+      sessionStorage.setItem("vendorId", vendorId);
+      sessionStorage.setItem("staffId", staffId);
 
       console.log("Logged in as:", userInfo);
 
+      // Điều hướng dựa trên vai trò
       if (userRole === "admin") {
         navigate("/dashboard-admin");
       } else if (userRole === "host") {
-        navigate(`/${userInfo.hostInfo?.hostId}/dashboard`);
-      } else if (userRole === "vendor") {
-        navigate(`/${userInfo.vendorInfo?.vendorId}/dashboardVendor`);
+        if (!hostId) {
+          throw new Error("Host ID not found for this user");
+        }
+        navigate(`/${hostId}/dashboard`);
+      } else if (userRole === "manager") {
+        if (!vendorId) {
+          throw new Error("Vendor ID not found for this user");
+        }
+        navigate(`/${vendorId}/dashboardVendor`);
       } else if (userRole === "staff") {
-        navigate(
-          `/eventStaff/${userInfo.vendorInfo?.vendorId}/${userInfo.staffInfo?.staffId}`
-        );
+        if (!vendorId || !staffId) {
+          throw new Error("Vendor or Staff ID not found for this user");
+        }
+        navigate(`/eventStaff/${vendorId}/${staffId}`);
       } else {
-        toast({
-          title: "Login failed",
-          description: "Invalid role.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-          position: "top",
-        });
+        throw new Error("Invalid user role");
       }
 
       toast({
         title: "Login Successfully",
-        description: `Logged in as ${role}`,
+        description: `Logged in as ${userRole}`,
         status: "success",
         duration: 3000,
         isClosable: true,
         position: "top",
       });
     } catch (err) {
+      console.error("Login error:", err);
+
+      // Xử lý lỗi và hiển thị thông báo
       toast({
         title: "Login failed",
         description:
-          err.response?.data?.message || "An unexpected error occurred.",
+          err.response?.data?.message ||
+          err.message ||
+          "An unexpected error occurred.",
         status: "error",
         duration: 3000,
         isClosable: true,

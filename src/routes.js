@@ -79,7 +79,7 @@ const AppRoutes = () => {
       <Route
         path="/manage-product/:vendorId"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <ManageProducts />
             </VendorLayout>
@@ -89,7 +89,7 @@ const AppRoutes = () => {
       <Route
         path="/map-sample"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <BoothPlanView />
             </VendorLayout>
@@ -100,7 +100,7 @@ const AppRoutes = () => {
       <Route
         path="/vendor-profile"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <VendorProfile />
             </VendorLayout>
@@ -110,7 +110,7 @@ const AppRoutes = () => {
       <Route
         path="/listEventEnrolled/:vendorId"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <ListEventEnrolled />
             </VendorLayout>
@@ -120,7 +120,7 @@ const AppRoutes = () => {
       <Route
         path="/staff-account-manager/:vendorId"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <StaffAccountManager />
             </VendorLayout>
@@ -130,7 +130,7 @@ const AppRoutes = () => {
       <Route
         path="/selectbooth/:vendorId"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <SelectBoothPage />
             </VendorLayout>
@@ -140,7 +140,7 @@ const AppRoutes = () => {
       <Route
         path="/:vendorId/dashboardVendor"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <DashboardVendor />
           </ProtectedRoute>
         }
@@ -148,7 +148,7 @@ const AppRoutes = () => {
       <Route
         path="/qrcodecodecode"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <TestQRCODE />
             </VendorLayout>
@@ -172,7 +172,7 @@ const AppRoutes = () => {
       <Route
         path="/events/:vendorId/:eventId"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <EventPage />
             </VendorLayout>
@@ -182,7 +182,7 @@ const AppRoutes = () => {
       <Route
         path="/productsList/:vendorId"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <ListProducts />
             </VendorLayout>
@@ -213,7 +213,7 @@ const AppRoutes = () => {
       <Route
         path="/ManageProductItems"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <ManageProductItems />
             </VendorLayout>
@@ -243,7 +243,7 @@ const AppRoutes = () => {
       <Route
         path="/eventsVendor/:vendorId"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <EventVendor />
             </VendorLayout>
@@ -273,7 +273,7 @@ const AppRoutes = () => {
       <Route
         path="/transaction"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <Transaction />
             </VendorLayout>
@@ -283,7 +283,7 @@ const AppRoutes = () => {
       <Route
         path="/eventenrolled/:vendorId/:eventId"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <EventEnrolled />
             </VendorLayout>
@@ -293,7 +293,7 @@ const AppRoutes = () => {
       <Route
         path="/Shop/:vendorId/:eventId"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <Shop />
             </VendorLayout>
@@ -351,7 +351,7 @@ const AppRoutes = () => {
       <Route
         path="/ordered-list/:vendorId/:eventId"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <OrderedList />
             </VendorLayout>
@@ -361,7 +361,7 @@ const AppRoutes = () => {
       <Route
         path="/payment/:vendorId/:eventId"
         element={
-          <ProtectedRoute allowedRoles={["vendor"]}>
+          <ProtectedRoute allowedRoles={["manager"]}>
             <VendorLayout>
               <Payment />
             </VendorLayout>
