@@ -470,6 +470,18 @@ const LoginComponent = ({ onLoginSuccess }) => {
               Create Account for Host
             </Text>
           </Text>
+          <Text
+            colorScheme="gray"
+            cursor="pointer"
+            onClick={() => navigate("/home")}
+            mt={4} // Khoảng cách dưới nút
+            width="auto" // Đặt chiều rộng tự động để căn giữa
+            mx="auto" // Căn giữa nút trong container
+            display="block" // Đảm bảo nút được hiển thị như block để căn giữa
+            textAlign="center" // Căn giữa nội dung
+          >
+            Back to Home
+          </Text>
         </Box>
       </Box>
 
