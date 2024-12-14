@@ -320,7 +320,12 @@ const Event = () => {
             headers: { Authorization: getAccessToken() },
           }
         );
-        setThemes(response.data);
+
+        console.log("All Themes:", response.data);
+
+        const activeThemes = response.data.filter((theme) => theme.status);
+        console.log("Active Themes:", activeThemes);
+        setThemes(activeThemes);
       } catch (error) {
         console.error("Error fetching themes:", error);
         message.error("Error fetching themes.");
@@ -503,14 +508,21 @@ const Event = () => {
               },
             ]}
           >
-            <Select placeholder="Select Theme">
-              {themes.map((theme) => (
-                <Select.Option key={theme.themeId} value={theme.themeId}>
-                  {theme.name}
+            <Select placeholder="Select Theme" disabled={themes.length === 0}>
+              {themes.length > 0 ? (
+                themes.map((theme) => (
+                  <Select.Option key={theme.themeId} value={theme.themeId}>
+                    {theme.name}
+                  </Select.Option>
+                ))
+              ) : (
+                <Select.Option value="none" disabled>
+                  No active themes available
                 </Select.Option>
-              ))}
+              )}
             </Select>
           </Form.Item>
+
           <Form.Item
             name="file"
             label="Event Thumbnail"

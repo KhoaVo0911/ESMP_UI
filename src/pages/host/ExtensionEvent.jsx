@@ -1,9 +1,12 @@
-import React from "react";
-import { Box, Heading, Divider, Grid, GridItem } from "@chakra-ui/react";
+import React, { useState, useEffect } from "react";
+import { Box, Heading, Divider, Grid, GridItem, Text } from "@chakra-ui/react";
 import { useParams, useLocation } from "react-router-dom";
 import LocationTypeManagement from "../../components/extensionEvent/LocationTypePage";
 import ServiceManagement from "../../components/extensionEvent/ServiceSelection";
 import ImageEventManagement from "../../components/extensionEvent/ImageEventManagement";
+
+const BASE_URL = "https://esmpbe.id.vn/api/event";
+const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const ExtensionEvent = () => {
   const { eventId } = useParams();
@@ -11,11 +14,35 @@ const ExtensionEvent = () => {
   const hostId =
     location.state?.hostId || sessionStorage.getItem("hostId") || "";
 
+  const [eventName, setEventName] = useState(""); // State for storing event name
+
+  // Fetch event name data
+  useEffect(() => {
+    const fetchEventName = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/${eventId}`, {
+          headers: {
+            Authorization: `${getAccessToken()}`,
+          },
+        });
+        const data = await response.json();
+        setEventName(data.name || "Event Details");
+      } catch (error) {
+        console.error("Error fetching event details:", error);
+      }
+    };
+
+    fetchEventName();
+  }, [eventId]);
+
   return (
     <Box p={6} bg="gray.50" borderRadius="md" boxShadow="md">
-      <Heading size="lg" mb={4}>
-        Extension Event
-      </Heading>
+      <Text fontSize="3xl" fontWeight="bold" mb={6}>
+        Extension Event -{" "}
+        <Text as="span" color="purple.900" fontWeight="bold">
+          {eventName}
+        </Text>
+      </Text>
 
       <Grid
         templateRows="repeat(2, 1fr)"
