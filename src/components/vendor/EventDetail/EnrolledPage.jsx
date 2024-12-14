@@ -27,6 +27,9 @@ import { Pagination } from "antd";
 import ViewBoothMap from "./ViewBoothMap";
 import CancelEventButton from "./CancelEventButton";
 import MapboxComponent from "../../../components/MapBox/MapboxComponent";
+import Slider from "react-slick"; // Import react-slick
+import "slick-carousel/slick/slick.css"; // Import CSS cho slider
+import "slick-carousel/slick/slick-theme.css";
 
 const BASE_URL = "https://esmpbe.id.vn/api/event";
 const LOCATION_TYPE_URL = "https://esmpbe.id.vn/api/map/locationType";
@@ -38,7 +41,8 @@ const EventEnrolled = () => {
   const accessToken = sessionStorage.getItem("accessToken") || "";
   const vendorId = sessionStorage.getItem("vendorId") || "";
   const hostId = sessionStorage.getItem("hostId") || "";
-
+  const [eventImages, setEventImages] = useState([]);
+  const [loadingImages, setLoadingImages] = useState(true);
   const [eventDetail, setEventDetail] = useState(null);
   const [boothData, setBoothData] = useState([]);
   const [serviceData, setServiceData] = useState([]); // Service data state
@@ -58,6 +62,38 @@ const EventEnrolled = () => {
       return;
     }
 
+    // const fetchEventDetail = async () => {
+    //   try {
+    //     const response = await axios.get(`${BASE_URL}/${eventId}`, {
+    //       headers: {
+    //         Authorization: `${accessToken}`,
+    //         "Content-Type": "application/json",
+    //       },
+    //     });
+    //     const event = response.data;
+
+    //     try {
+    //       const imagesRef = ref(storage, `${hostId}/${eventId}`);
+    //       const imagesList = await listAll(imagesRef);
+    //       if (imagesList.items.length > 0) {
+    //         const mainImageRef = imagesList.items[0];
+    //         event.logo = await getDownloadURL(mainImageRef);
+    //       } else {
+    //         event.logo = "https://via.placeholder.com/150";
+    //       }
+    //     } catch (error) {
+    //       console.warn("Error fetching event image:", error);
+    //       event.logo = "https://via.placeholder.com/150";
+    //     }
+    //     setEventDetail(event);
+    //     setLoading(false);
+    //   } catch (error) {
+    //     console.error("Error fetching event detail:", error);
+    //     setError("Failed to fetch event details");
+    //     setLoading(false);
+    //   }
+    // };
+
     const fetchEventDetail = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/${eventId}`, {
@@ -67,26 +103,31 @@ const EventEnrolled = () => {
           },
         });
         const event = response.data;
-
-        try {
-          const imagesRef = ref(storage, `${hostId}/${eventId}`);
-          const imagesList = await listAll(imagesRef);
-          if (imagesList.items.length > 0) {
-            const mainImageRef = imagesList.items[0];
-            event.logo = await getDownloadURL(mainImageRef);
-          } else {
-            event.logo = "https://via.placeholder.com/150";
-          }
-        } catch (error) {
-          console.warn("Error fetching event image:", error);
-          event.logo = "https://via.placeholder.com/150";
-        }
         setEventDetail(event);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching event detail:", error);
         setError("Failed to fetch event details");
         setLoading(false);
+      }
+    };
+
+    const fetchEventImages = async () => {
+      try {
+        const imagesRef = ref(storage, `${hostId}/${eventId}`);
+        const imagesList = await listAll(imagesRef);
+
+        const imageUrls = imagesList.items.length
+          ? await Promise.all(
+              imagesList.items.map((item) => getDownloadURL(item))
+            )
+          : ["https://via.placeholder.com/300"]; // Fallback nếu không có ảnh
+        setEventImages(imageUrls);
+      } catch (error) {
+        console.error("Error fetching event images:", error);
+        setEventImages(["https://via.placeholder.com/300"]); // Fallback
+      } finally {
+        setLoadingImages(false);
       }
     };
 
@@ -144,6 +185,7 @@ const EventEnrolled = () => {
 
     fetchEventDetail();
     fetchBoothData();
+    fetchEventImages();
     fetchServiceData();
     fetchLocationTypeColors();
   }, [eventId, accessToken, hostId, navigate]);
@@ -190,6 +232,17 @@ const EventEnrolled = () => {
     );
   }
 
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 2000,
+    pauseOnHover: true,
+  };
+
   return (
     <Box
       padding="20px"
@@ -219,12 +272,32 @@ const EventEnrolled = () => {
             />
           </HStack>
         </VStack>
-        <Image
-          src={eventDetail.logo}
-          alt={eventDetail.name}
+        <Box
           borderRadius="lg"
           boxShadow="lg"
-        />
+          overflow="hidden"
+          width="100%"
+          height="300px"
+        >
+          {loadingImages ? (
+            <Flex justifyContent="center" alignItems="center" height="100%">
+              <Spinner size="lg" color="teal.500" />
+            </Flex>
+          ) : (
+            <Slider {...sliderSettings}>
+              {eventImages.map((url, index) => (
+                <Image
+                  key={index}
+                  src={url}
+                  alt={`Event Image ${index + 1}`}
+                  objectFit="cover"
+                  width="100%"
+                  height="100%"
+                />
+              ))}
+            </Slider>
+          )}
+        </Box>
       </Grid>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />

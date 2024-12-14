@@ -22,6 +22,9 @@ import { ref, getDownloadURL, listAll } from "firebase/storage";
 import { storage } from "../../../shared/firebase/firebaseConfig";
 import { Pagination } from "antd";
 import MapboxComponent from "../../../components/MapBox/MapboxComponent";
+import Slider from "react-slick"; // Import thư viện react-slick
+import "slick-carousel/slick/slick.css"; // Import CSS slider
+import "slick-carousel/slick/slick-theme.css";
 
 const BASE_URL = "https://esmpbe.id.vn/api/event";
 const LOCATION_TYPE_URL = "https://esmpbe.id.vn/api/map/locationType";
@@ -34,7 +37,8 @@ const EventDetail = () => {
   const accessToken = sessionStorage.getItem("accessToken");
   const vendorId = sessionStorage.getItem("vendorId");
   const hostId = sessionStorage.getItem("hostId") || "";
-
+  const [eventImages, setEventImages] = useState([]);
+  const [loadingImages, setLoadingImages] = useState(true);
   const [eventDetail, setEventDetail] = useState(null);
   const [boothData, setBoothData] = useState([]);
   const [serviceData, setServiceData] = useState([]);
@@ -89,6 +93,38 @@ const EventDetail = () => {
       }
     };
 
+    // const fetchEventDetail = async () => {
+    //   try {
+    //     const response = await axios.get(`${BASE_URL}/${eventId}`, {
+    //       headers: {
+    //         Authorization: `${accessToken}`,
+    //         "Content-Type": "application/json",
+    //       },
+    //     });
+    //     const event = response.data;
+
+    //     try {
+    //       const imagesRef = ref(storage, `${hostId}/${eventId}`);
+    //       const imagesList = await listAll(imagesRef);
+    //       if (imagesList.items.length > 0) {
+    //         const mainImageRef = imagesList.items[0];
+    //         event.logo = await getDownloadURL(mainImageRef);
+    //       } else {
+    //         event.logo = "https://via.placeholder.com/150";
+    //       }
+    //     } catch (error) {
+    //       console.warn("Error fetching event image:", error);
+    //       event.logo = "https://via.placeholder.com/150";
+    //     }
+
+    //     setEventDetail(event);
+    //     setLoading(false);
+    //   } catch (error) {
+    //     console.error("Error fetching event details:", error);
+    //     setLoading(false);
+    //   }
+    // };
+
     const fetchEventDetail = async () => {
       try {
         const response = await axios.get(`${BASE_URL}/${eventId}`, {
@@ -98,26 +134,30 @@ const EventDetail = () => {
           },
         });
         const event = response.data;
-
-        try {
-          const imagesRef = ref(storage, `${hostId}/${eventId}`);
-          const imagesList = await listAll(imagesRef);
-          if (imagesList.items.length > 0) {
-            const mainImageRef = imagesList.items[0];
-            event.logo = await getDownloadURL(mainImageRef);
-          } else {
-            event.logo = "https://via.placeholder.com/150";
-          }
-        } catch (error) {
-          console.warn("Error fetching event image:", error);
-          event.logo = "https://via.placeholder.com/150";
-        }
-
         setEventDetail(event);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching event details:", error);
         setLoading(false);
+      }
+    };
+
+    const fetchEventImages = async () => {
+      try {
+        const imagesRef = ref(storage, `${hostId}/${eventId}`);
+        const imagesList = await listAll(imagesRef);
+
+        const imageUrls = imagesList.items.length
+          ? await Promise.all(
+              imagesList.items.map((item) => getDownloadURL(item))
+            )
+          : ["https://via.placeholder.com/300"]; // Fallback nếu không có ảnh
+        setEventImages(imageUrls);
+      } catch (error) {
+        console.error("Error fetching event images:", error);
+        setEventImages(["https://via.placeholder.com/300"]); // Fallback
+      } finally {
+        setLoadingImages(false);
       }
     };
 
@@ -175,6 +215,7 @@ const EventDetail = () => {
     };
 
     checkVendorInEvent();
+    fetchEventImages();
     fetchEventDetail();
     fetchBoothData();
     fetchServiceData();
@@ -212,6 +253,17 @@ const EventDetail = () => {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 2000,
+    pauseOnHover: true,
+  };
 
   return (
     <Box
@@ -257,7 +309,7 @@ const EventDetail = () => {
             Register Now
           </Button>
         </VStack>
-        <Image
+        {/* <Image
           src={eventDetail.logo}
           alt={eventDetail.name}
           borderRadius="lg"
@@ -266,7 +318,43 @@ const EventDetail = () => {
           height={{ base: "250px", lg: "300px" }}
           width={{ base: "100%", lg: "400px" }}
           mt={{ base: "20px", lg: "0" }}
-        />
+        /> */}
+        <Box
+          borderRadius="lg"
+          boxShadow="md"
+          overflow="hidden"
+          width={{ base: "100%", lg: "400px" }}
+          height={{ base: "250px", lg: "300px" }}
+          mt={{ base: "20px", lg: "0" }}
+        >
+          {loadingImages ? (
+            <Flex justifyContent="center" alignItems="center" height="100%">
+              <Spinner size="lg" color="teal.500" />
+            </Flex>
+          ) : (
+            <Slider
+              dots={true}
+              infinite={true}
+              speed={500}
+              slidesToShow={1}
+              slidesToScroll={1}
+              autoplay={true}
+              autoplaySpeed={4000}
+              pauseOnHover={true}
+            >
+              {eventImages.map((url, index) => (
+                <Image
+                  key={index}
+                  src={url}
+                  alt={`Event Image ${index + 1}`}
+                  objectFit="cover"
+                  height="100%"
+                  width="100%"
+                />
+              ))}
+            </Slider>
+          )}
+        </Box>
       </Flex>
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />

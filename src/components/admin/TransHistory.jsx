@@ -23,7 +23,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
 
 const TransactionDetails = () => {
   const [transactionData, setTransactionData] = useState([]);
-  const [hostData, setHostData] = useState(null);
+  const [hostData, setHostData] = useState([]);
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,6 +33,12 @@ const TransactionDetails = () => {
 
   const [filteredHost, setFilteredHost] = useState("");
   const [filteredPackage, setFilteredPackage] = useState("");
+
+  // Lọc danh sách host đã mua ít nhất một gói
+  const hostsWithTransactions =
+    hostData?.filter((host) =>
+      transactionData?.some((transaction) => transaction.hostid === host.hostid)
+    ) || [];
 
   useEffect(() => {
     const accessToken = sessionStorage.getItem("accessToken");
@@ -110,7 +116,62 @@ const TransactionDetails = () => {
   }
 
   // Compile data for the table
+  // const compiledData = transactionData
+  //   .map((transaction) => {
+  //     const hostInfo = hostData.find(
+  //       (host) => host.hostid === transaction.hostid
+  //     );
+  //     const packageInfo = packages.find(
+  //       (pkg) => pkg.id === transaction.packageid
+  //     );
+  //     const createdAtDate = new Date(transaction.createdat);
+
+  //     const storageMonths = packageInfo
+  //       ? parseInt(packageInfo.eventstoragetime)
+  //       : 0;
+
+  //     const expirationDate = new Date(createdAtDate);
+  //     expirationDate.setMonth(expirationDate.getMonth() + storageMonths);
+
+  //     return {
+  //       transactionId: transaction.id,
+  //       hostName: hostInfo ? hostInfo.account.name : "Unknown",
+  //       packageName: packageInfo ? packageInfo.name : "Unknown",
+  //       createdAt: createdAtDate.toLocaleString(),
+  //       status: transaction.status,
+  //       price: packageInfo ? packageInfo.price : "N/A",
+  //       expiration: expirationDate.toLocaleString(),
+  //     };
+  //   })
+  //   .filter((transaction) => {
+  //     // Filter based on selected filters
+  //     const hostMatch = filteredHost
+  //       ? transaction.hostName.includes(filteredHost)
+  //       : true;
+  //     const packageMatch = filteredPackage
+  //       ? transaction.packageName.includes(filteredPackage)
+  //       : true;
+  //     return hostMatch && packageMatch;
+  //   });
+
   const compiledData = transactionData
+    .filter((transaction) => {
+      // Lọc các giao dịch dựa trên host đã mua package
+      const hostMatch = filteredHost
+        ? hostData.find(
+            (host) =>
+              host.hostid === transaction.hostid &&
+              host.account.name === filteredHost
+          )
+        : true;
+
+      const packageMatch = filteredPackage
+        ? transaction.packageid ===
+          packages.find((pkg) => pkg.name === filteredPackage)?.id
+        : true;
+
+      return hostMatch && packageMatch;
+    })
     .map((transaction) => {
       const hostInfo = hostData.find(
         (host) => host.hostid === transaction.hostid
@@ -136,17 +197,22 @@ const TransactionDetails = () => {
         price: packageInfo ? packageInfo.price : "N/A",
         expiration: expirationDate.toLocaleString(),
       };
-    })
-    .filter((transaction) => {
-      // Filter based on selected filters
-      const hostMatch = filteredHost
-        ? transaction.hostName.includes(filteredHost)
-        : true;
-      const packageMatch = filteredPackage
-        ? transaction.packageName.includes(filteredPackage)
-        : true;
-      return hostMatch && packageMatch;
     });
+
+  // Cập nhật dropdown package chỉ hiển thị các package đã được mua
+  const filteredPackages = transactionData
+    .filter((transaction) =>
+      filteredHost
+        ? hostData.some(
+            (host) =>
+              host.hostid === transaction.hostid &&
+              host.account.name === filteredHost
+          )
+        : true
+    )
+    .map((transaction) => transaction.packageid)
+    .filter((value, index, self) => self.indexOf(value) === index)
+    .map((id) => packages.find((pkg) => pkg.id === id));
 
   // Calculate total pages
   const totalPages = Math.ceil(compiledData.length / itemsPerPage);
@@ -174,7 +240,7 @@ const TransactionDetails = () => {
 
         {/* Filter Section */}
         <HStack spacing={4} width="100%" mb={4}>
-          <Select
+          {/* <Select
             placeholder="Select Host"
             value={filteredHost}
             onChange={(e) => setFilteredHost(e.target.value)}
@@ -187,8 +253,24 @@ const TransactionDetails = () => {
                   {host.account.name}
                 </option>
               ))}
+          </Select> */}
+
+          <Select
+            placeholder="Select Host"
+            value={filteredHost}
+            onChange={(e) => setFilteredHost(e.target.value)}
+            width="auto"
+          >
+            <option value="">All Hosts</option>
+            {hostsWithTransactions.length > 0 &&
+              hostsWithTransactions.map((host) => (
+                <option key={host.hostid} value={host.account.name}>
+                  {host.account.name}
+                </option>
+              ))}
           </Select>
 
+          {/* 
           <Select
             placeholder="Select Package"
             value={filteredPackage}
@@ -198,6 +280,21 @@ const TransactionDetails = () => {
             <option value="">All Packages</option>
             {packages &&
               packages.map((pkg) => (
+                <option key={pkg.id} value={pkg.name}>
+                  {pkg.name}
+                </option>
+              ))}
+          </Select> */}
+
+          <Select
+            placeholder="Select Package"
+            value={filteredPackage}
+            onChange={(e) => setFilteredPackage(e.target.value)}
+            width="auto"
+          >
+            <option value="">All Packages</option>
+            {filteredPackages &&
+              filteredPackages.map((pkg) => (
                 <option key={pkg.id} value={pkg.name}>
                   {pkg.name}
                 </option>
