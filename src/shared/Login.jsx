@@ -309,7 +309,10 @@ const LoginComponent = ({ onLoginSuccess }) => {
       const hostId = userInfo.hostInfo?.hostId || "";
       const vendorId = userInfo.vendorInfo?.vendorId || "";
       const staffId = userInfo.staffInfo?.staffId || "";
-
+      const vendorName = userInfo.vendorInfo
+      ? userInfo.vendorInfo.vendorName
+      : "";
+      sessionStorage.setItem("vendorName", vendorName);
       // Lưu dữ liệu vào sessionStorage
       sessionStorage.setItem("accessToken", accessToken);
       sessionStorage.setItem("role", userRole);
