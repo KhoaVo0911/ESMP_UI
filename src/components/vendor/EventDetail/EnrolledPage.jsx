@@ -379,7 +379,7 @@ const EventEnrolled = () => {
           <Thead bg="gray.100">
             <Tr>
               <Th textAlign="center">No</Th>
-              <Th textAlign="center">Service ID</Th>
+              {/* <Th textAlign="center">Service ID</Th> */}
               <Th textAlign="center">Service Name</Th>
               <Th textAlign="center">Price</Th>
               <Th textAlign="center">Quantity</Th>
@@ -391,7 +391,7 @@ const EventEnrolled = () => {
                 <Td textAlign="center">
                   {(currentPage - 1) * pageSize + index + 1}
                 </Td>
-                <Td textAlign="center">{service.serviceId}</Td>
+                {/* <Td textAlign="center">{service.serviceId}</Td> */}
                 <Td textAlign="center">{service.name}</Td>
                 <Td textAlign="center">{service.price}</Td>
                 <Td textAlign="center">{service.quantity}</Td>
