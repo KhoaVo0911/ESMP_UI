@@ -36,6 +36,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
   const fetchProducts = async () => {
     setLoading(true);
     try {
+      // Fetch product items
       const productItemsResponse = await axios.get(
         `https://esmpbe.id.vn/api/productitem/${vendorId}`,
         {
@@ -45,15 +46,21 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
           },
         }
       );
+  
+      // Filter for product items with status: true
+      const filteredProductItems = productItemsResponse.data.filter((product) => product.status === true);
+  
       const productItemsWithImages = await Promise.all(
-        productItemsResponse.data.map(async (product) => {
+        filteredProductItems.map(async (product) => {
           const imageRef = ref(storage, `${vendorId}/${product.productItemId}`);
           const imageUrl = await getDownloadURL(imageRef).catch(() => "https://via.placeholder.com/150");
           return { ...product, imageUrl };
         })
       );
+  
       setProducts(productItemsWithImages);
-
+  
+      // Fetch product names
       const productsResponse = await axios.get(
         `https://esmpbe.id.vn/api/product/${vendorId}`,
         {
@@ -63,6 +70,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
           },
         }
       );
+  
       const productNameMap = {};
       productsResponse.data.forEach((product) => {
         productNameMap[product.productId] = product.productName;
@@ -81,6 +89,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
       setLoading(false);
     }
   };
+  
 
   const handleSelectProduct = (product) => {
     setSelectedProducts((prev) =>

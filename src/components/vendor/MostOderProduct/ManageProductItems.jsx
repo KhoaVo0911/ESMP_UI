@@ -97,29 +97,53 @@ const ManageProducts = () => {
 
   const fetchProductItems = async () => {
     try {
-      const response = await axios.get(`https://esmpbe.id.vn/api/productitem/${vendorId}`, {
-        headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
-      });
+        const response = await axios.get(`https://esmpbe.id.vn/api/productitem/${vendorId}`, {
+            headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
+        });
 
-      const itemsWithImages = await Promise.all(
-        response.data.map(async (item) => {
-          const imageURL = await fetchImageURL(item.productItemId);
-          return { ...item, imageURL };
-        })
-      );
+        const itemsWithImages = await Promise.all(
+            response.data
+                .filter((item) => item.status === true) // Only items with status: true
+                .map(async (item) => {
+                    const imageURL = await fetchImageURL(item.productItemId);
+                    return { ...item, imageURL };
+                })
+        );
 
-      setProductItems(itemsWithImages);
+        setProductItems(itemsWithImages);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch product items.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+        toast({
+            title: "Error",
+            description: "Failed to fetch product items.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+        });
     }
-  };
-
+};
+const handleDelete = async (productItemId) => {
+  try {
+      await axios.delete(`https://esmpbe.id.vn/api/productitem/${productItemId}`, {
+          headers: { Authorization: `${accessToken}`, "Content-Type": "application/json" },
+      });
+      setProductItems((prevItems) => prevItems.filter((item) => item.productItemId !== productItemId));
+      toast({
+          title: "Success",
+          description: "Product deleted successfully!",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+      });
+  } catch (error) {
+      toast({
+          title: "Error",
+          description: "Failed to delete product.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+      });
+  }
+};
   useEffect(() => {
     fetchData();
     fetchProductItems();
@@ -276,49 +300,61 @@ const ManageProducts = () => {
 
       <Grid templateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={6} mt={10}>
         {productItems.map((productItem) => (
-          <GridItem
-            key={productItem.productItemId}
-            border="1px solid #e0e0e0"
-            borderRadius="lg"
-            overflow="hidden"
-            boxShadow="lg"
-            _hover={{ boxShadow: "2xl", transform: "scale(1.05)" }}
-            transition="all 0.3s ease"
-          >
-            <Image
-              src={productItem.imageURL || "https://via.placeholder.com/150"}
-              alt={productItem.name}
-              objectFit="cover"
-              width="100%"
-              height="150px"
-            />
-            <Box p={4}>
-              <Text fontWeight="bold" fontSize="lg" color="blue.600">
-                {productItem.name}
-              </Text>
-              <Text color="gray.500" mb={2}>{productItem.price} VND</Text>
-              <Box>
-                {productItem.details.map((detail, index) => (
-                  <Text key={index} fontSize="sm">
-                    - {products.find((p) => p.productId === detail.productId)?.productName || "Unknown"} x {detail.quantity}
-                  </Text>
-                ))}
-              </Box>
-            </Box>
-            <Box p={4} textAlign="center">
-              <Button
-                leftIcon={<FaEdit />}
-                size="sm"
-                colorScheme="teal"
-                variant="outline"
-                onClick={() => handleEdit(productItem)}
-              >
-                Edit
-              </Button>
-            </Box>
-          </GridItem>
+            <GridItem
+                key={productItem.productItemId}
+                border="1px solid #e0e0e0"
+                borderRadius="lg"
+                overflow="hidden"
+                boxShadow="lg"
+                _hover={{ boxShadow: "2xl", transform: "scale(1.05)" }}
+                transition="all 0.3s ease"
+            >
+                <Image
+                    src={productItem.imageURL || "https://via.placeholder.com/150"}
+                    alt={productItem.name}
+                    objectFit="cover"
+                    width="100%"
+                    height="150px"
+                />
+                <Box p={4}>
+                    <Text fontWeight="bold" fontSize="lg" color="blue.600">
+                        {productItem.name}
+                    </Text>
+                    <Text color="gray.500" mb={2}>
+                        {productItem.price} VND
+                    </Text>
+                    <Box>
+                        {productItem.details.map((detail, index) => (
+                            <Text key={index} fontSize="sm">
+                                - {products.find((p) => p.productId === detail.productId)?.productName || "Unknown"} x{" "}
+                                {detail.quantity}
+                            </Text>
+                        ))}
+                    </Box>
+                </Box>
+                <Flex p={4} justifyContent="space-between" alignItems="center">
+                    <Button
+                        leftIcon={<FaEdit />}
+                        size="sm"
+                        colorScheme="teal"
+                        variant="outline"
+                        onClick={() => handleEdit(productItem)}
+                    >
+                        Edit
+                    </Button>
+                    <Button
+                        leftIcon={<FaTrash />}
+                        size="sm"
+                        colorScheme="red"
+                        variant="outline"
+                        onClick={() => handleDelete(productItem.productItemId)}
+                    >
+                        Delete
+                    </Button>
+                </Flex>
+            </GridItem>
         ))}
-      </Grid>
+    </Grid>
 
       <Modal isOpen={isOpen} onClose={resetForm} isCentered>
         <ModalOverlay />
