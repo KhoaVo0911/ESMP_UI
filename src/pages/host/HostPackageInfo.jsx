@@ -17,8 +17,8 @@ const HostPackageInfo = () => {
 
   // Fetch Transaction and Package Information
   useEffect(() => {
-    const hostid = sessionStorage.getItem('hostid');
-    if (!hostid) {
+    const hostId = sessionStorage.getItem('hostId');
+    if (!hostId) {
       setError("Host ID is required");
       setLoading(false);
       return;
@@ -29,9 +29,9 @@ const HostPackageInfo = () => {
         const response = await axios.get(API_TRANSACTION_PACKAGE);
         console.log("Transactions:", response.data);  // Kiểm tra tất cả các giao dịch
 
-        // Lọc giao dịch có hostid trùng với hostid từ sessionStorage và status là "pending"
+        // Lọc giao dịch có hostId trùng với hostId từ sessionStorage và status là "pending"
         const filteredTransaction = response.data.find(
-          (transaction) => transaction.hostid === hostid && transaction.status === "pending"
+          (transaction) => transaction.hostid === hostId && transaction.status === "pending"
         );
 
         if (!filteredTransaction) {

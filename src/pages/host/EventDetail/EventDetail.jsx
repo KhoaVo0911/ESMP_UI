@@ -193,6 +193,61 @@ const EventDetails = () => {
         });
         setUpdatingVisibility(false); // Stop updating visibility
         return;
+      }  // Fetch vendors if the event is being made public
+      if (newVisibility) {
+        const vendorResponse = await fetch(
+          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendor/host/${event.hostId}`,
+          {
+            headers: {
+              Authorization: `${getAccessToken()}`,
+            },
+          }
+        );
+  
+        if (!vendorResponse.ok) {
+          console.error("Failed to fetch vendors for host.");
+          return;
+        }
+  
+        const vendors = await vendorResponse.json();
+  
+        // Send notification to each vendor
+        await Promise.all(
+          vendors.map((vendor) => {
+            console.log(`Sending notification to vendor: ${vendor.userid}`);
+            return fetch(
+              `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/notification`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `${getAccessToken()}`,
+                },
+                body: JSON.stringify({
+                  userid: vendor.userid,
+                  source: `Sự kiện "${event.name}" đã được khởi động.`,
+                }),
+              }
+            )
+              .then((res) => {
+                if (res.ok) {
+                  console.log(
+                    `Notification sent successfully to vendor: ${vendor.userid}`
+                  );
+                } else {
+                  console.error(
+                    `Failed to send notification to vendor: ${vendor.userid}`
+                  );
+                }
+              })
+              .catch((err) => {
+                console.error(
+                  `Error sending notification to vendor: ${vendor.userid}`,
+                  err
+                );
+              });
+          })
+        );
       }
 
       // Show success toast

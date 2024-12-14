@@ -352,8 +352,10 @@ const RegisterHostComponent = () => {
       try {
         const currentDate = new Date();
         const expiretime = new Date(
-          currentDate.setFullYear(currentDate.getFullYear() + 1)
-        ).toISOString(); // Tính expiretime
+          currentDate.getFullYear() , // Trừ 1 năm
+          currentDate.getMonth(),       // Tháng hiện tại
+          currentDate.getDate() - 1,        // Ngày hiện tại
+        ).toISOString(); // Chuyển thành định dạng ISO
 
         const apiUrl = "https://esmpbe.id.vn/api/user/register";
 

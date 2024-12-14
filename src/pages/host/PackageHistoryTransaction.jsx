@@ -16,20 +16,21 @@ import {
 } from "@chakra-ui/react";
 
 // Define API URLs
-const API_PACKAGE = "https://esmpbe.id.vn/api/package"; // URL to fetch package data
-const API_TRANSACTION_PACKAGE = "https://esmpbe.id.vn/api/transactionpackage"; // URL to fetch transaction package data
+const API_PACKAGE = "https://esmpbe.id.vn/api/package";
+const API_TRANSACTION_PACKAGE = "https://esmpbe.id.vn/api/transactionpackage";
+const API_HOST = "https://esmpbe.id.vn/api/host";
 
 const TransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
+  const hostid = sessionStorage.getItem("hostId");
 
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         const accessToken = sessionStorage.getItem("accessToken");
-        const hostid = sessionStorage.getItem("hostid");
 
         if (!accessToken || !hostid) {
           throw new Error("Access token or host ID not found");
@@ -69,15 +70,26 @@ const TransactionHistory = () => {
         );
         setPackages(fetchedPackages);
         setLoading(false);
+
+        // Update host data with expiretime and eventstoragetime
+        if (hostTransactions.length > 0 && fetchedPackages.length > 0) {
+          await updateHostData(
+            hostid,
+            calculateExpirationDate(
+              hostTransactions[0].createdat,
+              fetchedPackages[0].expiretime
+            ),
+            calculateStorageDate(
+              calculateExpirationDate(
+                hostTransactions[0].createdat,
+                fetchedPackages[0].expiretime
+              ),
+              fetchedPackages[0].eventstoragetime
+            )
+          );
+        }
       } catch (error) {
         console.error("Error fetching transactions or packages:", error);
-        // toast({
-        //   title: "Error",
-        //   description: "Unable to load transaction history. Please try again.",
-        //   status: "error",
-        //   duration: 5000,
-        //   isClosable: true,
-        // });
         setLoading(false);
       }
     };
@@ -85,11 +97,63 @@ const TransactionHistory = () => {
     fetchTransactions();
   }, [toast]);
 
-  // Function to calculate expiration date
   const calculateExpirationDate = (createdAt, months) => {
     const createdDate = new Date(createdAt);
-    createdDate.setMonth(createdDate.getMonth() + months); // Add months to the created date
-    return createdDate.toLocaleDateString(); // Format the date
+    createdDate.setMonth(createdDate.getMonth() + months);
+    return createdDate.toISOString();
+  };
+
+  const calculateStorageDate = (expirationDate, monthsToAdd) => {
+    const expDate = new Date(expirationDate);
+    expDate.setMonth(expDate.getMonth() + monthsToAdd);
+    return expDate.toISOString();
+  };
+
+  const updateHostData = async (hostId, expireTime, eventStorageTime) => {
+    try {
+      const accessToken = sessionStorage.getItem("accessToken");
+
+      // Get current host data
+      const { data: currentHostData } = await axios.get(`${API_HOST}/${hostId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // Update host data with new expiretime and eventstoragetime
+      const updatedData = {
+        name: currentHostData.account.name,
+        phone: currentHostData.account.phone,
+        email: currentHostData.account.email,
+        expiretime: expireTime,
+        eventstoragetime: eventStorageTime,
+        bankingaccount: currentHostData.bankingaccount,
+        status: currentHostData.account.status,
+      };
+
+      await axios.put(`${API_HOST}/${hostId}`, updatedData, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // toast({
+      //   title: "Host updated successfully",
+      //   description: "Expire time and storage time have been updated.",
+      //   status: "success",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
+    } catch (error) {
+      console.error("Error updating host data:", error);
+      toast({
+        title: "Update failed",
+        description: "Unable to update host data. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   };
 
   if (loading) {
@@ -138,65 +202,58 @@ const TransactionHistory = () => {
                 <Th>Purchase Date</Th>
                 <Th>Expiration Date</Th>
                 <Th>Storage Date</Th>
-                <Th>Price</Th> {/* Changed status to price */}
+                <Th>Price</Th>
               </Tr>
             </Thead>
             <Tbody>
               {transactions.map((transaction) => {
-                // Find corresponding package for each transaction
                 const packageDetails = packages.find(
                   (pkg) => pkg.id === transaction.packageid
                 );
 
                 return packageDetails ? (
                   <Tr key={transaction.id}>
-                    <Td border="1px" borderColor="gray.200">
-                      {packageDetails.name}
-                    </Td>
-                    <Td border="1px" borderColor="gray.200">
-                      {packageDetails.description}
-                    </Td>
-                    <Td border="1px" borderColor="gray.200">
-                      <Box
+                    <Td>{packageDetails.name}</Td>
+                    <Td>{packageDetails.description}</Td>
+                    <Td><Box
                         color="blue" // Green color for purchase date text
                         fontWeight="bold"
                       >
-                        {new Date(transaction.createdat).toLocaleDateString()}
+                      {new Date(transaction.createdat).toLocaleDateString()}
                       </Box>
                     </Td>
-                    <Td border="1px" borderColor="gray.200">
-                      <Box
+                    <Td>
+                    <Box
                         color="red.600" // Red color for expiration date text
                         fontWeight="bold"
                       >
-                        {calculateExpirationDate(
+                      {new Date(
+                        calculateExpirationDate(
                           transaction.createdat,
                           packageDetails.expiretime
-                        )}
-                      </Box>
-                    </Td>
-                    <Td border="1px" borderColor="gray.200">
-                      <Box
+                        )
+                      ).toLocaleDateString()}
+                    </Box></Td>
+                    <Td>
+                    <Box
                         color="blue.600" // Red color for expiration date text
                         fontWeight="bold"
                       >
-                        {packageDetails.eventstoragetime}{" "}
-                        {packageDetails.eventstoragetime > 1
-                          ? "Months"
-                          : "Month"}
-                      </Box>
-                    </Td>
-                    <Td border="1px" borderColor="gray.200">
-                      <Text fontWeight="bold" color="yellow.600">
-                        {packageDetails.price} VND
-                      </Text>
-                    </Td>
+                      {new Date(
+                        calculateStorageDate(
+                          calculateExpirationDate(
+                            transaction.createdat,
+                            packageDetails.expiretime
+                          ),
+                          packageDetails.eventstoragetime
+                        )
+                      ).toLocaleDateString()}
+                    </Box> </Td>
+                    <Td>{packageDetails.price} VND</Td>
                   </Tr>
                 ) : (
                   <Tr key={transaction.id}>
-                    <Td colSpan={5} border="1px" borderColor="gray.200">
-                      Package information not found
-                    </Td>
+                    <Td colSpan={6}>Package information not found</Td>
                   </Tr>
                 );
               })}
