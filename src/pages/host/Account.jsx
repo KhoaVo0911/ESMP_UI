@@ -279,7 +279,7 @@ const AccountManagement = () => {
 
   const openEditModal = (account) => {
     setIsEditing(true);
-    setEditVendorId(account.vendorid);
+    setEditVendorId(account.vendorId);
     setValue("username", account.username);
     setValue("password", account.password);
     setValue("name", account.name);
@@ -382,7 +382,7 @@ const AccountManagement = () => {
               </Tr>
             ) : (
               accounts.map((account, index) => (
-                <Tr key={account.vendorid}>
+                <Tr key={account.vendorId}>
                   <Td>{index + 1}</Td>
                   <Td>{account.username}</Td>
                   <Td>{account.name}</Td>

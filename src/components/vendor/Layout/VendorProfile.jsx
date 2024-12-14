@@ -13,7 +13,7 @@ const VendorProfile = () => {
     urlQr: ''
   });
   const toast = useToast();
-  const vendorId = sessionStorage.getItem('vendorId');
+  const vendorId = sessionStorage.getItem("vendorId");
   // Lấy các thông tin từ sessionStorage
   const hostId = sessionStorage.getItem('hostId');
   const accessToken = sessionStorage.getItem('accessToken');

@@ -22,7 +22,7 @@ const VendorHeader = ({ collapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const vendorName = sessionStorage.getItem("vendorName");
+  const [vendorName, setVendorName] = useState("");
   const vendorId = sessionStorage.getItem("vendorId");
   const [userId, setUserId] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -44,6 +44,7 @@ const VendorHeader = ({ collapsed }) => {
 
         if (response.data && response.data.userid) {
           setUserId(response.data.userid);
+          setVendorName(response.data.name); 
           console.log("User ID found:", response.data.userid);
         } else {
           console.warn("No user ID found for vendorId:", vendorId);
@@ -137,7 +138,7 @@ const VendorHeader = ({ collapsed }) => {
           </MenuButton>
           <MenuList boxShadow="lg" borderRadius="lg" padding="12px">
             <MenuItem fontSize="md" fontWeight="700" color="gray.700"  onClick={() => navigate("/vendor-profile",{
-
+                state: { vendorId: vendorId},
               })}>
               👋 Hey, {vendorName}
             </MenuItem>
