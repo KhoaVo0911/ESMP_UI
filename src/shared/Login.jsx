@@ -312,6 +312,8 @@ const LoginComponent = ({ onLoginSuccess }) => {
       const vendorName = userInfo.vendorInfo
       ? userInfo.vendorInfo.vendorName
       : "";
+      const expiretime = userInfo.hostInfo?.expiretime|| "";
+      sessionStorage.setItem("expiretime", expiretime);
       sessionStorage.setItem("vendorName", vendorName);
       // Lưu dữ liệu vào sessionStorage
       sessionStorage.setItem("accessToken", accessToken);

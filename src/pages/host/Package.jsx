@@ -20,6 +20,7 @@ import {
   Progress,
 } from "@chakra-ui/react";
 import HostPackageInfo from "./HostPackageInfo";
+const API_HOST = "https://esmpbe.id.vn/api/host";
 
 const API_PACKAGE = "https://esmpbe.id.vn/api/package";
 const API_TRANSACTION_PACKAGE = "https://esmpbe.id.vn/api/transactionpackage"; // URL api transaction package
@@ -38,30 +39,29 @@ const CourseList = () => {
   const countdownIntervalRef = useRef(null);
   const [hostTransactions, setHostTransactions] = useState([]); // Add state to store host transactions
 
-
+  const expiretime = sessionStorage.getItem("expiretime");
+  console.log("time",expiretime);
   useEffect(() => {
     const fetchPackages = async () => {
       try {
         const accessToken = sessionStorage.getItem("accessToken");
-        if (!accessToken) {
-          throw new Error("Access token không tồn tại");
+        const hostId = sessionStorage.getItem("hostId");
+        const expiretime = sessionStorage.getItem("expiretime");
+  
+        if (!accessToken || !hostId || !expiretime) {
+          throw new Error("Thiếu thông tin trong sessionStorage");
         }
   
-        const transactionResponse = await axios.get(API_TRANSACTION_PACKAGE, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        // Chuyển expiretime từ string sang Date object
+        const expireDate = new Date(expiretime);
+        const today = new Date(); // Lấy ngày hiện tại
   
-        const hostid = sessionStorage.getItem("hostid");
-        const filteredTransactions = transactionResponse.data.filter((transaction) => transaction.hostid === hostid);
-        setHostTransactions(filteredTransactions); // Set the host transactions to state
+        console.log("Expire Time:", expireDate);
+        console.log("Today's Date:", today);
   
-        if (filteredTransactions.length > 0) {
-          // You can handle showing host package info here, based on host transactions
-          console.log("Host ID:", filteredTransactions.length);
-        } else {
-          // Hiển thị danh sách các gói dịch vụ
+        // Kiểm tra nếu expiretime đã hết hạn
+        if (expireDate < today) {
+          console.log("Expire time đã hết hạn. Tải danh sách gói dịch vụ mới.");
           const response = await axios.get(API_PACKAGE, {
             headers: {
               Authorization: `${accessToken}`,
@@ -69,14 +69,17 @@ const CourseList = () => {
             },
           });
   
-          const activePackages = response.data.filter((pkg) => pkg.status);
+          const activePackages = response.data.filter((pkg) => pkg.status); // Lọc các gói đang hoạt động
           setPackages(activePackages);
+        } else {
+          console.log("Expire time còn hiệu lực. Hiển thị thông tin gói của host.");
+          setHostTransactions([{ hostid: hostId }]); // Dùng state để hiển thị HostPackageInfo
         }
       } catch (error) {
         console.error("Error fetching packages:", error);
         toast({
           title: "Lỗi",
-          description: "Không thể tải danh sách gói. Vui lòng thử lại.",
+          description: "Không thể tải dữ liệu. Vui lòng thử lại.",
           status: "error",
           duration: 5000,
           isClosable: true,
@@ -86,6 +89,8 @@ const CourseList = () => {
   
     fetchPackages();
   }, [toast]);
+  
+  
   
   const handlePackageClick = (pkg) => {
     const paidPrice = pkg.price;
@@ -166,19 +171,135 @@ const CourseList = () => {
       ) {
         console.log("Thanh toán thành công!");
 
-        const hostid = sessionStorage.getItem("hostid"); // Lấy hostId từ sessionStorage
+        const hostId = sessionStorage.getItem("hostId"); // Lấy hostId từ sessionStorage
         const accessToken = sessionStorage.getItem("accessToken"); // Lấy accessToken từ sessionStorage
 
-        if (hostid) {
+        if (hostId) {
           // Gọi API để lưu thông tin thanh toán
           await axios.post(API_TRANSACTION_PACKAGE, {
-            hostid: hostid,
+            hostid: hostId,
             packageid: packageId,
           }, {
             headers: {
-              Authorization: `Bearer ${accessToken}` // Gửi accessToken vào header
+              Authorization: `${accessToken}` // Gửi accessToken vào header
             }
           });
+
+          // Gọi lại API_TRANSACTION_PACKAGE để lấy thông tin giao dịch
+try {
+  const transactionResponse = await axios.get(API_TRANSACTION_PACKAGE, {
+    headers: {
+      Authorization: `${accessToken}`,
+    },
+  });
+
+  const hostTransactions = transactionResponse.data.filter(
+    (transaction) => transaction.hostid === hostId
+  );
+
+  // Lấy giao dịch có start day là ngày hôm nay
+  const today = new Date();
+  const todayTransactions = hostTransactions.filter((transaction) => {
+    const transactionDate = new Date(transaction.createdat);
+    return (
+      transactionDate.getDate() === today.getDate() &&
+      transactionDate.getMonth() === today.getMonth() &&
+      transactionDate.getFullYear() === today.getFullYear()
+    );
+  });
+
+  if (todayTransactions.length > 0) {
+    const selectedTransaction = todayTransactions[0]; // Lấy giao dịch đầu tiên trong danh sách hôm nay
+    const selectedPackageDetails = packages.find(
+      (pkg) => pkg.id === selectedTransaction.packageid
+    );
+
+    if (selectedPackageDetails) {
+      // Tính toán expireTime và eventStorageTime
+      const calculateExpirationDate = (createdAt, months) => {
+        const createdDate = new Date(createdAt);
+        createdDate.setMonth(createdDate.getMonth() + months);
+        return createdDate.toISOString();
+      };
+
+      const calculateStorageDate = (expirationDate, monthsToAdd) => {
+        const expDate = new Date(expirationDate);
+        expDate.setMonth(expDate.getMonth() + monthsToAdd);
+        return expDate.toISOString();
+      };
+
+      const expireTime = calculateExpirationDate(
+        selectedTransaction.createdat,
+        selectedPackageDetails.expiretime
+      );
+      const eventStorageTime = calculateStorageDate(
+        expireTime,
+        selectedPackageDetails.eventstoragetime
+      );
+
+      // Cập nhật thông tin host
+      const updateHostData = async (hostId, expireTime, eventStorageTime) => {
+        try {
+          const getHostResponse = await axios.get(`${API_HOST}/${hostId}`, {
+            headers: {
+              Authorization: `${accessToken}`,
+            },
+          });
+
+          const currentHostData = getHostResponse.data;
+
+          const updatedHostData = {
+            name: currentHostData.account.name,
+            phone: currentHostData.account.phone,
+            email: currentHostData.account.email,
+            expiretime: expireTime,
+            eventstoragetime: eventStorageTime,
+            bankingaccount: currentHostData.bankingaccount,
+            status: currentHostData.account.status,
+          };
+
+          await axios.put(`${API_HOST}/${hostId}`, updatedHostData, {
+            headers: {
+              Authorization: `${accessToken}`,
+            },
+          });
+          sessionStorage.setItem("expiretime", expireTime);
+          toast({
+            title: "Cập nhật thông tin thành công",
+            description: "Ngày hết hạn và thời gian lưu trữ đã được cập nhật.",
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+        } catch (error) {
+          console.error("Lỗi khi cập nhật thông tin host:", error);
+          toast({
+            title: "Cập nhật thất bại",
+            description: "Không thể cập nhật thông tin host. Vui lòng thử lại.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+      };
+
+      // Gọi hàm cập nhật thông tin host
+      await updateHostData(hostId, expireTime, eventStorageTime);
+    }
+  } else {
+    console.log("Không có giao dịch nào bắt đầu từ hôm nay.");
+  }
+} catch (error) {
+  console.error("Lỗi khi lấy thông tin giao dịch hoặc cập nhật host:", error);
+  toast({
+    title: "Lỗi",
+    description: "Không thể xử lý giao dịch. Vui lòng thử lại.",
+    status: "error",
+    duration: 5000,
+    isClosable: true,
+  });
+}
+
           toast({
             title: "Ghi nhận giao dịch thành công",
             description: "Thông tin giao dịch đã được lưu.",
@@ -218,10 +339,10 @@ const CourseList = () => {
   return (
     <Box p={4}>
       <VStack spacing={8} align="center" padding={4} bg="white" minH="90vh">
-        {hostTransactions.length > 0 ? (
-          // If there are host transactions, show HostPackageInfo component
-          <HostPackageInfo hostid={sessionStorage.getItem("hostid")} />
-        ) : (
+      {expiretime && new Date(expiretime) >= new Date() ? (
+        // Nếu expiretime còn hiệu lực, hiển thị HostPackageInfo
+        <HostPackageInfo hostid={sessionStorage.getItem("hostId")} />
+      ) : (
           // If no host transactions, show the package list with heading
           <>
             <Box mb={6}>
