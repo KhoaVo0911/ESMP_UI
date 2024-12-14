@@ -5,8 +5,9 @@ import {
   ModalBody, ModalCloseButton, useDisclosure, FormControl,
   FormLabel, Input, Stack, Button, Box, InputGroup, InputLeftElement, FormErrorMessage, useToast, Select
 } from "@chakra-ui/react";
-import { EditIcon, DeleteIcon, ViewIcon, SearchIcon } from "@chakra-ui/icons";
+import { EditIcon, DeleteIcon, ViewIcon, SearchIcon, EmailIcon } from "@chakra-ui/icons";
 import axios from "axios";
+
 
 const AdminAccountManagement = () => {
   const [accounts, setAccounts] = useState([]);
@@ -27,7 +28,85 @@ const AdminAccountManagement = () => {
   const { isOpen: isCreateOpen, onOpen: onCreateOpen, onClose: onCreateClose } = useDisclosure();
   const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure();
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
-
+  const sendEmail = async (account) => {
+    const emailData = {
+      toEmail: account.account.email,
+      subject: "Your account has been activated",
+      body: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <div style="background-color: #f4f4f4; padding: 20px; border-radius: 8px;">
+            <h2 style="text-align: center; color: #007BFF;">Account Activation Successful</h2>
+            <p style="font-size: 16px; text-align: justify;">
+              Dear ${account.account.name || "User"},
+            </p>
+            <p style="font-size: 16px; text-align: justify;">
+              Congratulations! Your account has been successfully activated by our admin team. We are delighted to have you onboard. Please review our terms and contract by clicking the link below:
+            </p>
+            <div style="text-align: center; margin: 20px 0;">
+              <a href="https://docs.google.com/document/d/1a7-4GR1zZADkCw6CzCYRZ_guTl88MF4c/edit?usp=sharing&ouid=104522618690737883282&rtpof=true&sd=true" 
+                 style="text-decoration: none; background-color: #007BFF; color: #fff; padding: 10px 20px; border-radius: 5px; font-size: 16px;"
+                 download>
+                Download Contract
+              </a>
+            </div>
+            <p style="font-size: 16px; text-align: justify;">
+              Thank you for choosing us. If you have any questions or need further assistance, feel free to contact us at any time.
+            </p>
+            <p style="font-size: 16px; text-align: justify;">
+              Best regards,<br>
+              The Admin Team
+            </p>
+          </div>
+        </div>
+      `,
+    };
+    
+  
+    try {
+      // Fetch the PDF file from the public directory
+      const fileUrl = `${process.env.PUBLIC_URL}/Hợp đồng sử dụng phần mềm.docx.pdf`; // Use a file URL
+      const response = await fetch(fileUrl);
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch the file");
+      }
+  
+      // Convert the response to a Blob
+      const fileBlob = await response.blob();
+  
+      // Create a FormData object
+      const formData = new FormData();
+      formData.append("toEmail", emailData.toEmail);
+      formData.append("subject", emailData.subject);
+      formData.append("body", emailData.body);
+      formData.append("file", fileBlob, "Hợp đồng sử dụng phần mềm.pdf");
+  
+      // Send the form data
+      await axios.post("https://esmpbe.id.vn/api/mail/send-email", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+  
+      toast({
+        title: "Email Sent.",
+        description: `An email with the contract has been sent to ${emailData.toEmail}`,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error sending email:", error);
+      toast({
+        title: "Email Error.",
+        description: "There was an error sending the email. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
+  
   // Get list of accounts from API
   useEffect(() => {
     axios.get("https://esmpbe.id.vn/api/host")
@@ -240,14 +319,13 @@ const AdminAccountManagement = () => {
                   />
                   {/* Delete account button */}
                   <IconButton
-                    icon={<DeleteIcon />}
-                    aria-label="Delete account"
-                    onClick={() => {}}
-                    variant="ghost"
-                    size="sm"
-                    mx={1}
-                    isDisabled
-                  />
+    icon={<EmailIcon />}
+    aria-label="Send email"
+    onClick={() => sendEmail(account)}
+    variant="ghost"
+    size="sm"
+    mx={1}
+  />
                 </Td>
               </Tr>
             ))}
