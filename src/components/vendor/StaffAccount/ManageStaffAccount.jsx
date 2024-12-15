@@ -181,20 +181,19 @@ const StaffAccountManager = () => {
   const handleCreateStaff = async () => {
     try {
       const { username, password, name, phone, email } = newStaff;
-
+  
       // Validation for email
       if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)) {
         toast({
           title: "Invalid Email",
-          description:
-            "Please enter a valid Gmail address (e.g., example@gmail.com).",
+          description: "Please enter a valid Gmail address (e.g., example@gmail.com).",
           status: "error",
           duration: 3000,
           isClosable: true,
         });
         return;
       }
-
+  
       // Validation for phone
       if (!/^\d{10,11}$/.test(phone)) {
         toast({
@@ -206,14 +205,14 @@ const StaffAccountManager = () => {
         });
         return;
       }
-
+  
+      // Gửi yêu cầu tạo tài khoản
       await axios.post(
         `${BASE_URL}/staff/${vendorId}`,
         { username, password, name, phone, email },
-        {
-          headers: { Authorization: `${accessToken}` },
-        }
+        { headers: { Authorization: `${accessToken}` } }
       );
+  
       toast({
         title: "Success",
         description: "Staff account created successfully.",
@@ -222,22 +221,31 @@ const StaffAccountManager = () => {
         isClosable: true,
       });
       setIsCreateModalOpen(false);
-      fetchStaffAccounts();
+      fetchStaffAccounts(); // Làm mới danh sách
     } catch (error) {
-      console.error(
-        "Error creating staff account:",
-        error.response || error.message
-      );
-      toast({
-        title: "Error",
-        description:
-          error.response?.data?.message || "Failed to create staff account.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.error("Error creating staff account:", error);
+  
+      // Kiểm tra mã lỗi từ backend
+      if (error.response?.data?.code === "P2002") {
+        toast({
+          title: "Email Exists",
+          description: "This email is already registered. Please use another email.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.response?.data?.message || "Failed to create staff account.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
   };
+  
 
   return (
     <Box p={5}>
