@@ -162,6 +162,7 @@ const EventDetails = () => {
           isClosable: true,
         });
         setEvent(updatedEvent); // Cập nhật dữ liệu event
+        sessionStorage.setItem("selectedEvent", JSON.stringify(updatedEvent));
         closeEditModal(); // Đóng Modal
       } else {
         throw new Error("Failed to update the event.");
@@ -706,30 +707,6 @@ const EventDetails = () => {
           <Text>No services available.</Text>
         )}
       </Box>
-
-      {/* <Box mb={6}>
-        <Text fontWeight="bold" color="purple.900" fontSize="lg">
-          Location:
-        </Text>
-        <MapboxComponent
-          eventId={event?.eventId}
-          eventData={{
-            name: event?.name || "Default Event Name",
-            description: event?.description || "Default Event Description",
-            startDate: event?.startDate || new Date().toISOString(),
-            endDate: event?.endDate || new Date().toISOString(),
-            deposit: parseFloat(event?.deposit) || 0, // Ensure deposit is a number
-            status: event?.status,
-            stageValue: null,
-            coordinates: event?.coordinates || "10.8231,106.6297",
-            onWeb: event?.onWeb || false,
-          }}
-          onSaveCoordinates={(updatedCoordinates) =>
-            setEvent({ ...event, coordinates: updatedCoordinates })
-          }
-        />
-      </Box> */}
-
       <Box mb={6}>
         <Text fontWeight="bold" color="purple.900" fontSize="lg">
           Event Location:

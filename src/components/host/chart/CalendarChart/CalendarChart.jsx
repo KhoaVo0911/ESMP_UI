@@ -191,17 +191,21 @@ const CalendarChart = () => {
           headers: { Authorization: getAccessToken() },
         });
 
+        const validEvents = response.data.filter(
+          (event) => event.status.toLowerCase() !== "cancelled"
+        );
+
         // Lấy hình ảnh từ Firebase và chuẩn hóa dữ liệu sự kiện
         const fetchedEvents = await Promise.all(
-          response.data.map(async (event) => {
+          validEvents.map(async (event) => {
             const imageURL = await fetchEventImage(hostId, event.eventId);
             return {
               title: event.name,
               start: event.startDate,
               end: event.endDate,
-              eventId: event.eventId, // Thêm eventId vào dữ liệu sự kiện
+              eventId: event.eventId,
               extendedProps: {
-                imageURL: imageURL, // URL của hình ảnh sự kiện
+                imageURL: imageURL,
               },
             };
           })

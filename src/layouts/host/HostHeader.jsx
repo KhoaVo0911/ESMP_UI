@@ -30,6 +30,7 @@ const HostHeader = ({ collapsed }) => {
   const [userId, setUserId] = useState(null);
   // Modal Disclosure for UpdateApiBanking
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [hostName, setHostName] = useState("");
 
   useEffect(() => {
     const fetchUserId = async () => {
@@ -47,6 +48,7 @@ const HostHeader = ({ collapsed }) => {
 
         if (response.data && response.data.userid) {
           setUserId(response.data.userid);
+          setHostName(response.data.account?.name || "");
           console.log("User ID found:", response.data.userid);
         } else {
           console.warn("No user ID found for hostId:", hostId);
@@ -138,7 +140,7 @@ const HostHeader = ({ collapsed }) => {
           </MenuButton>
           <MenuList boxShadow="lg" borderRadius="lg" padding="12px">
             <MenuItem fontSize="md" fontWeight="700" color="gray.700">
-              👋 Hey, {currentUser?.name || "Host"}
+              👋 Hey, {hostName || "Host"}
             </MenuItem>
             <MenuItem
               fontSize="md"

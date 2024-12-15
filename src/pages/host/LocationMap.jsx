@@ -618,6 +618,126 @@ const LocationMap = () => {
     }
   };
 
+  const renderShape = (shape) => {
+    const location = shape.location;
+    const fillColor = shape.color || "lightgray";
+    const strokeColor = "black";
+    const strokeWidth = 1;
+
+    switch (shape.name) {
+      case "rectangle":
+        return (
+          <rect
+            x={0}
+            y={0}
+            width={location.width}
+            height={location.height}
+            fill={fillColor}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        );
+
+      case "circle":
+        return (
+          <circle
+            cx={location.width / 2}
+            cy={location.height / 2}
+            r={Math.min(location.width, location.height) / 2}
+            fill={fillColor}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        );
+
+      case "triangle":
+        return (
+          <polygon
+            points={`${location.width / 2},0 ${location.width},${
+              location.height
+            } 0,${location.height}`}
+            fill={fillColor}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        );
+
+      case "pentagon":
+        return (
+          <polygon
+            points={`${location.width / 2},0 ${location.width},${
+              location.height * 0.38
+            } ${location.width * 0.82},${location.height} ${
+              location.width * 0.18
+            },${location.height} 0,${location.height * 0.38}`}
+            fill={fillColor}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        );
+
+      case "hexagon":
+        return (
+          <polygon
+            points={`${location.width / 2},0 ${location.width},${
+              location.height * 0.25
+            } ${location.width},${location.height * 0.75} ${
+              location.width / 2
+            },${location.height} 0,${location.height * 0.75} 0,${
+              location.height * 0.25
+            }`}
+            fill={fillColor}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        );
+
+      case "star":
+        return (
+          <polygon
+            points={`${location.width / 2},0 ${location.width * 0.61},${
+              location.height * 0.35
+            } ${location.width * 0.98},${location.height * 0.35} ${
+              location.width * 0.68
+            },${location.height * 0.57} ${location.width * 0.79},${
+              location.height * 0.91
+            } ${location.width / 2},${location.height * 0.7} ${
+              location.width * 0.21
+            },${location.height * 0.91} ${location.width * 0.32},${
+              location.height * 0.57
+            } ${location.width * 0.02},${location.height * 0.35} ${
+              location.width * 0.39
+            },${location.height * 0.35}`}
+            fill={fillColor}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        );
+
+      case "arrow":
+        return (
+          <polygon
+            points={`10,${location.height * 0.4} ${location.width * 0.7},${
+              location.height * 0.4
+            } ${location.width * 0.7},${location.height * 0.2} ${
+              location.width
+            },${location.height * 0.5} ${location.width * 0.7},${
+              location.height * 0.8
+            } ${location.width * 0.7},${location.height * 0.6} 10,${
+              location.height * 0.6
+            }`}
+            fill={fillColor}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+          />
+        );
+
+      default:
+        console.warn("Unsupported shape:", shape.name);
+        return null;
+    }
+  };
+
   const bgColor = useColorModeValue("white", "gray.800");
 
   return (
@@ -721,196 +841,22 @@ const LocationMap = () => {
               {booth.name}
             </div>
           ))}
-          {/* {shapes.map((shape) => (
-            <div
+
+          {shapes.map((shape) => (
+            <svg
               key={shape.location.locationId}
               style={{
-                width: `${shape.location.width}px`,
-                height: `${shape.location.height}px`,
                 position: "absolute",
                 left: `${shape.location.x}px`,
                 top: `${shape.location.y}px`,
-                backgroundColor: "lightgray",
-                border: "1px solid black",
-                transform: `rotate(${shape.location.rotation || 0}deg)`,
+                width: `${shape.location.width}px`,
+                height: `${shape.location.height}px`,
+                overflow: "visible",
               }}
             >
-              {shape.name}
-            </div>
-          ))} */}
-
-          {shapes.map((shape) => {
-            const location = shape.location;
-            if (
-              !location ||
-              location.x === undefined ||
-              location.y === undefined
-            ) {
-              console.warn("Invalid shape data:", shape); // Log cảnh báo nếu dữ liệu shape không hợp lệ
-              return null;
-            }
-
-            const renderShape = () => {
-              switch (shape.name) {
-                case "rectangle":
-                  return (
-                    <rect
-                      x={location.x}
-                      y={location.y}
-                      width={location.width}
-                      height={location.height}
-                      fill="lightgray"
-                      stroke="black"
-                    />
-                  );
-                case "circle":
-                  return (
-                    <circle
-                      cx={location.x + location.width / 2}
-                      cy={location.y + location.height / 2}
-                      r={Math.min(location.width, location.height) / 2}
-                      fill="lightgray"
-                      stroke="black"
-                    />
-                  );
-                case "triangle":
-                  return (
-                    <polygon
-                      points={`${location.x},${location.y + location.height} ${
-                        location.x + location.width / 2
-                      },${location.y} ${location.x + location.width},${
-                        location.y + location.height
-                      }`}
-                      fill="lightgray"
-                      stroke="black"
-                    />
-                  );
-                case "pentagon":
-                  return (
-                    <polygon
-                      points={`${location.x + location.width / 2},${location.y} 
-              ${location.x + location.width},${
-                        location.y + location.height * 0.38
-                      } 
-              ${location.x + location.width * 0.82},${
-                        location.y + location.height
-                      } 
-              ${location.x + location.width * 0.18},${
-                        location.y + location.height
-                      } 
-              ${location.x},${location.y + location.height * 0.38}`}
-                      fill="lightgray"
-                      stroke="black"
-                    />
-                  );
-                case "hexagon":
-                  return (
-                    <polygon
-                      points={`${location.x + location.width * 0.5},${
-                        location.y
-                      } 
-              ${location.x + location.width},${
-                        location.y + location.height * 0.25
-                      } 
-              ${location.x + location.width},${
-                        location.y + location.height * 0.75
-                      } 
-              ${location.x + location.width * 0.5},${
-                        location.y + location.height
-                      } 
-              ${location.x},${location.y + location.height * 0.75} 
-              ${location.x},${location.y + location.height * 0.25}`}
-                      fill="lightgray"
-                      stroke="black"
-                    />
-                  );
-                case "star":
-                  return (
-                    <polygon
-                      points={`${location.x + location.width * 0.5},${
-                        location.y
-                      } 
-              ${location.x + location.width * 0.61},${
-                        location.y + location.height * 0.35
-                      } 
-              ${location.x + location.width * 0.98},${
-                        location.y + location.height * 0.35
-                      } 
-              ${location.x + location.width * 0.68},${
-                        location.y + location.height * 0.57
-                      } 
-              ${location.x + location.width * 0.79},${
-                        location.y + location.height * 0.91
-                      } 
-              ${location.x + location.width * 0.5},${
-                        location.y + location.height * 0.7
-                      } 
-              ${location.x + location.width * 0.21},${
-                        location.y + location.height * 0.91
-                      } 
-              ${location.x + location.width * 0.32},${
-                        location.y + location.height * 0.57
-                      } 
-              ${location.x + location.width * 0.02},${
-                        location.y + location.height * 0.35
-                      } 
-              ${location.x + location.width * 0.39},${
-                        location.y + location.height * 0.35
-                      }`}
-                      fill="lightgray"
-                      stroke="black"
-                    />
-                  );
-                case "arrow":
-                  return (
-                    <polygon
-                      points={`${location.x + location.width * 0.1},${
-                        location.y + location.height * 0.4
-                      } 
-              ${location.x + location.width * 0.7},${
-                        location.y + location.height * 0.4
-                      } 
-              ${location.x + location.width * 0.7},${
-                        location.y + location.height * 0.2
-                      } 
-              ${location.x + location.width},${
-                        location.y + location.height * 0.5
-                      } 
-              ${location.x + location.width * 0.7},${
-                        location.y + location.height * 0.8
-                      } 
-              ${location.x + location.width * 0.7},${
-                        location.y + location.height * 0.6
-                      } 
-              ${location.x + location.width * 0.1},${
-                        location.y + location.height * 0.6
-                      }`}
-                      fill="lightgray"
-                      stroke="black"
-                    />
-                  );
-                default:
-                  console.warn("Unsupported shape:", shape.name);
-                  return null;
-              }
-            };
-
-            return (
-              <svg
-                key={location.locationId}
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  width: "100%",
-                  height: "100%",
-                  overflow: "visible",
-                }}
-              >
-                {renderShape()}
-              </svg>
-            );
-          })}
+              {renderShape(shape)}
+            </svg>
+          ))}
 
           {textElements.map((text) => (
             <div
