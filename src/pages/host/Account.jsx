@@ -103,11 +103,47 @@ const AccountManagement = () => {
           "Content-Type": "application/json",
         },
       });
+      toast({
+        title: "Account created successfully.",
+        description: "The new account has been created.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
       onClose();
       fetchVendors();
       reset();
     } catch (error) {
-      console.error("Error creating account:", error);
+      const errorMessage = error.response?.data?.message || error.message;
+      console.error("Error creating account:", errorMessage);
+
+      // Hiển thị thông báo lỗi cụ thể
+      if (error.response?.data?.code === "UNKNOWN") {
+        toast({
+          title: "Error: Username already exists.",
+          description: "The username is already in use. Please choose another.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else if (error.response?.data?.code === "P2002") {
+        toast({
+          title: "Error: Email already exists.",
+          description:
+            "The email is already registered. Please use a different email.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Unexpected Error",
+          description: errorMessage,
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     } finally {
       setFormSubmitting(false);
     }
@@ -122,13 +158,48 @@ const AccountManagement = () => {
           "Content-Type": "application/json",
         },
       });
+      toast({
+        title: "Account updated successfully.",
+        description: "The account has been updated.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
       onClose();
       fetchVendors();
       reset();
       setIsEditing(false);
       setEditVendorId(null);
     } catch (error) {
-      console.error("Error updating account:", error);
+      const errorMessage = error.response?.data?.message || error.message;
+      console.error("Error updating account:", errorMessage);
+
+      if (error.response?.data?.code === "UNKNOWN") {
+        toast({
+          title: "Error: Username already exists.",
+          description: "The username is already in use. Please choose another.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else if (error.response?.data?.code === "P2002") {
+        toast({
+          title: "Error: Email already exists.",
+          description:
+            "The email is already registered. Please use a different email.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Unexpected Error",
+          description: errorMessage,
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     } finally {
       setFormSubmitting(false);
     }
@@ -374,102 +445,75 @@ const AccountManagement = () => {
             </Tr>
           </Thead>
           <Tbody>
-            {loading ? (
-              <Tr>
-                <Td colSpan={7} textAlign="center">
-                  <Spinner color="teal" />
-                </Td>
-              </Tr>
-            ) : (
-              accounts.map((account, index) => (
-                <Tr key={account.vendorId}>
-                  <Td>{index + 1}</Td>
-                  <Td>{account.username}</Td>
-                  <Td>{account.name}</Td>
-                  <Td>{account.email}</Td>
-                  <Td>{account.urlQr}</Td>
-                  <Td>
-                    <Badge colorScheme={account.status ? "green" : "red"}>
-                      {account.status ? "ACTIVE" : "INACTIVE"}
-                    </Badge>
-                  </Td>
-                  <Td textAlign="center">
-                    <Tooltip
-                      label={
-                        canCreateAccount
-                          ? ""
-                          : "Your package has expired, you cannot view details."
-                      }
-                      shouldWrapChildren
-                    >
-                      <Button
-                        size="sm"
-                        colorScheme="blue"
-                        mr={2}
-                        onClick={() => openDetailModal(account)}
-                        isDisabled={!canCreateAccount} // Use isDisabled instead of disabled
-                      >
-                        Details
-                      </Button>
-                    </Tooltip>
-                    <Tooltip
-                      label={
-                        canCreateAccount
-                          ? ""
-                          : "Your package has expired, you cannot edit this account."
-                      }
-                      shouldWrapChildren
-                    >
-                      <Button
-                        size="sm"
-                        colorScheme="yellow"
-                        mr={2}
-                        onClick={() => openEditModal(account)}
-                        isDisabled={!canCreateAccount} // Use isDisabled instead of disabled
-                      >
-                        Edit
-                      </Button>
-                    </Tooltip>
-                    <Tooltip
-                      label={
-                        canCreateAccount
-                          ? ""
-                          : "Your package has expired, you cannot send an email."
-                      }
-                      shouldWrapChildren
-                    >
-                      <Button
-                        size="sm"
-                        colorScheme="teal"
-                        mr={2}
-                        onClick={() => handleSendEmail(account)}
-                        isDisabled={!canCreateAccount} // Use isDisabled instead of disabled
-                      >
-                        Email
-                      </Button>
-                    </Tooltip>
-                    <Tooltip
-                      label={
-                        canCreateAccount
-                          ? ""
-                          : "Your package has expired, you cannot delete this account."
-                      }
-                      shouldWrapChildren
-                    >
-                      <Button
-                        size="sm"
-                        colorScheme="red"
-                        onClick={() => handleDeleteAccount(account.vendorId)}
-                        isDisabled={!canCreateAccount} // Use isDisabled instead of disabled
-                      >
-                        Delete
-                      </Button>
-                    </Tooltip>
-                  </Td>
-                </Tr>
-              ))
-            )}
-          </Tbody>
+  {loading ? (
+    <Tr>
+      <Td colSpan={7} textAlign="center">
+        <Spinner color="teal" />
+      </Td>
+    </Tr>
+  ) : (
+    accounts.map((account, index) => (
+      <Tr key={account.vendorId}>
+        <Td>{index + 1}</Td>
+        <Td>{account.username}</Td>
+        <Td>{account.name}</Td>
+        <Td>{account.email}</Td>
+        <Td>{account.urlQr}</Td>
+        <Td>
+          <Badge colorScheme={account.status ? "green" : "red"}>
+            {account.status ? "ACTIVE" : "INACTIVE"}
+          </Badge>
+        </Td>
+        <Td textAlign="center">
+          <Tooltip label="View Details" shouldWrapChildren>
+            <IconButton
+              icon={<InfoIcon />}
+              size="sm"
+              colorScheme="blue"
+              mr={2}
+              onClick={() => openDetailModal(account)}
+              isDisabled={!canCreateAccount}
+              aria-label="View Details"
+            />
+          </Tooltip>
+          <Tooltip label="Edit Account" shouldWrapChildren>
+            <IconButton
+              icon={<EditIcon />}
+              size="sm"
+              colorScheme="yellow"
+              mr={2}
+              onClick={() => openEditModal(account)}
+              isDisabled={!canCreateAccount}
+              aria-label="Edit Account"
+            />
+          </Tooltip>
+          <Tooltip label="Send Email" shouldWrapChildren>
+            <IconButton
+              icon={<EmailIcon />}
+              size="sm"
+              colorScheme="teal"
+              mr={2}
+              onClick={() => handleSendEmail(account)}
+              isDisabled={!canCreateAccount}
+              aria-label="Send Email"
+            />
+          </Tooltip>
+          <Tooltip label="Delete Account" shouldWrapChildren>
+            <IconButton
+              icon={<DeleteIcon />}
+              size="sm"
+              colorScheme="red"
+              onClick={() => handleDeleteAccount(account.vendorId)}
+              isDisabled={!canCreateAccount}
+              aria-label="Delete Account"
+            />
+          </Tooltip>
+        </Td>
+      </Tr>
+    ))
+  )}
+</Tbody>
+
         </Table>
 
         {/* Modal for Create/Edit Account */}
@@ -512,7 +556,6 @@ const AccountManagement = () => {
                     {errors.password?.message}
                   </FormErrorMessage>
                 </FormControl>
-                
 
                 <FormControl mt={4} isInvalid={errors.name}>
                   <FormLabel>Name</FormLabel>
@@ -526,33 +569,39 @@ const AccountManagement = () => {
                 <FormControl mt={4} isInvalid={errors.email}>
                   <FormLabel>Email</FormLabel>
                   <Input
-                    {...register("email", { required: "Email is required" })}
+                    {...register("email", {
+                      required: "Email is required",
+                      pattern: {
+                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                        message: "Invalid email format",
+                      },
+                    })}
                     placeholder="Enter email"
                   />
                   <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
                 </FormControl>
                 <FormControl mt={4} isInvalid={errors.phone}>
-  <FormLabel>Phone Number</FormLabel>
-  <Input
-    {...register("phone", {
-      required: "Phone number is required",
-      pattern: {
-        value: /^[0-9]{10,15}$/,
-        message: "Invalid phone number format",
-      },
-    })}
-    placeholder="Enter phone number"
-  />
-  <FormErrorMessage>{errors.phone?.message}</FormErrorMessage>
-</FormControl>
-                <FormControl mt={4} isInvalid={errors.urlQr}>
-                  <FormLabel>Account Banking</FormLabel>
+                  <FormLabel>Phone Number</FormLabel>
                   <Input
-                    {...register("urlQr", { required: "QR URL is required" })}
-                    placeholder="Enter QR code URL"
+                    {...register("phone", {
+                      required: "Phone number is required",
+                      pattern: {
+                        value: /^[0-9]{10,15}$/,
+                        message: "Invalid phone number format",
+                      },
+                    })}
+                    placeholder="Enter phone number"
                   />
-                  <FormErrorMessage>{errors.urlQr?.message}</FormErrorMessage>
+                  <FormErrorMessage>{errors.phone?.message}</FormErrorMessage>
                 </FormControl>
+                <FormControl mt={4}>
+  <FormLabel>Account Banking</FormLabel>
+  <Input
+    {...register("urlQr")}
+    placeholder="Enter QR code URL"
+  />
+</FormControl>
+
 
                 <ModalFooter>
                   <Button

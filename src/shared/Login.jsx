@@ -313,8 +313,10 @@ const LoginComponent = ({ onLoginSuccess }) => {
       ? userInfo.vendorInfo.vendorName
       : "";
       const expiretime = userInfo.hostInfo?.expiretime|| "";
+      const userIdAdmin = userInfo.userId || "";
       sessionStorage.setItem("expiretime", expiretime);
       sessionStorage.setItem("vendorName", vendorName);
+      sessionStorage.setItem("userId", userIdAdmin);
       // Lưu dữ liệu vào sessionStorage
       sessionStorage.setItem("accessToken", accessToken);
       sessionStorage.setItem("role", userRole);
