@@ -42,7 +42,6 @@ const TransactionList = () => {
   } = useDisclosure();
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [qrUrl, setQrUrl] = useState(""); // URL for QR Code
-  const [vendorInEventId, setVendorInEventId] = useState(null); // VendorInEventId
   const [loading, setLoading] = useState(true); // Loading state
   const [eventName, setEventName] = useState(""); // State for storing event name
   const toast = useToast(); // Initialize toast
@@ -66,27 +65,31 @@ const TransactionList = () => {
   }, [eventId]);
 
   // Fetch payments data from the API
-  useEffect(() => {
-    const fetchPayments = async () => {
-      try {
-        setLoading(true); // Set loading to true before fetching data
-        const response = await axios.get(
-          `${BASE_URL}/eventpayment/${eventId}`,
-          {
-            headers: {
-              Authorization: `${getAccessToken()}`,
-            },
-          }
-        );
-        setPayments(response.data);
-      } catch (error) {
-        console.error("Error fetching payments:", error);
-      } finally {
-        setLoading(false); // Set loading to false after fetching is complete
-      }
-    };
+  const fetchPayments = async () => {
+    try {
+      setLoading(true); // Set loading to true before fetching data
+      const response = await axios.get(`${BASE_URL}/eventpayment/${eventId}`, {
+        headers: {
+          Authorization: `${getAccessToken()}`,
+        },
+      });
+      setPayments(response.data);
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+    } finally {
+      setLoading(false); // Set loading to false after fetching is complete
+    }
+  };
 
+  useEffect(() => {
+    // Fetch payments on initial load
     fetchPayments();
+
+    // Set up interval to fetch payments every 10 seconds
+    const intervalId = setInterval(fetchPayments, 10000);
+
+    // Cleanup the interval on component unmount
+    return () => clearInterval(intervalId);
   }, [eventId]);
 
   const indexOfLastPayment = currentPage * paymentsPerPage;
@@ -110,16 +113,16 @@ const TransactionList = () => {
   const handleGenerateQr = async (payment) => {
     try {
       const { vendorId, deposit } = payment;
-  
+
       // Fetch vendor details to get QR URL
       const vendorResponse = await axios.get(`${BASE_URL}/vendor/${vendorId}`, {
         headers: { Authorization: `${getAccessToken()}` },
       });
       const userid = vendorResponse.data.userid;
-  
+
       const { urlQr } = vendorResponse.data;
       const newQrUrl = `https://img.vietqr.io/image/${urlQr}-compact2.png?amount=${deposit}`;
-  
+
       setSelectedPayment({ ...payment, userid }); // Include `userid` in `selectedPayment`
       setQrUrl(newQrUrl);
       onQrOpen();
@@ -127,7 +130,6 @@ const TransactionList = () => {
       console.error("Error generating QR:", error);
     }
   };
-  
 
   const handleConfirmPayment = async (userid, deposit) => {
     try {
@@ -136,11 +138,11 @@ const TransactionList = () => {
           Authorization: `${getAccessToken()}`,
         },
       });
-  
+
       const paymentToUpdate = response.data.find(
         (payment) => payment.id === selectedPayment.id
       );
-  
+
       if (paymentToUpdate) {
         // Update payment status
         await axios.put(
@@ -152,30 +154,26 @@ const TransactionList = () => {
             },
           }
         );
-  
+
         // Send notification
-        console.log("User ID:", userid); // Log safely
-        console.log("Deposit:", deposit); // Log safely
         const notificationApiUrl = `https://esmpbe.id.vn/api/notification`;
         const notificationResponse = await axios.post(notificationApiUrl, {
           userid,
           source: `Host has refunded the deposit: ${deposit} VNĐ`,
         });
-        console.log("Notification API Response:", notificationResponse.data);
-  
+
         // Close QR Modal
         onQrClose();
         setQrUrl("");
-        setVendorInEventId(null);
         setSelectedPayment(null);
-  
+
         // Update local state
         setPayments((prevPayments) =>
           prevPayments.map((p) =>
             p.id === paymentToUpdate.id ? { ...p, status: "Finished" } : p
           )
         );
-  
+
         // Show success toast
         toast({
           title: "Payment Confirmed",
@@ -191,12 +189,9 @@ const TransactionList = () => {
       console.error("Error confirming payment:", error.message || error);
     }
   };
-  
-  
 
   const handleCancelQr = () => {
     setQrUrl("");
-    setVendorInEventId(null);
     setSelectedPayment(null);
     onQrClose();
 
@@ -217,11 +212,7 @@ const TransactionList = () => {
           {eventName}
         </Text>
       </Text>
-      {loading ? (
-        <Flex justify="center" align="center" height="200px">
-          <Spinner size="lg" />
-        </Flex>
-      ) : (
+      
         <>
           <Table variant="simple">
             <Thead>
@@ -246,9 +237,7 @@ const TransactionList = () => {
                   <Td textAlign="center">
                     <Badge
                       colorScheme={
-                        payment.status === "Success Deposit"
-                          ? "green"
-                          : "yellow"
+                        payment.status === "Success Deposit" ? "green" : "yellow"
                       }
                     >
                       {payment.status}
@@ -287,7 +276,7 @@ const TransactionList = () => {
             ))}
           </Flex>
         </>
-      )}
+     
 
       {selectedPayment && (
         <Modal isOpen={isOpen} onClose={onClose} size="lg">
@@ -361,13 +350,15 @@ const TransactionList = () => {
               </Box>
             </ModalBody>
             <ModalFooter>
-            <Button
-  colorScheme="blue"
-  mr={3}
-  onClick={() => handleConfirmPayment(selectedPayment.userid, selectedPayment.deposit)}
->
-  Confirm
-</Button>
+              <Button
+                colorScheme="blue"
+                mr={3}
+                onClick={() =>
+                  handleConfirmPayment(selectedPayment.userid, selectedPayment.deposit)
+                }
+              >
+                Confirm
+              </Button>
               <Button variant="outline" onClick={handleCancelQr}>
                 Cancel
               </Button>
