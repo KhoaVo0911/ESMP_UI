@@ -85,13 +85,7 @@ const ManageProducts = () => {
       });
       setProducts(response.data);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch products.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      
     }
   };
 
@@ -112,13 +106,7 @@ const ManageProducts = () => {
 
         setProductItems(itemsWithImages);
     } catch (error) {
-        toast({
-            title: "Error",
-            description: "Failed to fetch product items.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-        });
+       
     }
 };
 const handleDelete = async (productItemId) => {
@@ -298,57 +286,58 @@ const handleDelete = async (productItemId) => {
         Add New Product
       </Button>
 
-      <Grid templateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={6} mt={10}>
-        {productItems.map((productItem) => (
-      <GridItem
+      <Grid
+  templateColumns="repeat(auto-fit, minmax(250px,250px))" // Compact card width
+  gap={4} // Small gaps for compactness
+  mt={6} // Adjust margin for better spacing
+>
+  {productItems.map((productItem) => (
+    <GridItem
       key={productItem.productItemId}
       border="1px solid #e0e0e0"
       borderRadius="lg"
       overflow="hidden"
-      boxShadow="lg"
+      boxShadow="sm"
       display="flex"
-      flexDirection="column" // Tạo layout dọc
+      flexDirection="column"
       justifyContent="space-between"
-      height="430px" // Đặt chiều cao cố định cho item
-      _hover={{ boxShadow: "2xl", transform: "scale(1.05)" }}
-      transition="all 0.3s ease"
+      height="350px" // Compact card height
+      _hover={{ boxShadow: "md", transform: "scale(1.05)" }}
+      transition="all 0.2s ease-in-out"
     >
-      {/* Hình ảnh sản phẩm */}
+      {/* Product Image */}
       <Image
         src={productItem.imageURL || "https://via.placeholder.com/150"}
         alt={productItem.name}
         objectFit="cover"
         width="100%"
-        height="150px"
+        height="120px" // Smaller image for compact design
       />
-    
-      {/* Phần nội dung */}
-      <Box p={4} flex="1">
-        {/* Thông tin sản phẩm */}
-        <Text fontWeight="bold" fontSize="lg" color="blue.600">
+
+      {/* Product Details */}
+      <Box p={3} flex="1">
+        <Text fontWeight="semibold" fontSize="md" color="blue.600">
           {productItem.name}
         </Text>
-        <Text color="gray.500" mb={2}>
+        <Text color="gray.500" fontSize="sm" mb={2}>
           {productItem.price} VND
         </Text>
-       
-        <Box> <Text color="gray.500">
-          Details:
-        </Text>
+        <Box>
+          <Text color="gray.400" fontSize="sm">Details:</Text>
           {productItem.details.map((detail, index) => (
-            <Text key={index} fontSize="sm">
+            <Text key={index} fontSize="xs">
               - {products.find((p) => p.productId === detail.productId)?.productName || "Unknown"} x{" "}
               {detail.quantity}
             </Text>
           ))}
         </Box>
       </Box>
-    
-      {/* Phần nút nằm dưới cùng */}
-      <Flex p={4} justifyContent="space-between">
+
+      {/* Action Buttons */}
+      <Flex p={3} justifyContent="space-between">
         <Button
           leftIcon={<FaEdit />}
-          size="sm"
+          size="sm" // Compact button size
           colorScheme="teal"
           variant="outline"
           onClick={() => handleEdit(productItem)}
@@ -357,7 +346,7 @@ const handleDelete = async (productItemId) => {
         </Button>
         <Button
           leftIcon={<FaTrash />}
-          size="sm"
+          size="sm" // Compact button size
           colorScheme="red"
           variant="outline"
           onClick={() => handleDelete(productItem.productItemId)}
@@ -366,12 +355,9 @@ const handleDelete = async (productItemId) => {
         </Button>
       </Flex>
     </GridItem>
-    
-     
-       
-          
-        ))}
-    </Grid>
+  ))}
+</Grid>
+
 
       <Modal isOpen={isOpen} onClose={resetForm} isCentered>
         <ModalOverlay />

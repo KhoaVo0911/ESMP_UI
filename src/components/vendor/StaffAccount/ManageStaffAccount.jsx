@@ -20,6 +20,9 @@ import {
   Switch,
   useToast,
   HStack,
+  Text,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react";
 import { EditIcon } from "@chakra-ui/icons";
 import axios from "axios";
@@ -38,10 +41,12 @@ const StaffAccountManager = () => {
     phone: "",
     email: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const toast = useToast();
 
-  const vendorId = sessionStorage.getItem("vendorId") || "dummyVendorId"; // Replace with actual vendorId
-  const accessToken = sessionStorage.getItem("accessToken") || "dummyAccessToken"; // Replace with actual accessToken
+  const vendorId = sessionStorage.getItem("vendorId") || "dummyVendorId";
+  const accessToken =
+    sessionStorage.getItem("accessToken") || "dummyAccessToken";
 
   // Fetch staff accounts
   const fetchStaffAccounts = async () => {
@@ -69,24 +74,39 @@ const StaffAccountManager = () => {
   // Edit modal click
   const handleEditClick = (staff) => {
     setSelectedStaff(staff);
+    setShowPassword(false);
     setIsEditModalOpen(true);
   };
 
   // Update staff account
   const handleUpdateStaff = async () => {
     const { password, name, phone, email, status } = selectedStaff;
-  
+
+    // Validation for email
     if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)) {
       toast({
         title: "Invalid Email",
-        description: "Please enter a valid Gmail address (e.g., example@gmail.com).",
+        description:
+          "Please enter a valid Gmail address (e.g., example@gmail.com).",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
       return;
     }
-  
+
+    // Validation for phone
+    if (!/^\d{10,11}$/.test(phone)) {
+      toast({
+        title: "Invalid Phone",
+        description: "Phone number must be 10-11 digits.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     try {
       await axios.put(
         `${BASE_URL}/staff/${selectedStaff.staffId}`,
@@ -105,28 +125,31 @@ const StaffAccountManager = () => {
       setIsEditModalOpen(false);
       fetchStaffAccounts();
     } catch (error) {
-      console.error("Error updating staff account:", error.response || error.message);
+      console.error(
+        "Error updating staff account:",
+        error.response || error.message
+      );
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to update staff account.",
+        description:
+          error.response?.data?.message || "Failed to update staff account.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
     }
   };
-  
 
   // Toggle staff status
   const handleStatusToggle = async (staff) => {
     try {
-      const { password, name, phone, email } = staff; // Send necessary fields with updated status
+      const { password, name, phone, email } = staff;
       const updatedStaff = {
         password,
         name,
         phone,
         email,
-        status: !staff.status, // Toggle status
+        status: !staff.status,
       };
       await axios.put(`${BASE_URL}/staff/${staff.staffId}`, updatedStaff, {
         headers: { Authorization: `${accessToken}` },
@@ -140,7 +163,10 @@ const StaffAccountManager = () => {
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error toggling staff status:", error.response || error.message);
+      console.error(
+        "Error toggling staff status:",
+        error.response || error.message
+      );
       toast({
         title: "Error",
         description: "Failed to update staff status.",
@@ -154,14 +180,39 @@ const StaffAccountManager = () => {
   // Create new staff account
   const handleCreateStaff = async () => {
     try {
-      const { username, password, name, phone, email } = newStaff; // Send all necessary fields
+      const { username, password, name, phone, email } = newStaff;
+  
+      // Validation for email
+      if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)) {
+        toast({
+          title: "Invalid Email",
+          description: "Please enter a valid Gmail address (e.g., example@gmail.com).",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+  
+      // Validation for phone
+      if (!/^\d{10,11}$/.test(phone)) {
+        toast({
+          title: "Invalid Phone",
+          description: "Phone number must be 10-11 digits.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+  
+      // Gửi yêu cầu tạo tài khoản
       await axios.post(
         `${BASE_URL}/staff/${vendorId}`,
         { username, password, name, phone, email },
-        {
-          headers: { Authorization: `${accessToken}` },
-        }
+        { headers: { Authorization: `${accessToken}` } }
       );
+  
       toast({
         title: "Success",
         description: "Staff account created successfully.",
@@ -170,22 +221,34 @@ const StaffAccountManager = () => {
         isClosable: true,
       });
       setIsCreateModalOpen(false);
-      fetchStaffAccounts();
+      fetchStaffAccounts(); // Làm mới danh sách
     } catch (error) {
-      console.error("Error creating staff account:", error.response || error.message);
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to create staff account.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.error("Error creating staff account:", error);
+  
+      // Kiểm tra mã lỗi từ backend
+      if (error.response?.data?.code === "P2002") {
+        toast({
+          title: "Email Exists",
+          description: "This email is already registered. Please use another email.",
+          status: "warning",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.response?.data?.message || "Failed to create staff account.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
   };
+  
 
   return (
     <Box p={5}>
-      {/* Create Staff Button */}
       <Button
         colorScheme="blue"
         mb={4}
@@ -193,9 +256,7 @@ const StaffAccountManager = () => {
       >
         + Create Staff Account
       </Button>
-
-      {/* Staff Table */}
-      <Table variant="simple" bg="white" boxShadow="lg" borderRadius="md" overflow="hidden">
+      <Table variant="simple" bg="white" boxShadow="lg" borderRadius="md">
         <Thead bg="gray.100">
           <Tr>
             <Th>Username</Th>
@@ -211,10 +272,14 @@ const StaffAccountManager = () => {
           {staffAccounts.map((staff) => (
             <Tr key={staff.staffId}>
               <Td>{staff.username}</Td>
-              <Td>{staff.password}</Td>
+              <Td>
+                {showPassword && selectedStaff?.staffId === staff.staffId
+                  ? staff.password
+                  : "****"}
+              </Td>
               <Td>{staff.name}</Td>
-              <Td>{staff.phone}</Td> {/* Added Phone */}
-              <Td>{staff.email}</Td> {/* Added Email */}
+              <Td>{staff.phone}</Td>
+              <Td>{staff.email}</Td>
               <Td>
                 <Switch
                   isChecked={staff.status}
@@ -229,13 +294,23 @@ const StaffAccountManager = () => {
                     colorScheme="blue"
                     onClick={() => handleEditClick(staff)}
                   />
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setSelectedStaff(staff);
+                      setShowPassword(!showPassword);
+                    }}
+                  >
+                    {showPassword && selectedStaff?.staffId === staff.staffId
+                      ? "Hide"
+                      : "Show"}
+                  </Button>
                 </HStack>
               </Td>
             </Tr>
           ))}
         </Tbody>
-      </Table>
-
+      </Table>{" "}
       {/* Edit Staff Modal */}
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
         <ModalOverlay />
@@ -243,41 +318,65 @@ const StaffAccountManager = () => {
           <ModalHeader>Edit Staff Account</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Input
-              placeholder="Name"
-              value={selectedStaff?.name || ""}
-              onChange={(e) =>
-                setSelectedStaff((prev) => ({ ...prev, name: e.target.value }))
-              }
+            <FormControl mb={3}>
+              <FormLabel>Name</FormLabel>
+              <Input
+                placeholder="Enter name"
+                value={selectedStaff?.name || ""}
+                onChange={(e) =>
+                  setSelectedStaff((prev) => ({
+                    ...prev,
+                    name: e.target.value,
+                  }))
+                }
+              />
+            </FormControl>
+            <FormControl mb={3}>
+              <FormLabel>Password</FormLabel>
+              <Input
+                placeholder="Enter password"
+                type="password"
+                value={selectedStaff?.password || ""}
+                onChange={(e) =>
+                  setSelectedStaff((prev) => ({
+                    ...prev,
+                    password: e.target.value,
+                  }))
+                }
+              />
+            </FormControl>
+            <FormControl mb={3}>
+              <FormLabel>Phone</FormLabel>
+              <Input
+                placeholder="Enter phone number"
+                value={selectedStaff?.phone || ""}
+                onChange={(e) =>
+                  setSelectedStaff((prev) => ({
+                    ...prev,
+                    phone: e.target.value,
+                  }))
+                }
+              />
+            </FormControl>
+            <FormControl
               mb={3}
-            />
-            <Input
-              placeholder="Password"
-              type="password"
-              value={selectedStaff?.password || ""}
-              onChange={(e) =>
-                setSelectedStaff((prev) => ({ ...prev, password: e.target.value }))
+              isInvalid={
+                !/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(selectedStaff?.email) &&
+                selectedStaff?.email !== ""
               }
-              mb={3}
-            />
-            <Input
-              placeholder="Phone"
-              value={selectedStaff?.phone || ""}
-              onChange={(e) =>
-                setSelectedStaff((prev) => ({ ...prev, phone: e.target.value }))
-              }
-              mb={3}
-            />
-            <Input
-  placeholder="Email"
-  value={selectedStaff?.email || ""}
-  onChange={(e) =>
-    setSelectedStaff((prev) => ({ ...prev, email: e.target.value }))
-  }
-  mb={3}
-  isInvalid={!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(selectedStaff?.email) && selectedStaff?.email !== ""}
-/>
-
+            >
+              <FormLabel>Email</FormLabel>
+              <Input
+                placeholder="Enter email"
+                value={selectedStaff?.email || ""}
+                onChange={(e) =>
+                  setSelectedStaff((prev) => ({
+                    ...prev,
+                    email: e.target.value,
+                  }))
+                }
+              />
+            </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleUpdateStaff}>
@@ -289,61 +388,85 @@ const StaffAccountManager = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-
       {/* Create Staff Modal */}
-      <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)}>
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => {
+          setIsCreateModalOpen(false); // Close the modal
+          setNewStaff({ // Reset the form fields
+            username: "",
+            password: "",
+            name: "",
+            phone: "",
+            email: "",
+          });
+        }}
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Create Staff Account</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Input
-              placeholder="Username"
-              value={newStaff.username}
-              onChange={(e) =>
-                setNewStaff((prev) => ({ ...prev, username: e.target.value }))
-              }
-              mb={3}
-            />
-            <Input
-              placeholder="Password"
-              type="password"
-              value={newStaff.password}
-              onChange={(e) =>
-                setNewStaff((prev) => ({ ...prev, password: e.target.value }))
-              }
-              mb={3}
-            />
-            <Input
-              placeholder="Name"
-              value={newStaff.name}
-              onChange={(e) =>
-                setNewStaff((prev) => ({ ...prev, name: e.target.value }))
-              }
-              mb={3}
-            />
-            <Input
-              placeholder="Phone"
-              value={newStaff.phone}
-              onChange={(e) =>
-                setNewStaff((prev) => ({ ...prev, phone: e.target.value }))
-              }
-              mb={3}
-            />
-            <Input
-              placeholder="Email"
-              value={newStaff.email}
-              onChange={(e) =>
-                setNewStaff((prev) => ({ ...prev, email: e.target.value }))
-              }
-              mb={3}
-            />
+            <FormControl mb={3}>
+              <FormLabel>Username</FormLabel>
+              <Input
+                placeholder="Enter username"
+                value={newStaff.username}
+                onChange={(e) =>
+                  setNewStaff((prev) => ({ ...prev, username: e.target.value }))
+                }
+              />
+            </FormControl>
+            <FormControl mb={3}>
+              <FormLabel>Password</FormLabel>
+              <Input
+                placeholder="Enter password"
+                type="password"
+                value={newStaff.password}
+                onChange={(e) =>
+                  setNewStaff((prev) => ({ ...prev, password: e.target.value }))
+                }
+              />
+            </FormControl>
+            <FormControl mb={3}>
+              <FormLabel>Name</FormLabel>
+              <Input
+                placeholder="Enter name"
+                value={newStaff.name}
+                onChange={(e) =>
+                  setNewStaff((prev) => ({ ...prev, name: e.target.value }))
+                }
+              />
+            </FormControl>
+            <FormControl mb={3}>
+              <FormLabel>Phone</FormLabel>
+              <Input
+                placeholder="Enter phone number"
+                value={newStaff.phone}
+                onChange={(e) =>
+                  setNewStaff((prev) => ({ ...prev, phone: e.target.value }))
+                }
+              />
+            </FormControl>
+            <FormControl mb={3}>
+              <FormLabel>Email</FormLabel>
+              <Input
+                placeholder="Enter email"
+                value={newStaff.email}
+                onChange={(e) =>
+                  setNewStaff((prev) => ({ ...prev, email: e.target.value }))
+                }
+              />
+            </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleCreateStaff}>
               Create
             </Button>
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateModalOpen(false)}
+            >
               Cancel
             </Button>
           </ModalFooter>

@@ -22,6 +22,7 @@ import {
   Input,
   Tooltip,
   useToast,
+  Badge,
 } from "@chakra-ui/react";
 import ProductCard from "./ProductCard";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -54,7 +55,6 @@ const Shop = () => {
   const [vendorInEventStatus, setVendorInEventStatus] = useState(null);
   const [showCreateMenuModal, setShowCreateMenuModal] = useState(false);
   const toast = useToast(); // Toast instance for notifications
-
 
   const {
     isOpen: isCartOpen,
@@ -197,12 +197,12 @@ const Shop = () => {
     await fetchVendorInEventStatus();
   };
 
-  const addToCart = (product,productItemIds) => {
+  const addToCart = (product, productItemIds) => {
     setCart((prevCart) => {
       const existingProductIndex = prevCart.findIndex(
         (cartItem) => cartItem.productItemId === product.productItemId
       );
-  
+
       if (existingProductIndex !== -1) {
         const updatedCart = [...prevCart];
         updatedCart[existingProductIndex].quantity += product.quantity;
@@ -226,7 +226,6 @@ const Shop = () => {
       }
     });
   };
-  
 
   const onOpenCartWithSessionData = () => {
     if (vendorInEventStatus !== "finished") {
@@ -255,7 +254,7 @@ const Shop = () => {
           },
         }
       );
-     
+
       setShowCreateMenuModal(false); // Close modal after success
       toast({
         title: "Menu Created!",
@@ -287,30 +286,32 @@ const Shop = () => {
           },
         }
       );
-  
+
       const menuName = response.data.menuEvent.menuName; // Giả sử menuName nằm trong response.data
       console.log("Menu Name:", menuName); // Hiển thị menuName
-  
+
       // Nếu cần sử dụng menuName sau đó, bạn có thể set vào state
       setMenuName(menuName); // Ví dụ: lưu menuName vào state nếu cần
     } catch (error) {
       console.error("Error fetching menu:", error);
-      toast({
-        title: "Error",
-        description: "There was an issue fetching the menu name.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "There was an issue fetching the menu name.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     }
   };
-  
+
   useEffect(() => {
     if (vendorId && eventId && accessToken) {
       handleFetchMenuName(); // Gọi khi cần thiết để lấy menuName
     }
   }, [vendorId, eventId, accessToken]);
-  
+  const getTotalQuantity = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
 
   return (
     <Box
@@ -319,69 +320,74 @@ const Shop = () => {
       minH="100vh"
       textAlign="center"
     >
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={5}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={5}
+      >
         <Text fontSize="3xl" fontWeight="bold">
-          Menu
+          {menuName}
         </Text>
         <Box display="flex" alignItems="center" gap={4}>
-          <Tooltip
-            label={
-              vendorInEventStatus === "finished"
-                ? "Event is already finished."
-                : "Click to end the event."
-            }
-          >
-            <Box>
-              <EndEvent
-                eventId={eventId}
-                accessToken={accessToken}
-                hostId={hostId}
-                vendorId={vendorId}
-                vendorInEventStatus={vendorInEventStatus}
-                onStatusUpdate={handleStatusUpdate}
-                totalRevenue={totalRevenue}
-              />
-            </Box>
-          </Tooltip>
-          <Button
-            colorScheme="blue"
-            onClick={handleGoToOrderedList}
-          >
+         
+
+          <Button colorScheme="blue" onClick={handleGoToOrderedList}>
             Order History
           </Button>
           <Tooltip
-  label={
-    vendorInEventStatus === "finished"
-      ? "Cannot add product. Event is finished."
-      : "Add a new product."
-  }
->
-  <Button
-    onClick={() => {
-      if (vendorInEventStatus !== "finished") {
-        onOpenAdd();
-      }
-    }}
-    disabled={vendorInEventStatus === "finished"}
-    cursor={vendorInEventStatus === "finished" ? "not-allowed" : "pointer"}
-  >
-    Add Product
-  </Button>
-</Tooltip>
+            label={
+              vendorInEventStatus === "finished"
+                ? "Cannot add product. Event is finished."
+                : "Add a new product."
+            }
+          >
+            <Button
+              onClick={() => {
+                if (vendorInEventStatus !== "finished") {
+                  onOpenAdd();
+                }
+              }}
+              disabled={vendorInEventStatus === "finished"}
+              cursor={
+                vendorInEventStatus === "finished" ? "not-allowed" : "pointer"
+              }
+            >
+              Add Product
+            </Button>
+          </Tooltip>
           <Tooltip
             label={
               vendorInEventStatus === "finished"
                 ? "Cannot open cart. Event is finished."
-                : "View your cart."
+                : `View your cart. Total items: ${getTotalQuantity()}`
             }
           >
-            <IconButton
-              icon={<ShoppingCartIcon />}
-              onClick={onOpenCartWithSessionData}
-              aria-label="View Cart"
-              disabled={vendorInEventStatus === "finished"}
-              cursor={vendorInEventStatus === "finished" ? "not-allowed" : "pointer"}
-            />
+            <Box position="relative" display="inline-block">
+              <IconButton
+                icon={<ShoppingCartIcon />}
+                onClick={onOpenCartWithSessionData}
+                aria-label="View Cart"
+                disabled={vendorInEventStatus === "finished"}
+                cursor={
+                  vendorInEventStatus === "finished" ? "not-allowed" : "pointer"
+                }
+              />
+              {getTotalQuantity() > 0 && (
+                <Badge
+                  position="absolute"
+                  top="-2px"
+                  right="-2px"
+                  colorScheme="red"
+                  borderRadius="full"
+                  px={2}
+                  py={0.5}
+                  fontSize="xs"
+                >
+                  {getTotalQuantity()}
+                </Badge>
+              )}
+            </Box>
           </Tooltip>
         </Box>
       </Box>
@@ -407,21 +413,20 @@ const Shop = () => {
           <DrawerContent maxWidth="700px">
             <DrawerHeader>Cart</DrawerHeader>
             <DrawerBody>
-            <Cart
-  cartItems={cart}
-  updateQuantity={(index, newQuantity) =>
-    setCart((prevCart) => {
-      const updatedCart = [...prevCart];
-      updatedCart[index].quantity = newQuantity;
-      return updatedCart;
-    })
-  }
-  removeItem={(index) =>
-    setCart((prevCart) => prevCart.filter((_, i) => i !== index))
-  }
-  clearCart={clearCart} // Gọi hàm clearCart
-/>
-
+              <Cart
+                cartItems={cart}
+                updateQuantity={(index, newQuantity) =>
+                  setCart((prevCart) => {
+                    const updatedCart = [...prevCart];
+                    updatedCart[index].quantity = newQuantity;
+                    return updatedCart;
+                  })
+                }
+                removeItem={(index) =>
+                  setCart((prevCart) => prevCart.filter((_, i) => i !== index))
+                }
+                clearCart={clearCart} // Gọi hàm clearCart
+              />
             </DrawerBody>
             <DrawerFooter>
               <Button colorScheme="teal" onClick={onCloseCart}>
