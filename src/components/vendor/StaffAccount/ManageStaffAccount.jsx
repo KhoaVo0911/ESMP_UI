@@ -74,8 +74,20 @@ const StaffAccountManager = () => {
 
   // Update staff account
   const handleUpdateStaff = async () => {
+    const { password, name, phone, email, status } = selectedStaff;
+  
+    if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid Gmail address (e.g., example@gmail.com).",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+  
     try {
-      const { password, name, phone, email, status } = selectedStaff; // Send all necessary fields
       await axios.put(
         `${BASE_URL}/staff/${selectedStaff.staffId}`,
         { password, name, phone, email, status },
@@ -103,6 +115,7 @@ const StaffAccountManager = () => {
       });
     }
   };
+  
 
   // Toggle staff status
   const handleStatusToggle = async (staff) => {
@@ -256,13 +269,15 @@ const StaffAccountManager = () => {
               mb={3}
             />
             <Input
-              placeholder="Email"
-              value={selectedStaff?.email || ""}
-              onChange={(e) =>
-                setSelectedStaff((prev) => ({ ...prev, email: e.target.value }))
-              }
-              mb={3}
-            />
+  placeholder="Email"
+  value={selectedStaff?.email || ""}
+  onChange={(e) =>
+    setSelectedStaff((prev) => ({ ...prev, email: e.target.value }))
+  }
+  mb={3}
+  isInvalid={!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(selectedStaff?.email) && selectedStaff?.email !== ""}
+/>
+
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleUpdateStaff}>
