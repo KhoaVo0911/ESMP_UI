@@ -512,6 +512,7 @@ const AccountManagement = () => {
                     {errors.password?.message}
                   </FormErrorMessage>
                 </FormControl>
+                
 
                 <FormControl mt={4} isInvalid={errors.name}>
                   <FormLabel>Name</FormLabel>
@@ -530,7 +531,20 @@ const AccountManagement = () => {
                   />
                   <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
                 </FormControl>
-
+                <FormControl mt={4} isInvalid={errors.phone}>
+  <FormLabel>Phone Number</FormLabel>
+  <Input
+    {...register("phone", {
+      required: "Phone number is required",
+      pattern: {
+        value: /^[0-9]{10,15}$/,
+        message: "Invalid phone number format",
+      },
+    })}
+    placeholder="Enter phone number"
+  />
+  <FormErrorMessage>{errors.phone?.message}</FormErrorMessage>
+</FormControl>
                 <FormControl mt={4} isInvalid={errors.urlQr}>
                   <FormLabel>Account Banking</FormLabel>
                   <Input
