@@ -271,7 +271,7 @@ const AccountManagement = () => {
       name: "",
       phone: "",
       email: "",
-      address: "",
+      // address: "",
       urlQr: "",
       // status: true,
     });
