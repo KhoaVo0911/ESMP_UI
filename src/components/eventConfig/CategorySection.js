@@ -363,9 +363,62 @@ const CategorySection = () => {
     onOpen();
   };
 
+  // const handleSaveCategory = async () => {
+  //   try {
+  //     if (selectedCategory) {
+  //       await axios.put(
+  //         `https://esmpbe.id.vn/api/category/${selectedCategory.categoryId}`,
+  //         { categoryName: newCategory, status: categoryStatus },
+  //         {
+  //           headers: {
+  //             Authorization: `${accessToken}`,
+  //             "Content-Type": "application/json",
+  //           },
+  //         }
+  //       );
+  //       toast({
+  //         title: "Category updated",
+  //         status: "success",
+  //         duration: 3000,
+  //         isClosable: true,
+  //       });
+  //     } else {
+  //       await axios.post(
+  //         "https://esmpbe.id.vn/api/category",
+  //         { categoryName: newCategory, hostid: hostId, status: categoryStatus },
+  //         {
+  //           headers: {
+  //             Authorization: `${accessToken}`,
+  //             "Content-Type": "application/json",
+  //           },
+  //         }
+  //       );
+  //       toast({
+  //         title: "New category created",
+  //         status: "success",
+  //         duration: 3000,
+  //         isClosable: true,
+  //       });
+  //     }
+
+  //     fetchCategories();
+  //     onClose();
+  //   } catch (error) {
+  //     console.error("Error saving category:", error);
+  //     toast({
+  //       title: "Error saving category",
+  //       description: "Could not save the category.",
+  //       status: "error",
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //   }
+  // };
+
   const handleSaveCategory = async () => {
     try {
       if (selectedCategory) {
+        // Cập nhật category nếu đang sửa
         await axios.put(
           `https://esmpbe.id.vn/api/category/${selectedCategory.categoryId}`,
           { categoryName: newCategory, status: categoryStatus },
@@ -383,9 +436,10 @@ const CategorySection = () => {
           isClosable: true,
         });
       } else {
+        // Tạo mới category nếu không có category đang chọn
         await axios.post(
           "https://esmpbe.id.vn/api/category",
-          { categoryName: newCategory, hostid: hostId, status: categoryStatus },
+          { categoryName: newCategory, hostid: hostId, status: categoryStatus }, // Đảm bảo truyền đúng categoryStatus
           {
             headers: {
               Authorization: `${accessToken}`,
@@ -401,6 +455,7 @@ const CategorySection = () => {
         });
       }
 
+      // Cập nhật lại danh sách categories
       fetchCategories();
       onClose();
     } catch (error) {
