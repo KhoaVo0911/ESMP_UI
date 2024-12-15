@@ -785,6 +785,110 @@ const LocationMap = () => {
                       stroke="black"
                     />
                   );
+                case "pentagon":
+                  return (
+                    <polygon
+                      points={`${location.x + location.width / 2},${location.y} 
+              ${location.x + location.width},${
+                        location.y + location.height * 0.38
+                      } 
+              ${location.x + location.width * 0.82},${
+                        location.y + location.height
+                      } 
+              ${location.x + location.width * 0.18},${
+                        location.y + location.height
+                      } 
+              ${location.x},${location.y + location.height * 0.38}`}
+                      fill="lightgray"
+                      stroke="black"
+                    />
+                  );
+                case "hexagon":
+                  return (
+                    <polygon
+                      points={`${location.x + location.width * 0.5},${
+                        location.y
+                      } 
+              ${location.x + location.width},${
+                        location.y + location.height * 0.25
+                      } 
+              ${location.x + location.width},${
+                        location.y + location.height * 0.75
+                      } 
+              ${location.x + location.width * 0.5},${
+                        location.y + location.height
+                      } 
+              ${location.x},${location.y + location.height * 0.75} 
+              ${location.x},${location.y + location.height * 0.25}`}
+                      fill="lightgray"
+                      stroke="black"
+                    />
+                  );
+                case "star":
+                  return (
+                    <polygon
+                      points={`${location.x + location.width * 0.5},${
+                        location.y
+                      } 
+              ${location.x + location.width * 0.61},${
+                        location.y + location.height * 0.35
+                      } 
+              ${location.x + location.width * 0.98},${
+                        location.y + location.height * 0.35
+                      } 
+              ${location.x + location.width * 0.68},${
+                        location.y + location.height * 0.57
+                      } 
+              ${location.x + location.width * 0.79},${
+                        location.y + location.height * 0.91
+                      } 
+              ${location.x + location.width * 0.5},${
+                        location.y + location.height * 0.7
+                      } 
+              ${location.x + location.width * 0.21},${
+                        location.y + location.height * 0.91
+                      } 
+              ${location.x + location.width * 0.32},${
+                        location.y + location.height * 0.57
+                      } 
+              ${location.x + location.width * 0.02},${
+                        location.y + location.height * 0.35
+                      } 
+              ${location.x + location.width * 0.39},${
+                        location.y + location.height * 0.35
+                      }`}
+                      fill="lightgray"
+                      stroke="black"
+                    />
+                  );
+                case "arrow":
+                  return (
+                    <polygon
+                      points={`${location.x + location.width * 0.1},${
+                        location.y + location.height * 0.4
+                      } 
+              ${location.x + location.width * 0.7},${
+                        location.y + location.height * 0.4
+                      } 
+              ${location.x + location.width * 0.7},${
+                        location.y + location.height * 0.2
+                      } 
+              ${location.x + location.width},${
+                        location.y + location.height * 0.5
+                      } 
+              ${location.x + location.width * 0.7},${
+                        location.y + location.height * 0.8
+                      } 
+              ${location.x + location.width * 0.7},${
+                        location.y + location.height * 0.6
+                      } 
+              ${location.x + location.width * 0.1},${
+                        location.y + location.height * 0.6
+                      }`}
+                      fill="lightgray"
+                      stroke="black"
+                    />
+                  );
                 default:
                   console.warn("Unsupported shape:", shape.name);
                   return null;

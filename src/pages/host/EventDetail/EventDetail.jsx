@@ -1,5 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+// import {
+//   Box,
+//   Flex,
+//   Heading,
+//   Text,
+//   Button,
+//   Grid,
+//   GridItem,
+//   Divider,
+//   Table,
+//   Thead,
+//   Tbody,
+//   Tr,
+//   Th,
+//   Td,
+//   useToast,
+//   Switch,
+//   Spinner,
+// } from "@chakra-ui/react";
 import {
   Box,
   Flex,
@@ -18,13 +37,28 @@ import {
   useToast,
   Switch,
   Spinner,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  FormControl,
+  FormLabel,
+  Input,
+  Textarea,
+  Select,
 } from "@chakra-ui/react";
+import { DatePicker } from "antd";
+import moment from "moment";
 import { format } from "date-fns";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 import MapboxComponent from "../../../components/MapBox/MapboxComponent";
+import axios from "axios";
 
 const BASE_URL = "https://esmpbe.id.vn/api/event";
 const SERVICE_URL = "https://esmpbe.id.vn/api/service"; // Cập nhật đường dẫn service mới
+const THEME_URL = "https://esmpbe.id.vn/api/theme/hostId";
 const getAccessToken = () => sessionStorage.getItem("accessToken") || "";
 
 const EventDetails = () => {
@@ -34,12 +68,14 @@ const EventDetails = () => {
 
   const [event, setEvent] = useState(null);
   const [services, setServices] = useState([]);
-  const [theme, setTheme] = useState(null);
+  const [themes, setThemes] = useState([]);
 
   const [loadingEvent, setLoadingEvent] = useState(true); // Loading state for event
   const [loadingServices, setLoadingServices] = useState(true); // Loading state for services
-  const [loadingTheme, setLoadingTheme] = useState(true); // Loading state for theme
+  const [loadingThemes, setLoadingThemes] = useState(true);
   const [updatingVisibility, setUpdatingVisibility] = useState(false); // Loading state for toggling visibility
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [formData, setFormData] = useState(null);
 
   // Load event data from location state or sessionStorage
   useEffect(() => {
@@ -66,6 +102,81 @@ const EventDetails = () => {
       console.error("No event data found!");
     }
   }, [location.state]);
+
+  // Hiển thị Modal chỉnh sửa
+  const openEditModal = () => {
+    setFormData({ ...event }); // Copy dữ liệu hiện tại vào formData
+    setIsEditModalOpen(true);
+  };
+
+  // Đóng Modal chỉnh sửa
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setFormData(null); // Reset dữ liệu form
+  };
+
+  // Cập nhật giá trị trong formData
+  const handleFormChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  // Xử lý lưu thay đổi
+  const handleSaveChanges = async () => {
+    try {
+      // Kiểm tra và chuyển đổi giá trị startDate và endDate
+      const updatedStartDate = formData.startDate
+        ? moment(formData.startDate).toDate().toISOString() // Chuyển đổi sang ISO 8601
+        : null;
+
+      const updatedEndDate = formData.endDate
+        ? moment(formData.endDate).toDate().toISOString()
+        : null;
+
+      // Gửi toàn bộ dữ liệu event với các thay đổi
+      const updatedEvent = {
+        ...formData,
+        startDate: updatedStartDate,
+        endDate: updatedEndDate,
+        deposit: parseFloat(formData.deposit), // Đảm bảo giá trị là số
+      };
+
+      const response = await axios.put(
+        `${BASE_URL}/${event.eventId}`,
+        updatedEvent,
+        {
+          headers: {
+            Authorization: sessionStorage.getItem("accessToken") || "",
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        toast({
+          title: "Event Updated",
+          description: "The event has been successfully updated.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        setEvent(updatedEvent); // Cập nhật dữ liệu event
+        closeEditModal(); // Đóng Modal
+      } else {
+        throw new Error("Failed to update the event.");
+      }
+    } catch (error) {
+      console.error("Error updating event:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update the event.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   // Fetch services when event is set
   useEffect(() => {
@@ -112,35 +223,32 @@ const EventDetails = () => {
 
   // Fetch theme when event is set
   useEffect(() => {
-    const fetchTheme = async () => {
-      if (event?.themeId) {
+    const fetchThemes = async () => {
+      if (event?.hostId) {
         try {
-          const response = await fetch(
-            `https://esmpbe.id.vn/api/theme/${event.themeId}`,
-            {
-              headers: {
-                Authorization: `${getAccessToken()}`,
-              },
-            }
-          );
-          if (response.ok) {
-            const data = await response.json();
-            setTheme(data); // Save theme data
-          } else {
-            console.error("Failed to fetch theme:", await response.text());
-          }
+          const response = await axios.get(`${THEME_URL}/${event.hostId}`, {
+            headers: {
+              Authorization: getAccessToken(),
+            },
+          });
+          setThemes(response.data); // Cập nhật danh sách theme
         } catch (error) {
-          console.error("Error fetching theme:", error);
+          console.error("Error fetching themes:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load themes.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
         } finally {
-          setLoadingTheme(false); // Done loading theme
+          setLoadingThemes(false);
         }
-      } else {
-        setLoadingTheme(false); // No themeId, set loading to false
       }
     };
 
-    fetchTheme();
-  }, [event?.themeId]);
+    fetchThemes();
+  }, [event?.hostId]);
 
   // Handle back button click
   const handleBackClick = () => {
@@ -193,7 +301,7 @@ const EventDetails = () => {
         });
         setUpdatingVisibility(false); // Stop updating visibility
         return;
-      }  // Fetch vendors if the event is being made public
+      } // Fetch vendors if the event is being made public
       if (newVisibility) {
         const vendorResponse = await fetch(
           `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendor/host/${event.hostId}`,
@@ -203,14 +311,14 @@ const EventDetails = () => {
             },
           }
         );
-  
+
         if (!vendorResponse.ok) {
           console.error("Failed to fetch vendors for host.");
           return;
         }
-  
+
         const vendors = await vendorResponse.json();
-  
+
         // Send notification to each vendor
         await Promise.all(
           vendors.map((vendor) => {
@@ -369,6 +477,9 @@ const EventDetails = () => {
           </Heading>
         </Flex>
         <Flex align="center" gap={4}>
+          <Button colorScheme="blue" onClick={openEditModal}>
+            Edit Event
+          </Button>
           <Button
             colorScheme="red"
             onClick={handleCancelEvent}
@@ -421,6 +532,103 @@ const EventDetails = () => {
         </Grid>
       )}
 
+      {/* Modal chỉnh sửa */}
+      <Modal isOpen={isEditModalOpen} onClose={closeEditModal} zIndex="1400">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Edit Event</ModalHeader>
+          <ModalBody>
+            <FormControl mb={4}>
+              <FormLabel>Name</FormLabel>
+              <Input
+                value={formData?.name || ""}
+                onChange={(e) => handleFormChange("name", e.target.value)}
+              />
+            </FormControl>
+            <FormControl mb={4}>
+              <FormLabel>Description</FormLabel>
+              <Textarea
+                value={formData?.description || ""}
+                onChange={(e) =>
+                  handleFormChange("description", e.target.value)
+                }
+              />
+            </FormControl>
+            <FormControl mb={4}>
+              <FormLabel>Start Date</FormLabel>
+              <DatePicker
+                style={{ width: "100%" }}
+                picker="date"
+                disabledDate={(current) =>
+                  current && current < moment().startOf("day")
+                }
+                value={formData?.startDate ? moment(formData.startDate) : null} // Chuyển đổi từ ISO 8601 sang moment
+                onChange={(date) => {
+                  handleFormChange(
+                    "startDate",
+                    date ? date.toISOString() : null
+                  ); // Cập nhật giá trị ISO 8601
+                }}
+                getPopupContainer={(triggerNode) => triggerNode.parentNode}
+              />
+            </FormControl>
+            <FormControl mb={4}>
+              <FormLabel>End Date</FormLabel>
+              <DatePicker
+                style={{ width: "100%" }}
+                picker="date"
+                disabledDate={(current) =>
+                  current &&
+                  (current < moment().startOf("day") ||
+                    (formData?.startDate &&
+                      current < moment(formData.startDate)))
+                }
+                value={formData?.endDate ? moment(formData.endDate) : null}
+                onChange={(date) => {
+                  handleFormChange("endDate", date ? date.toISOString() : null);
+                }}
+                getPopupContainer={(triggerNode) => triggerNode.parentNode}
+              />
+            </FormControl>
+
+            <FormControl mb={4}>
+              <FormLabel>Deposit</FormLabel>
+              <Input
+                type="number"
+                value={formData?.deposit || ""}
+                onChange={(e) => handleFormChange("deposit", e.target.value)}
+              />
+            </FormControl>
+            <FormControl mb={4}>
+              <FormLabel>Theme</FormLabel>
+              {loadingThemes ? (
+                <Spinner size="sm" />
+              ) : (
+                <Select
+                  value={formData?.themeId || ""}
+                  onChange={(e) => handleFormChange("themeId", e.target.value)}
+                >
+                  <option value="">Select Theme</option>
+                  {themes.map((theme) => (
+                    <option key={theme.themeId} value={theme.themeId}>
+                      {theme.name}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={closeEditModal} mr={3}>
+              Cancel
+            </Button>
+            <Button colorScheme="blue" onClick={handleSaveChanges}>
+              Save Changes
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
       <Box mb={6}>
         <Text fontWeight="bold" color="purple.900" fontSize="lg">
           Event Description:
@@ -460,14 +668,15 @@ const EventDetails = () => {
         <Text fontWeight="bold" color="purple.900" fontSize="lg">
           Theme Event:
         </Text>
-        {loadingTheme ? (
+        {loadingThemes ? (
           <Spinner size="sm" />
-        ) : theme ? (
-          <Box>
-            <Text>{theme.name}</Text>
-          </Box>
         ) : (
-          <Text>Theme not found.</Text>
+          <Box>
+            <Text>
+              {themes.find((t) => t.themeId === event?.themeId)?.name ||
+                "Theme not found."}
+            </Text>
+          </Box>
         )}
       </Box>
 
@@ -501,7 +710,7 @@ const EventDetails = () => {
         )}
       </Box>
 
-      <Box mb={6}>
+      {/* <Box mb={6}>
         <Text fontWeight="bold" color="purple.900" fontSize="lg">
           Location:
         </Text>
@@ -522,6 +731,69 @@ const EventDetails = () => {
             setEvent({ ...event, coordinates: updatedCoordinates })
           }
         />
+      </Box> */}
+
+      <Box mb={6}>
+        <Text fontWeight="bold" color="purple.900" fontSize="lg">
+          Event Location:
+        </Text>
+        {event?.coordinates ? (
+          <Box>
+            {/* Hiển thị thông số tọa độ */}
+            <Text>Coordinates: {event.coordinates}</Text>
+            {/* Link to Google Maps */}
+            <Text>
+              <a
+                href={`https://www.google.com/maps?q=${event.coordinates}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "blue", textDecoration: "underline" }}
+              >
+                View on Google Maps
+              </a>
+            </Text>
+            {/* Hiển thị bản đồ Mapbox */}
+            <MapboxComponent
+              eventId={event.eventId}
+              eventData={{
+                name: event.name,
+                description: event.description,
+                startDate: event.startDate,
+                endDate: event.endDate,
+                deposit: parseFloat(event.deposit),
+                status: event.status,
+                coordinates: event.coordinates,
+                onWeb: event.onWeb,
+              }}
+              onSaveCoordinates={(updatedCoordinates) =>
+                setEvent({ ...event, coordinates: updatedCoordinates })
+              }
+            />
+          </Box>
+        ) : (
+          // Nếu chưa có tọa độ, hiển thị MapboxComponent để thêm
+          <Box>
+            <Text mb={2}>
+              No coordinates available. Please add a location for this event.
+            </Text>
+            <MapboxComponent
+              eventId={event?.eventId}
+              eventData={{
+                name: event?.name,
+                description: event?.description,
+                startDate: event?.startDate,
+                endDate: event?.endDate,
+                deposit: parseFloat(event?.deposit),
+                status: event?.status,
+                coordinates: event?.coordinates,
+                onWeb: event?.onWeb,
+              }}
+              onSaveCoordinates={(updatedCoordinates) =>
+                setEvent({ ...event, coordinates: updatedCoordinates })
+              }
+            />
+          </Box>
+        )}
       </Box>
 
       <Button onClick={handleBackClick} colorScheme="purple" mt={6}>

@@ -30,10 +30,14 @@ import MapboxComponent from "../../../components/MapBox/MapboxComponent";
 import Slider from "react-slick"; // Import react-slick
 import "slick-carousel/slick/slick.css"; // Import CSS cho slider
 import "slick-carousel/slick/slick-theme.css";
+import Map, { Marker } from "react-map-gl";
 
 const BASE_URL = "https://esmpbe.id.vn/api/event";
 const LOCATION_TYPE_URL = "https://esmpbe.id.vn/api/map/locationType";
 const SERVICE_URL = "https://esmpbe.id.vn/api/service";
+
+const MAPBOX_TOKEN =
+  "pk.eyJ1IjoibWluaGRxMjUxMiIsImEiOiJjbTNvcng0Y3MwNmJpMmxxdWl3aDVjYXU0In0.aL5rtwlAjXrvQ_lRfnSXNQ";
 
 const EventEnrolled = () => {
   const { state } = useLocation();
@@ -416,18 +420,49 @@ const EventEnrolled = () => {
       <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
         Location
       </Text>
-      <Box mb={10}>
-        <MapboxComponent
-          eventId={eventId}
-          eventData={eventDetail}
-          onSaveCoordinates={(updatedCoordinates) =>
-            setEventDetail({ ...eventDetail, coordinates: updatedCoordinates })
-          }
-        />
-        {eventDetail.coordinates && (
-          <Text mt={4} color="gray.600">
-            Current Coordinates: {eventDetail.coordinates}
-          </Text>
+      <Box mb={6}>
+        {eventDetail?.coordinates ? (
+          <Box>
+            <Text fontWeight="bold" mb={2}>
+              Coordinates: {eventDetail.coordinates}
+            </Text>
+            <Text>
+              <a
+                href={`https://www.google.com/maps?q=${eventDetail.coordinates}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "blue", textDecoration: "underline" }}
+              >
+                View on Google Maps
+              </a>
+            </Text>
+            <Box mt={4}>
+              <Map
+                mapboxAccessToken={MAPBOX_TOKEN}
+                initialViewState={{
+                  latitude: parseFloat(eventDetail.coordinates.split(",")[0]),
+                  longitude: parseFloat(eventDetail.coordinates.split(",")[1]),
+                  zoom: 15,
+                }}
+                style={{
+                  width: "100%",
+                  height: "400px",
+                  borderRadius: "8px",
+                  border: "1px solid #ccc",
+                }}
+                mapStyle="mapbox://styles/mapbox/streets-v11"
+              >
+                {/* <Marker
+                  latitude={parseFloat(eventDetail.coordinates.split(",")[0])}
+                  longitude={parseFloat(eventDetail.coordinates.split(",")[1])}
+                  anchor="center"
+                  color="red"
+                /> */}
+              </Map>
+            </Box>
+          </Box>
+        ) : (
+          <Text>No coordinates available for this event.</Text>
         )}
       </Box>
     </Box>
