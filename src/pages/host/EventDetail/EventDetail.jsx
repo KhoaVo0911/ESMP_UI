@@ -76,7 +76,7 @@ const EventDetails = () => {
   const [updatingVisibility, setUpdatingVisibility] = useState(false); // Loading state for toggling visibility
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [formData, setFormData] = useState(null);
-
+  const hostId = sessionStorage.getItem("hostId") || "dummyVendorId";
   // Load event data from location state or sessionStorage
   useEffect(() => {
     const storedEvent = sessionStorage.getItem("selectedEvent");
@@ -304,7 +304,7 @@ const EventDetails = () => {
       } // Fetch vendors if the event is being made public
       if (newVisibility) {
         const vendorResponse = await fetch(
-          `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/vendor/host/${event.hostId}`,
+          `https://esmpbe.id.vn/api/vendor/host/${hostId}`,
           {
             headers: {
               Authorization: `${getAccessToken()}`,
@@ -323,20 +323,17 @@ const EventDetails = () => {
         await Promise.all(
           vendors.map((vendor) => {
             console.log(`Sending notification to vendor: ${vendor.userid}`);
-            return fetch(
-              `http://ec2-13-215-31-68.ap-southeast-1.compute.amazonaws.com:2510/api/notification`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `${getAccessToken()}`,
-                },
-                body: JSON.stringify({
-                  userid: vendor.userid,
-                  source: `Sự kiện "${event.name}" đã được khởi động.`,
-                }),
-              }
-            )
+            return fetch(`https://esmpbe.id.vn/api/notification`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `${getAccessToken()}`,
+              },
+              body: JSON.stringify({
+                userid: vendor.userid,
+                source: `Sự kiện "${event.name}" đã được khởi động.`,
+              }),
+            })
               .then((res) => {
                 if (res.ok) {
                   console.log(

@@ -300,59 +300,76 @@ const handleDelete = async (productItemId) => {
 
       <Grid templateColumns="repeat(auto-fit, minmax(250px, 1fr))" gap={6} mt={10}>
         {productItems.map((productItem) => (
-            <GridItem
-                key={productItem.productItemId}
-                border="1px solid #e0e0e0"
-                borderRadius="lg"
-                overflow="hidden"
-                boxShadow="lg"
-                _hover={{ boxShadow: "2xl", transform: "scale(1.05)" }}
-                transition="all 0.3s ease"
-            >
-                <Image
-                    src={productItem.imageURL || "https://via.placeholder.com/150"}
-                    alt={productItem.name}
-                    objectFit="cover"
-                    width="100%"
-                    height="150px"
-                />
-                <Box p={4}>
-                    <Text fontWeight="bold" fontSize="lg" color="blue.600">
-                        {productItem.name}
-                    </Text>
-                    <Text color="gray.500" mb={2}>
-                        {productItem.price} VND
-                    </Text>
-                    <Box>
-                        {productItem.details.map((detail, index) => (
-                            <Text key={index} fontSize="sm">
-                                - {products.find((p) => p.productId === detail.productId)?.productName || "Unknown"} x{" "}
-                                {detail.quantity}
-                            </Text>
-                        ))}
-                    </Box>
-                </Box>
-                <Flex p={4} justifyContent="space-between" alignItems="center">
-                    <Button
-                        leftIcon={<FaEdit />}
-                        size="sm"
-                        colorScheme="teal"
-                        variant="outline"
-                        onClick={() => handleEdit(productItem)}
-                    >
-                        Edit
-                    </Button>
-                    <Button
-                        leftIcon={<FaTrash />}
-                        size="sm"
-                        colorScheme="red"
-                        variant="outline"
-                        onClick={() => handleDelete(productItem.productItemId)}
-                    >
-                        Delete
-                    </Button>
-                </Flex>
-            </GridItem>
+      <GridItem
+      key={productItem.productItemId}
+      border="1px solid #e0e0e0"
+      borderRadius="lg"
+      overflow="hidden"
+      boxShadow="lg"
+      display="flex"
+      flexDirection="column" // Tạo layout dọc
+      justifyContent="space-between"
+      height="430px" // Đặt chiều cao cố định cho item
+      _hover={{ boxShadow: "2xl", transform: "scale(1.05)" }}
+      transition="all 0.3s ease"
+    >
+      {/* Hình ảnh sản phẩm */}
+      <Image
+        src={productItem.imageURL || "https://via.placeholder.com/150"}
+        alt={productItem.name}
+        objectFit="cover"
+        width="100%"
+        height="150px"
+      />
+    
+      {/* Phần nội dung */}
+      <Box p={4} flex="1">
+        {/* Thông tin sản phẩm */}
+        <Text fontWeight="bold" fontSize="lg" color="blue.600">
+          {productItem.name}
+        </Text>
+        <Text color="gray.500" mb={2}>
+          {productItem.price} VND
+        </Text>
+       
+        <Box> <Text color="gray.500">
+          Details:
+        </Text>
+          {productItem.details.map((detail, index) => (
+            <Text key={index} fontSize="sm">
+              - {products.find((p) => p.productId === detail.productId)?.productName || "Unknown"} x{" "}
+              {detail.quantity}
+            </Text>
+          ))}
+        </Box>
+      </Box>
+    
+      {/* Phần nút nằm dưới cùng */}
+      <Flex p={4} justifyContent="space-between">
+        <Button
+          leftIcon={<FaEdit />}
+          size="sm"
+          colorScheme="teal"
+          variant="outline"
+          onClick={() => handleEdit(productItem)}
+        >
+          Edit
+        </Button>
+        <Button
+          leftIcon={<FaTrash />}
+          size="sm"
+          colorScheme="red"
+          variant="outline"
+          onClick={() => handleDelete(productItem.productItemId)}
+        >
+          Delete
+        </Button>
+      </Flex>
+    </GridItem>
+    
+     
+       
+          
         ))}
     </Grid>
 

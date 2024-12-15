@@ -33,7 +33,7 @@ const OrderedList = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
-  const { accessToken, vendorId, eventId, staffId } = location.state || {};
+  const { accessToken, vendorId, eventId, staffId  } = location.state || {};
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -187,7 +187,10 @@ const OrderedList = () => {
         const productItem = productItems.find(
           (item) => item.productItemId === detail.productitemId
         );
-        return { ...detail, productItemName: productItem?.name || "Unknown Product Item" };
+        return {
+          ...detail,
+          productItemName: productItem?.name || "Unknown Product Item",
+        };
       });
 
       setOrderDetails((prevDetails) => ({
@@ -235,7 +238,58 @@ const OrderedList = () => {
   const currentOrders = orders.slice(startIndex, startIndex + itemsPerPage);
 
   const calculateDetailTotal = (details) => {
-    return details.reduce((sum, item) => sum + parseFloat(item.totalPrice || 0), 0);
+    return details.reduce(
+      (sum, item) => sum + parseFloat(item.totalPrice || 0),
+      0
+    );
+  };
+  const toggleOrderStatus = async (orderId) => {
+    const order = orders.find((o) => o.orderId === orderId);
+    if (!order) return;
+
+    const nextStatus =
+      order.status === "Prepared"
+        ? "Success"
+        : order.status === "Success"
+        ? "Cancel"
+        : "Prepared";
+
+    try {
+      await axios.put(
+        `https://esmpbe.id.vn/api/order/${orderId}`,
+        { status: nextStatus },
+        {
+          headers: {
+            Authorization: `${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // Cập nhật trạng thái trong danh sách đơn hàng
+      setOrders((prevOrders) =>
+        prevOrders.map((o) =>
+          o.orderId === orderId ? { ...o, status: nextStatus } : o
+        )
+      );
+
+      toast({
+        title: "Status Updated",
+        description: `Order status updated to ${nextStatus}`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      toast({
+        title: "Error",
+        description: "Unable to update order status.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (
@@ -255,7 +309,13 @@ const OrderedList = () => {
         <Spinner size="xl" />
       ) : orders.length > 0 ? (
         <>
-          <Box bg="white" p={5} borderRadius="lg" boxShadow="lg" overflowX="auto">
+          <Box
+            bg="white"
+            p={5}
+            borderRadius="lg"
+            boxShadow="lg"
+            overflowX="auto"
+          >
             <Table variant="simple" size="md">
               <Thead bg="gray.100">
                 <Tr>
@@ -271,7 +331,11 @@ const OrderedList = () => {
                 {currentOrders.map((order) => (
                   <Tr key={order.orderId}>
                     <Td textAlign="center">
-                      <Tooltip label="Click to view details" hasArrow placement="top">
+                      <Tooltip
+                        label="Click to view details"
+                        hasArrow
+                        placement="top"
+                      >
                         <Text
                           as="span"
                           color="blue.500"
@@ -290,31 +354,26 @@ const OrderedList = () => {
                     <Td textAlign="center">{order.totalAmount}</Td>
                     <Td textAlign="center">
                       <HStack justify="center">
-                        <Icon
-                          as={
+                        <Button
+                          size="sm"
+                          colorScheme={
                             order.status === "Prepared"
-                              ? FaShippingFast
+                              ? "orange"
                               : order.status === "Success"
-                              ? FaCheckCircle
-                              : FaTimesCircle
+                              ? "green"
+                              : "red"
                           }
-                          color={
-                            order.status === "Prepared"
-                              ? "orange.500"
-                              : order.status === "Success"
-                              ? "green.500"
-                              : "red.500"
-                          }
-                        />
-                        <Text>
+                          onClick={() => toggleOrderStatus(order.orderId)}
+                        >
                           {order.status === "Prepared"
                             ? "Preparing"
                             : order.status === "Success"
                             ? "Successful"
-                            : "Failed"}
-                        </Text>
+                            : "Canceled"}
+                        </Button>
                       </HStack>
                     </Td>
+
                     <Td textAlign="center">
                       {transactions[order.orderId] ? (
                         <HStack justify="center">
@@ -349,7 +408,9 @@ const OrderedList = () => {
             </Table>
           </Box>
           <HStack mt={5} justify="center">
-            {Array.from({ length: Math.ceil(orders.length / itemsPerPage) }).map((_, index) => (
+            {Array.from({
+              length: Math.ceil(orders.length / itemsPerPage),
+            }).map((_, index) => (
               <Button
                 key={index}
                 size="sm"
@@ -389,15 +450,21 @@ const OrderedList = () => {
                         <Text fontWeight="bold">Product:</Text>
                         <Text>{detail.productItemName}</Text>
                         <Text>Quantity: {detail.quantity}</Text>
-                        <Text>Unit Price: {formatCurrency(detail.unitPrice)}</Text>
-                        <Text>Total Price: {formatCurrency(detail.totalPrice)}</Text>
+                        <Text>
+                          Unit Price: {formatCurrency(detail.unitPrice)}
+                        </Text>
+                        <Text>
+                          Total Price: {formatCurrency(detail.totalPrice)}
+                        </Text>
                       </VStack>
                     </GridItem>
                   ))}
                 </Grid>
                 <Text fontWeight="bold" mt={4}>
                   Total Order Amount:{" "}
-                  {formatCurrency(calculateDetailTotal(orderDetails[selectedOrder]))}
+                  {formatCurrency(
+                    calculateDetailTotal(orderDetails[selectedOrder])
+                  )}
                 </Text>
               </>
             ) : (
@@ -414,5 +481,4 @@ const OrderedList = () => {
     </Box>
   );
 };
-
 export default OrderedList;
