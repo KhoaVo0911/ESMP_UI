@@ -382,7 +382,7 @@ const RegisterHostComponent = () => {
           position: "top",
         });
 
-        navigate("/login");
+        onOpen(); 
       } catch (error) {
         toast({
           title: "Registration Failed",
@@ -531,7 +531,44 @@ const RegisterHostComponent = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+      <Modal isOpen={isOpen} onClose={() => {}} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Account Registration Successful</ModalHeader>
+          <ModalBody>
+            <Text fontSize="lg" mb={4}>
+              Your account has been successfully registered and forwarded to the
+              Admin.
+            </Text>
+            <Text fontSize="md" mb={6}>
+              Please contact the Admin to activate your account.
+            </Text>
+            <Box textAlign="center" mb={4}>
+              <IconButton
+                icon={<CheckIcon />}
+                aria-label="Success"
+                colorScheme="green"
+                size="lg"
+                isRound
+              />
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="blue"
+              onClick={() => navigate("/login")}
+              width="100%"
+            >
+              OK
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+
     </Box>
+
+    
   );
 };
 

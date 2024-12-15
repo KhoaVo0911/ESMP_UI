@@ -31,7 +31,7 @@ const HostPackageInfo = () => {
 
         // Lọc giao dịch có hostId trùng với hostId từ sessionStorage và status là "pending"
         const filteredTransaction = response.data.find(
-          (transaction) => transaction.hostid === hostId && transaction.status === "pending"
+          (transaction) => transaction.hostid === hostId && transaction.status === "success"
         );
 
         if (!filteredTransaction) {
