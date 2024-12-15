@@ -52,10 +52,11 @@ const ProductList = () => {
           },
         }
       );
-
+  
       setData(productResponse.data);
       setFilteredData(productResponse.data);
-
+  
+      // Fetch categories and filter by status = true
       const categoryResponse = await axios.get(
         `https://esmpbe.id.vn/api/category/host/${hostId}`,
         {
@@ -65,13 +66,18 @@ const ProductList = () => {
           },
         }
       );
-      setCategories(categoryResponse.data);
+  
+      // Filter categories where status is true
+      const filteredCategories = categoryResponse.data.filter((category) => category.status === true);
+      setCategories(filteredCategories);
+  
     } catch (error) {
       message.error("Error fetching data from API!");
     } finally {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchData();
