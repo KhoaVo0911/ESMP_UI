@@ -331,7 +331,25 @@ const Shop = () => {
         </Text>
         <Box display="flex" alignItems="center" gap={4}>
          
-
+        <Tooltip
+            label={
+              vendorInEventStatus === "finished"
+                ? "Event is already finished."
+                : "Click to end the event."
+            }
+          >
+            <Box>
+              <EndEvent
+                eventId={eventId}
+                accessToken={accessToken}
+                hostId={hostId}
+                vendorId={vendorId}
+                vendorInEventStatus={vendorInEventStatus}
+                onStatusUpdate={handleStatusUpdate}
+                totalRevenue={totalRevenue}
+              />
+            </Box>
+          </Tooltip>
           <Button colorScheme="blue" onClick={handleGoToOrderedList}>
             Order History
           </Button>

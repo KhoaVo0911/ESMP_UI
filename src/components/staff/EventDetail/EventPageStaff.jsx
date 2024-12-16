@@ -179,9 +179,9 @@ const EventPageStaff = () => {
       <ViewBoothMap/>
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
-      <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
+      {/* <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
         Location
-      </Text>
+      </Text> */}
       {/* <div style={{ width: "100%", height: "300px", marginBottom: "20px" }}>
         <iframe
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3918.6100105370224!2d106.8073080746704!3d10.84112758931162!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752731176b07b1%3A0xb752b24b379bae5e!2sFPT%20University%20HCMC!5e0!3m2!1sen!2s!4v1726308048313!5m2!1sen!2s"

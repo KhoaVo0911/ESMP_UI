@@ -202,6 +202,7 @@ const TransactionHistory = () => {
                 <Th>Purchase Date</Th>
                 <Th>Expiration Date</Th>
                 <Th>Storage Date</Th>
+                <Th>Status</Th>
                 <Th>Price</Th>
               </Tr>
             </Thead>
@@ -249,6 +250,7 @@ const TransactionHistory = () => {
                         )
                       ).toLocaleDateString()}
                     </Box> </Td>
+                    <Td>{transaction.status}</Td>
                     <Td>{packageDetails.price} VND</Td>
                   </Tr>
                 ) : (

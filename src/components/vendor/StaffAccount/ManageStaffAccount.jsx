@@ -20,11 +20,11 @@ import {
   Switch,
   useToast,
   HStack,
-  Text,
   FormControl,
   FormLabel,
+  FormErrorMessage,
 } from "@chakra-ui/react";
-import { EditIcon } from "@chakra-ui/icons";
+import { EditIcon, ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import axios from "axios";
 
 const BASE_URL = "https://esmpbe.id.vn/api";
@@ -42,8 +42,10 @@ const StaffAccountManager = () => {
     email: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const toast = useToast();
+  const [visiblePasswords, setVisiblePasswords] = useState({});
 
+  const toast = useToast();
+  const [errors, setErrors] = useState({});
   const vendorId = sessionStorage.getItem("vendorId") || "dummyVendorId";
   const accessToken =
     sessionStorage.getItem("accessToken") || "dummyAccessToken";
@@ -73,74 +75,17 @@ const StaffAccountManager = () => {
 
   // Edit modal click
   const handleEditClick = (staff) => {
-    setSelectedStaff(staff);
+    setSelectedStaff({
+      ...staff, // Copy existing staff data into selectedStaff
+      name: staff.name || "",
+      password: staff.password || "", // Default empty values if missing
+      phone: staff.phone || "",
+      email: staff.email || "",
+    });
     setShowPassword(false);
+    setErrors({}); // Reset errors
     setIsEditModalOpen(true);
   };
-
-  // Update staff account
-  const handleUpdateStaff = async () => {
-    const { password, name, phone, email, status } = selectedStaff;
-
-    // Validation for email
-    if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)) {
-      toast({
-        title: "Invalid Email",
-        description:
-          "Please enter a valid Gmail address (e.g., example@gmail.com).",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    // Validation for phone
-    if (!/^\d{10,11}$/.test(phone)) {
-      toast({
-        title: "Invalid Phone",
-        description: "Phone number must be 10-11 digits.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      await axios.put(
-        `${BASE_URL}/staff/${selectedStaff.staffId}`,
-        { password, name, phone, email, status },
-        {
-          headers: { Authorization: `${accessToken}` },
-        }
-      );
-      toast({
-        title: "Success",
-        description: "Staff account updated successfully.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      setIsEditModalOpen(false);
-      fetchStaffAccounts();
-    } catch (error) {
-      console.error(
-        "Error updating staff account:",
-        error.response || error.message
-      );
-      toast({
-        title: "Error",
-        description:
-          error.response?.data?.message || "Failed to update staff account.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  // Toggle staff status
   const handleStatusToggle = async (staff) => {
     try {
       const { password, name, phone, email } = staff;
@@ -176,37 +121,96 @@ const StaffAccountManager = () => {
       });
     }
   };
+  // Validate email and phone
+  const validateEmail = (email) => /^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email);
+  const validatePhone = (phone) => /^\d{10,11}$/.test(phone);
 
-  // Create new staff account
-  const handleCreateStaff = async () => {
+  // Handle Update Staff
+  const handleUpdateStaff = async () => {
+    const { password, name, phone, email } = selectedStaff;
+  
+    let newErrors = {};
+  
+    // Validation logic
+    if (!name) newErrors.name = "Name is required";
+    if (!password) newErrors.password = "Password is required";
+    if (!phone) newErrors.phone = "Phone number is required";
+    if (!validatePhone(phone)) newErrors.phone = "Phone number must be 10-11 digits";
+    if (!email) newErrors.email = "Email is required";
+    if (!validateEmail(email)) newErrors.email = "Please enter a valid Gmail address (e.g., example@gmail.com)";
+  
+    setErrors(newErrors);
+  
+    // If errors exist, do not proceed
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+  
     try {
-      const { username, password, name, phone, email } = newStaff;
+      await axios.put(
+        `${BASE_URL}/staff/${selectedStaff.staffId}`,
+        { password, name, phone, email, status: selectedStaff.status },
+        {
+          headers: { Authorization: `${accessToken}` },
+        }
+      );
   
-      // Validation for email
-      if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)) {
+      toast({
+        title: "Success",
+        description: "Staff account updated successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+  
+      setIsEditModalOpen(false);
+      fetchStaffAccounts();
+    } catch (error) {
+      console.error("Error updating staff account:", error);
+  
+      const responseCode = error.response?.data?.code;
+      const message = error.response?.data?.message;
+  
+      if (responseCode === "P2002" && message.includes("email")) {
+        setErrors((prev) => ({ ...prev, email: "This email is already registered." }));
+      } else if (responseCode === "UNKNOWN" && message.includes("Username already exists")) {
+        setErrors((prev) => ({ ...prev, username: "This username already exists." }));
+      } else {
         toast({
-          title: "Invalid Email",
-          description: "Please enter a valid Gmail address (e.g., example@gmail.com).",
+          title: "Error",
+          description: "Unexpected error occurred while updating the account.",
           status: "error",
           duration: 3000,
           isClosable: true,
         });
-        return;
       }
+    }
+  };
   
-      // Validation for phone
-      if (!/^\d{10,11}$/.test(phone)) {
-        toast({
-          title: "Invalid Phone",
-          description: "Phone number must be 10-11 digits.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
-      }
+
+  // Handle Create Staff
+  const handleCreateStaff = async () => {
+    const { username, password, name, phone, email } = newStaff;
   
-      // Gửi yêu cầu tạo tài khoản
+    let newErrors = {};
+  
+    // Validation logic
+    if (!username) newErrors.username = "Username is required";
+    if (!password) newErrors.password = "Password is required";
+    if (!name) newErrors.name = "Name is required";
+    if (!phone) newErrors.phone = "Phone number is required";
+    if (!validatePhone(phone)) newErrors.phone = "Phone number must be 10-11 digits";
+    if (!email) newErrors.email = "Email is required";
+    if (!validateEmail(email)) newErrors.email = "Please enter a valid Gmail address (e.g., example@gmail.com)";
+  
+    setErrors(newErrors);
+  
+    // If errors exist, do not proceed
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+  
+    try {
       await axios.post(
         `${BASE_URL}/staff/${vendorId}`,
         { username, password, name, phone, email },
@@ -220,24 +224,26 @@ const StaffAccountManager = () => {
         duration: 3000,
         isClosable: true,
       });
+  
       setIsCreateModalOpen(false);
-      fetchStaffAccounts(); // Làm mới danh sách
+      setNewStaff({ username: "", password: "", name: "", phone: "", email: "" });
+      fetchStaffAccounts();
     } catch (error) {
       console.error("Error creating staff account:", error);
   
-      // Kiểm tra mã lỗi từ backend
-      if (error.response?.data?.code === "P2002") {
-        toast({
-          title: "Email Exists",
-          description: "This email is already registered. Please use another email.",
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
+      // Handle known backend errors
+      const responseCode = error.response?.data?.code;
+      const message = error.response?.data?.message;
+     
+      
+      if (responseCode === "P2002" && message.includes("email")) {
+        setErrors((prev) => ({ ...prev, email: "This email is already registered." }));
+      } else if (responseCode === "UNKNOWN" && message.includes("Username already exists")) {
+        setErrors((prev) => ({ ...prev, username: "This username already exists." }));
       } else {
         toast({
           title: "Error",
-          description: error.response?.data?.message || "Failed to create staff account.",
+          description: "Unexpected error occurred while creating the account.",
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -245,7 +251,12 @@ const StaffAccountManager = () => {
       }
     }
   };
-  
+  const togglePasswordVisibility = (staffId) => {
+    setVisiblePasswords((prev) => ({
+      ...prev,
+      [staffId]: !prev[staffId], // Toggle visibility for the specific staffId
+    }));
+  };
 
   return (
     <Box p={5}>
@@ -273,10 +284,25 @@ const StaffAccountManager = () => {
             <Tr key={staff.staffId}>
               <Td>{staff.username}</Td>
               <Td>
-                {showPassword && selectedStaff?.staffId === staff.staffId
-                  ? staff.password
-                  : "****"}
-              </Td>
+  <HStack>
+    <Box>
+      {visiblePasswords[staff.staffId]
+        ? staff.password // Show password in plain text
+        : "****" // Masked password
+      }
+    </Box>
+    <IconButton
+      icon={
+        visiblePasswords[staff.staffId] ? <ViewOffIcon /> : <ViewIcon />
+      }
+      size="sm"
+      onClick={() => togglePasswordVisibility(staff.staffId)}
+      variant="ghost"
+      aria-label="Toggle Password Visibility"
+    />
+  </HStack>
+</Td>
+
               <Td>{staff.name}</Td>
               <Td>{staff.phone}</Td>
               <Td>{staff.email}</Td>
@@ -294,23 +320,13 @@ const StaffAccountManager = () => {
                     colorScheme="blue"
                     onClick={() => handleEditClick(staff)}
                   />
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setSelectedStaff(staff);
-                      setShowPassword(!showPassword);
-                    }}
-                  >
-                    {showPassword && selectedStaff?.staffId === staff.staffId
-                      ? "Hide"
-                      : "Show"}
-                  </Button>
                 </HStack>
               </Td>
             </Tr>
           ))}
         </Tbody>
-      </Table>{" "}
+      </Table>
+
       {/* Edit Staff Modal */}
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
         <ModalOverlay />
@@ -318,65 +334,55 @@ const StaffAccountManager = () => {
           <ModalHeader>Edit Staff Account</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <FormControl mb={3}>
-              <FormLabel>Name</FormLabel>
-              <Input
-                placeholder="Enter name"
-                value={selectedStaff?.name || ""}
-                onChange={(e) =>
-                  setSelectedStaff((prev) => ({
-                    ...prev,
-                    name: e.target.value,
-                  }))
-                }
-              />
-            </FormControl>
-            <FormControl mb={3}>
-              <FormLabel>Password</FormLabel>
-              <Input
-                placeholder="Enter password"
-                type="password"
-                value={selectedStaff?.password || ""}
-                onChange={(e) =>
-                  setSelectedStaff((prev) => ({
-                    ...prev,
-                    password: e.target.value,
-                  }))
-                }
-              />
-            </FormControl>
-            <FormControl mb={3}>
-              <FormLabel>Phone</FormLabel>
-              <Input
-                placeholder="Enter phone number"
-                value={selectedStaff?.phone || ""}
-                onChange={(e) =>
-                  setSelectedStaff((prev) => ({
-                    ...prev,
-                    phone: e.target.value,
-                  }))
-                }
-              />
-            </FormControl>
-            <FormControl
-              mb={3}
-              isInvalid={
-                !/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(selectedStaff?.email) &&
-                selectedStaff?.email !== ""
-              }
-            >
-              <FormLabel>Email</FormLabel>
-              <Input
-                placeholder="Enter email"
-                value={selectedStaff?.email || ""}
-                onChange={(e) =>
-                  setSelectedStaff((prev) => ({
-                    ...prev,
-                    email: e.target.value,
-                  }))
-                }
-              />
-            </FormControl>
+            <FormControl isInvalid={errors.name} mb={3}>
+  <FormLabel>Name</FormLabel>
+  <Input
+    placeholder="Enter name"
+    value={selectedStaff?.name || ""}
+    onChange={(e) =>
+      setSelectedStaff((prev) => ({ ...prev, name: e.target.value }))
+    }
+  />
+  <FormErrorMessage>{errors.name}</FormErrorMessage>
+</FormControl>
+
+<FormControl isInvalid={errors.password} mb={3}>
+  <FormLabel>Password</FormLabel>
+  <Input
+    type="password"
+    placeholder="Enter password"
+    value={selectedStaff?.password || ""}
+    onChange={(e) =>
+      setSelectedStaff((prev) => ({ ...prev, password: e.target.value }))
+    }
+  />
+  <FormErrorMessage>{errors.password}</FormErrorMessage>
+</FormControl>
+
+<FormControl isInvalid={errors.phone} mb={3}>
+  <FormLabel>Phone</FormLabel>
+  <Input
+    placeholder="Enter phone number"
+    value={selectedStaff?.phone || ""}
+    onChange={(e) =>
+      setSelectedStaff((prev) => ({ ...prev, phone: e.target.value }))
+    }
+  />
+  <FormErrorMessage>{errors.phone}</FormErrorMessage>
+</FormControl>
+
+<FormControl isInvalid={errors.email} mb={3}>
+  <FormLabel>Email</FormLabel>
+  <Input
+    placeholder="Enter email"
+    value={selectedStaff?.email || ""}
+    onChange={(e) =>
+      setSelectedStaff((prev) => ({ ...prev, email: e.target.value }))
+    }
+  />
+  <FormErrorMessage>{errors.email}</FormErrorMessage>
+</FormControl>
+
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleUpdateStaff}>
@@ -388,12 +394,14 @@ const StaffAccountManager = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
       {/* Create Staff Modal */}
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => {
           setIsCreateModalOpen(false); // Close the modal
-          setNewStaff({ // Reset the form fields
+          setNewStaff({
+            // Reset the form fields
             username: "",
             password: "",
             name: "",
@@ -407,56 +415,65 @@ const StaffAccountManager = () => {
           <ModalHeader>Create Staff Account</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <FormControl mb={3}>
+          <FormControl isInvalid={errors.username} mb={3}>
               <FormLabel>Username</FormLabel>
               <Input
                 placeholder="Enter username"
                 value={newStaff.username}
                 onChange={(e) =>
-                  setNewStaff((prev) => ({ ...prev, username: e.target.value }))
+                  setNewStaff({ ...newStaff, username: e.target.value })
                 }
               />
+              <FormErrorMessage>{errors.username}</FormErrorMessage>
             </FormControl>
-            <FormControl mb={3}>
+
+            <FormControl isInvalid={errors.password} mb={3}>
               <FormLabel>Password</FormLabel>
               <Input
-                placeholder="Enter password"
                 type="password"
+                placeholder="Enter password"
                 value={newStaff.password}
                 onChange={(e) =>
-                  setNewStaff((prev) => ({ ...prev, password: e.target.value }))
+                  setNewStaff({ ...newStaff, password: e.target.value })
                 }
               />
+              <FormErrorMessage>{errors.password}</FormErrorMessage>
             </FormControl>
-            <FormControl mb={3}>
+
+            <FormControl isInvalid={errors.name} mb={3}>
               <FormLabel>Name</FormLabel>
               <Input
                 placeholder="Enter name"
                 value={newStaff.name}
                 onChange={(e) =>
-                  setNewStaff((prev) => ({ ...prev, name: e.target.value }))
+                  setNewStaff({ ...newStaff, name: e.target.value })
                 }
               />
+              <FormErrorMessage>{errors.name}</FormErrorMessage>
             </FormControl>
-            <FormControl mb={3}>
+
+            <FormControl isInvalid={errors.phone} mb={3}>
               <FormLabel>Phone</FormLabel>
               <Input
                 placeholder="Enter phone number"
                 value={newStaff.phone}
                 onChange={(e) =>
-                  setNewStaff((prev) => ({ ...prev, phone: e.target.value }))
+                  setNewStaff({ ...newStaff, phone: e.target.value })
                 }
               />
+              <FormErrorMessage>{errors.phone}</FormErrorMessage>
             </FormControl>
-            <FormControl mb={3}>
+
+            <FormControl isInvalid={errors.email} mb={3}>
               <FormLabel>Email</FormLabel>
               <Input
                 placeholder="Enter email"
                 value={newStaff.email}
                 onChange={(e) =>
-                  setNewStaff((prev) => ({ ...prev, email: e.target.value }))
+                  setNewStaff({ ...newStaff, email: e.target.value })
                 }
               />
+              <FormErrorMessage>{errors.email}</FormErrorMessage>
             </FormControl>
           </ModalBody>
           <ModalFooter>
