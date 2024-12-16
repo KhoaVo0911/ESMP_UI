@@ -118,10 +118,13 @@ const ProductList = () => {
       // Nếu là tạo mới, thêm count = 0
       if (!editingProduct) {
         payload.count = 0; // count mặc định là 0 khi POST
+      } else {
+        // Nếu là cập nhật, lấy count từ DB và thêm vào payload
+        payload.count = editingProduct.count; // Đặt count từ editingProduct vào payload
       }
   
       if (editingProduct) {
-        // Cập nhật sản phẩm (PUT), không gửi trường count
+        // Cập nhật sản phẩm (PUT)
         await axios.put(
           `https://esmpbe.id.vn/api/product/${vendorId}/${editingProduct.productId}`,
           payload,
@@ -148,7 +151,7 @@ const ProductList = () => {
         message.success("New product added successfully!");
       }
   
-      fetchData();
+      fetchData(); // Lấy lại dữ liệu sau khi thêm/sửa
       setIsModalOpen(false);
       form.resetFields();
     } catch (error) {
@@ -156,6 +159,8 @@ const ProductList = () => {
       message.error("An error occurred!");
     }
   };
+  
+  
   
   
 
@@ -173,7 +178,7 @@ const ProductList = () => {
       fetchData();
       message.success("Product deleted successfully!");
     } catch (error) {
-      message.error("Error occurred while deleting product!");
+      message.error("The product has been added to the product item and cannot be deleted!");
     }
   };
 
