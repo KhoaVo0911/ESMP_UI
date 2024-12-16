@@ -458,14 +458,14 @@ const CourseList = () => {
                         }
                       );
                       sessionStorage.setItem("expiretime", expireTime);
-                      toast({
-                        title: "Information Updated Successfully",
-                        description:
-                          "Expiration date and storage time have been updated.",
-                        status: "success",
-                        duration: 5000,
-                        isClosable: true,
-                      });
+                      // toast({
+                      //   title: "Information Updated Successfully",
+                      //   description:
+                      //     "Expiration date and storage time have been updated.",
+                      //   status: "success",
+                      //   duration: 5000,
+                      //   isClosable: true,
+                      // });
                     } catch (error) {
                       console.error(
                         "Error while updating host information:",
@@ -503,13 +503,13 @@ const CourseList = () => {
               });
             }
 
-            toast({
-              title: "Transaction Recorded Successfully",
-              description: "The transaction information has been saved.",
-              status: "success",
-              duration: 5000,
-              isClosable: true,
-            });
+            // toast({
+            //   title: "Transaction Recorded Successfully",
+            //   description: "The transaction information has been saved.",
+            //   status: "success",
+            //   duration: 5000,
+            //   isClosable: true,
+            // });
           } else {
             console.error("hostId is not in sessionStorage.");
           }
@@ -518,14 +518,14 @@ const CourseList = () => {
           clearInterval(intervalId); // Dừng kiểm tra thanh toán
           clearInterval(countdownIntervalRef.current); // Dừng countdown
 
-          toast({
-            title: "Payment Successful",
-            description:
-              "You have successfully completed the payment for the package.",
-            status: "success",
-            duration: 5000,
-            isClosable: true,
-          });
+          // toast({
+          //   title: "Payment Successful",
+          //   description:
+          //     "You have successfully completed the payment for the package.",
+          //   status: "success",
+          //   duration: 5000,
+          //   isClosable: true,
+          // });
 
           setSelectedPackage((prevState) => ({ ...prevState, showQR: false }));
           onClose(); // Close the modal

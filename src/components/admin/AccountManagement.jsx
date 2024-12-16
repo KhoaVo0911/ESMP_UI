@@ -111,11 +111,21 @@ const AdminAccountManagement = () => {
   useEffect(() => {
     axios.get("https://esmpbe.id.vn/api/host")
       .then((response) => {
-        setAccounts(response.data); // Assuming the API returns account data
-        setFilteredAccounts(response.data); // Set initial filtered accounts
+        const sortedAccounts = response.data.sort((a, b) => {
+          // Sắp xếp theo trạng thái: Active (true) trước Inactive (false)
+          if (a.account.status !== b.account.status) {
+            return b.account.status - a.account.status;
+          }
+          // Nếu trạng thái giống nhau, sắp xếp theo thời gian tạo (mới nhất trước)
+          return new Date(b.account.createdat) - new Date(a.account.createdat);
+        });
+        
+        setAccounts(sortedAccounts); // Lưu lại dữ liệu đã sắp xếp
+        setFilteredAccounts(sortedAccounts); // Lưu lại filtered accounts (nếu có)
       })
       .catch((error) => console.error(error));
   }, []);
+  
 
   // Handle search filter
   const handleSearch = (event) => {
@@ -260,7 +270,61 @@ const AdminAccountManagement = () => {
     setSelectedAccount(account);
     onEditOpen();
   };
-
+  const toggleStatus = (account) => {
+    const updatedStatus = !account.account.status; // Toggle the status
+  
+    const updatedAccount = {
+      ...account,
+      account: { ...account.account, status: updatedStatus },
+    };
+  
+    axios.put(`https://esmpbe.id.vn/api/host/${account.hostid}`, {
+      ...updatedAccount.account,
+    })
+      .then((response) => {
+        // Update the status in the accounts state
+        const updatedAccounts = accounts.map(acc =>
+          acc.account.id === account.account.id ? updatedAccount : acc
+        );
+        
+        // Sort the accounts by status and creation date
+        const sortedAccounts = updatedAccounts.sort((a, b) => {
+          if (a.account.status !== b.account.status) {
+            return b.account.status - a.account.status; // Active first
+          }
+          return new Date(b.account.createdat) - new Date(a.account.createdat); // Latest first
+        });
+  
+        setAccounts(sortedAccounts); // Update state with sorted accounts
+        setFilteredAccounts(sortedAccounts); // Update filtered accounts
+  
+        toast({
+          title: "Account Status Updated.",
+          description: `The account status has been successfully updated to ${updatedStatus ? 'Active' : 'Inactive'}.`,
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+  
+        // If the account is now active, send email
+        if (updatedStatus) {
+          sendEmail(updatedAccount); // Gửi email thông báo tài khoản đã được kích hoạt
+        }
+      })
+      .catch((error) => {
+        console.error("Error updating account status:", error);
+        toast({
+          title: "Error Updating Status.",
+          description: "There was an error updating the status. Please try again.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      });
+  };
+  
+  
+  
   return (
     <Stack spacing={4} p={4}>
       {/* Search Bar */}
@@ -281,56 +345,53 @@ const AdminAccountManagement = () => {
 
       {/* Table displaying accounts */}
       <Box border="1px" borderColor="gray.200" borderRadius="md" boxShadow="lg" p={4}>
-        <Table variant="striped" size="md" colorScheme="gray" borderRadius="md">
-          <Thead>
-            <Tr>
-              <Th>Username</Th>
-              <Th>Password</Th>
-              <Th>Name</Th>
-              <Th>Status</Th>
-              <Th textAlign="center">Actions</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {currentAccounts.map((account) => (
-              <Tr key={account.account.id}>
-                <Td>{account.account.username}</Td>
-                <Td>*******</Td>
-                <Td>{account.account.name}</Td>
-                <Td>{account.account.status ? 'Active' : 'Inactive'}</Td>
-                <Td textAlign="center">
-                  {/* View details button */}
-                  <IconButton
-                    icon={<ViewIcon />}
-                    aria-label="View account details"
-                    onClick={() => viewDetails(account)}
-                    variant="ghost"
-                    size="sm"
-                    mx={1}
-                  />
-                  {/* Edit account button */}
-                  <IconButton
-                    icon={<EditIcon />}
-                    aria-label="Edit account"
-                    onClick={() => openEditModal(account)}
-                    variant="ghost"
-                    size="sm"
-                    mx={1}
-                  />
-                  {/* Delete account button */}
-                  <IconButton
-    icon={<EmailIcon />}
-    aria-label="Send email"
-    onClick={() => sendEmail(account)}
-    variant="ghost"
-    size="sm"
-    mx={1}
-  />
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
+      <Table variant="striped" size="md" colorScheme="gray" borderRadius="md">
+  <Thead>
+    <Tr>
+      <Th>Username</Th>
+      <Th>Name</Th>
+      <Th>Status</Th> {/* Make this clickable */}
+      <Th textAlign="center">Actions</Th>
+    </Tr>
+  </Thead>
+  <Tbody>
+    {currentAccounts.map((account) => (
+      <Tr key={account.account.id}>
+        <Td>{account.account.username}</Td>
+        <Td>{account.account.name}</Td>
+        <Td>
+          <Button 
+            size="sm"
+            onClick={() => toggleStatus(account)}
+            colorScheme={account.account.status ? "green" : "red"}>
+            {account.account.status ? 'Active' : 'Inactive'}
+          </Button>
+        </Td>
+        <Td textAlign="center">
+          {/* View details button */}
+          <IconButton
+            icon={<ViewIcon />}
+            aria-label="View account details"
+            onClick={() => viewDetails(account)}
+            variant="ghost"
+            size="sm"
+            mx={1}
+          />
+          {/* Edit account button */}
+          <IconButton
+            icon={<EditIcon />}
+            aria-label="Edit account"
+            onClick={() => openEditModal(account)}
+            variant="ghost"
+            size="sm"
+            mx={1}
+          />
+         
+        </Td>
+      </Tr>
+    ))}
+  </Tbody>
+</Table>
       </Box>
 
       {/* Pagination */}
