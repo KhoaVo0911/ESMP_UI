@@ -20,6 +20,7 @@ import {
   Stack,
   useDisclosure,
   useToast,
+  Tooltip,
 } from "@chakra-ui/react";
 import { DeleteIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -39,27 +40,41 @@ const StaffPayment = ({ removeItem }) => {
   const [transactionType, setTransactionType] = useState(0);
   const toast = useToast();
 
-  const cartItems = useMemo(() => JSON.parse(sessionStorage.getItem("cartItems")) || [], []);
-  const totalPrice = useMemo(() => Number(sessionStorage.getItem("totalPrice")) || 0, []);
+  const cartItems = useMemo(
+    () => JSON.parse(sessionStorage.getItem("cartItems")) || [],
+    []
+  );
+  const totalPrice = useMemo(
+    () => Number(sessionStorage.getItem("totalPrice")) || 0,
+    []
+  );
 
   const location = useLocation();
-  const accessToken = location.state?.accessToken || sessionStorage.getItem("accessToken");
-  const vendorId = location.state?.vendorId || sessionStorage.getItem("vendorId");
+  const accessToken =
+    location.state?.accessToken || sessionStorage.getItem("accessToken");
+  const vendorId =
+    location.state?.vendorId || sessionStorage.getItem("vendorId");
   const eventId = location.state?.eventId || sessionStorage.getItem("eventId");
   const staffId = location.state?.staffId || sessionStorage.getItem("staffId");
-  const totalQuantity = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const totalQuantity = cartItems.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 
   useEffect(() => {
     const fetchQrUrl = async () => {
       try {
         // Make the API call to fetch the QR code URL
-        const response = await axios.get(`https://esmpbe.id.vn/api/vendor/${vendorId}`, {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        });
-  
+        const response = await axios.get(
+          `https://esmpbe.id.vn/api/vendor/${vendorId}`,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
         // Check if the response contains the URL
         if (response.data && response.data.urlQr) {
           const newQrUrl = `https://img.vietqr.io/image/${response.data.urlQr}-compact2.png?amount=${totalPrice}`;
@@ -72,12 +87,11 @@ const StaffPayment = ({ removeItem }) => {
         setQrUrl("defaultBank-defaultAccount"); // Fallback URL if the fetch fails
       }
     };
-  
+
     if (vendorId && totalPrice > 0) {
       fetchQrUrl(); // Fetch the QR URL when vendorId and totalPrice are available
     }
   }, [vendorId, totalPrice, accessToken]); // Run when vendorId or totalPrice changes
-  
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -106,14 +120,15 @@ const StaffPayment = ({ removeItem }) => {
     if (paymentMethod === "Cash" && cashAmount < totalPrice) {
       toast({
         title: "Insufficient funds",
-        description: "Please enter an amount greater than or equal to the total amount.",
+        description:
+          "Please enter an amount greater than or equal to the total amount.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
       return;
     }
-  
+
     try {
       // Tạo order (POST)
       const orderData = {
@@ -128,20 +143,15 @@ const StaffPayment = ({ removeItem }) => {
           unitPrice: parseFloat(item.price),
         })),
         transactionType: paymentMethod === "QR" ? "Bank Transfer" : "Cash",
-
       };
-  
-      await axios.post(
-        `https://esmpbe.id.vn/api/order`,
-        orderData,
-        {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-  
+
+      await axios.post(`https://esmpbe.id.vn/api/order`, orderData, {
+        headers: {
+          Authorization: `${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
       // Gọi GET để lấy danh sách order và chọn order mới nhất
       const getOrderResponse = await axios.get(
         `https://esmpbe.id.vn/api/order/event/${eventId}/${vendorId}`,
@@ -152,24 +162,26 @@ const StaffPayment = ({ removeItem }) => {
           },
         }
       );
-  
+
       // Lấy order mới nhất (nằm dưới cùng hoặc sắp xếp lại)
       const orders = getOrderResponse.data;
       const latestOrder = orders.reduce((prev, current) => {
-        return new Date(prev.createAt) > new Date(current.createAt) ? prev : current;
+        return new Date(prev.createAt) > new Date(current.createAt)
+          ? prev
+          : current;
       });
-  
+
       if (!latestOrder) {
         throw new Error("No orders found.");
       }
-  
+
       // Gọi POST API transaction với orderId từ order mới nhất
       const transactionData = {
         orderId: latestOrder.orderId,
         transactionType: paymentMethod === "QR" ? "Bank Transfer" : "Cash",
         price: totalPrice,
       };
-  
+
       await axios.post(
         `https://esmpbe.id.vn/api/transaction`,
         transactionData,
@@ -180,7 +192,7 @@ const StaffPayment = ({ removeItem }) => {
           },
         }
       );
-  
+
       // Thông báo thành công
       toast({
         title: "Payment successful",
@@ -192,7 +204,7 @@ const StaffPayment = ({ removeItem }) => {
         duration: 3000,
         isClosable: true,
       });
-  
+
       // Điều hướng về shop
       navigate(`/StaffShop/${vendorId}/${staffId}/${eventId}`, {
         state: { accessToken, vendorId, eventId },
@@ -201,14 +213,14 @@ const StaffPayment = ({ removeItem }) => {
       console.error("Error processing payment:", error);
       toast({
         title: "Error",
-        description: "An error occurred while processing your payment. Please try again.",
+        description:
+          "An error occurred while processing your payment. Please try again.",
         status: "error",
         duration: 3000,
         isClosable: true,
       });
     }
   };
-  
 
   const handleCashPayment = (amount) => {
     setCashAmount(amount);
@@ -217,39 +229,102 @@ const StaffPayment = ({ removeItem }) => {
 
   return (
     <Box p={5} bgGradient="linear(to-r, blue.100, pink.100)" minH="100vh">
-      <HStack alignItems="center" mb={5} cursor="pointer" onClick={() => navigate(-1)}>
-        <IconButton icon={<ArrowBackIcon />} size="lg" variant="ghost" aria-label="Go Back" />
-        <Text fontSize="md" fontWeight="bold">Continue Shopping</Text>
+      <HStack
+        alignItems="center"
+        mb={5}
+        cursor="pointer"
+        onClick={() => navigate(-1)}
+      >
+        <IconButton
+          icon={<ArrowBackIcon />}
+          size="lg"
+          variant="ghost"
+          aria-label="Go Back"
+        />
+        <Text fontSize="md" fontWeight="bold">
+          Continue Shopping
+        </Text>
       </HStack>
 
-      <Text fontSize="2xl" mb={5} fontWeight="bold" color="blue.700" textAlign="center">
+      <Text
+        fontSize="2xl"
+        mb={5}
+        fontWeight="bold"
+        color="blue.700"
+        textAlign="center"
+      >
         Your Shopping Cart
       </Text>
 
       <HStack align="start" spacing={8} justify="center">
-        <VStack p={5} borderWidth="1px" borderRadius="md" boxShadow="lg" bg="white" width="60%" spacing={5} align="stretch">
+        <VStack
+          p={5}
+          borderWidth="1px"
+          borderRadius="md"
+          boxShadow="lg"
+          bg="white"
+          width="60%"
+          spacing={5}
+          align="stretch"
+        >
           {cartItems.map((item, index) => (
-            <HStack key={index} justify="space-between" p={4} borderWidth="1px" borderRadius="lg" boxShadow="sm" bg="gray.50" width="100%">
+            <HStack
+              key={index}
+              justify="space-between"
+              p={4}
+              borderWidth="1px"
+              borderRadius="lg"
+              boxShadow="sm"
+              bg="gray.50"
+              width="100%"
+            >
               <HStack spacing={4} width="70%">
-                <Image src={images[item.productItemId] || "https://via.placeholder.com/150"} alt={item.name} boxSize="60px" borderRadius="full" />
+                <Image
+                  src={
+                    images[item.productItemId] ||
+                    "https://via.placeholder.com/150"
+                  }
+                  alt={item.name}
+                  boxSize="60px"
+                  borderRadius="full"
+                />
                 <VStack align="start" spacing={1} width="100%">
-                  <Text fontWeight="medium" noOfLines={2} maxWidth="180px">{item.name}</Text>
+                  <Text fontWeight="medium" noOfLines={2} maxWidth="180px">
+                    {item.name}
+                  </Text>
                   <HStack>
-                    <Text fontSize="md" fontWeight="bold" color="gray.700">Quantity:</Text>
-                    <Text fontSize="md" fontWeight="bold" color="blue.600">{item.quantity}</Text>
+                    <Text fontSize="md" fontWeight="bold" color="gray.700">
+                      Quantity:
+                    </Text>
+                    <Text fontSize="md" fontWeight="bold" color="blue.600">
+                      {item.quantity}
+                    </Text>
                   </HStack>
                 </VStack>
               </HStack>
-              <Text fontWeight="bold" color="blue.600" minWidth="80px" textAlign="right">
+              <Text
+                fontWeight="bold"
+                color="blue.600"
+                minWidth="80px"
+                textAlign="right"
+              >
                 {(item.price * item.quantity).toLocaleString()} VND
               </Text>
-              <IconButton icon={<DeleteIcon />} colorScheme="red" onClick={() => removeItem(index)} aria-label="Remove Item" />
             </HStack>
           ))}
         </VStack>
 
-        <Box p={6} borderWidth="1px" borderRadius="md" boxShadow="lg" bg="white" width="30%">
-          <Text fontSize="2xl" fontWeight="bold" mb={4} color="blue.700">Payment</Text>
+        <Box
+          p={6}
+          borderWidth="1px"
+          borderRadius="md"
+          boxShadow="lg"
+          bg="white"
+          width="30%"
+        >
+          <Text fontSize="2xl" fontWeight="bold" mb={4} color="blue.700">
+            Payment
+          </Text>
           <VStack spacing={4} align="stretch">
             <Input
               placeholder="Recipient's Name"
@@ -267,31 +342,62 @@ const StaffPayment = ({ removeItem }) => {
           </VStack>
 
           <HStack justify="space-between" mt={6}>
-            <Text color="red.500" fontWeight="bold">{totalQuantity} items</Text>
-            <Text fontSize="lg" fontWeight="bold" color="blue.600">{totalPrice.toLocaleString()} VND</Text>
+            <Text color="red.500" fontWeight="bold">
+              {totalQuantity} items
+            </Text>
+            <Text fontSize="lg" fontWeight="bold" color="blue.600">
+              {totalPrice.toLocaleString()} VND
+            </Text>
           </HStack>
 
-          <Button colorScheme="blue" width="100%" mt={6} size="lg" fontWeight="bold" onClick={onOpen}>
-            Pay Now
-          </Button>
+          <Tooltip
+            label="Please enter Recipient's Name before proceeding with payment"
+            isDisabled={userName.trim() !== ""}
+            placement="top"
+          >
+            <Button
+              colorScheme="blue"
+              width="100%"
+              mt={6}
+              size="lg"
+              fontWeight="bold"
+              onClick={onOpen}
+              isDisabled={!userName.trim()} // Disable the button if userName is empty
+            >
+              Pay Now
+            </Button>
+          </Tooltip>
         </Box>
       </HStack>
 
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader textAlign="center">{paymentMethod === "QR" ? "Scan QR Code to Pay" : "Pay with Cash"}</ModalHeader>
+          <ModalHeader textAlign="center">
+            {paymentMethod === "QR" ? "Scan QR Code to Pay" : "Pay with Cash"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody textAlign="center">
             {paymentMethod === "QR" ? (
               <>
-                <Image src={qrUrl} alt="QR Code" mx="auto" mb={4} boxShadow="md" borderRadius="md" width="80%" />
-                <Text fontSize="lg" color="green.500">Scan to Pay</Text>
+                <Image
+                  src={qrUrl}
+                  alt="QR Code"
+                  mx="auto"
+                  mb={4}
+                  boxShadow="md"
+                  borderRadius="md"
+                  width="80%"
+                />
+                <Text fontSize="lg" color="green.500">
+                  Scan to Pay
+                </Text>
               </>
             ) : (
               <>
                 <Text fontSize="lg" mb={4}>
-                  Total Amount: <strong>{totalPrice.toLocaleString()} VND</strong>
+                  Total Amount:{" "}
+                  <strong>{totalPrice.toLocaleString()} VND</strong>
                 </Text>
                 <Input
                   placeholder="Enter cash amount"
@@ -320,9 +426,13 @@ const StaffPayment = ({ removeItem }) => {
                       boxShadow="md"
                       fontSize="small"
                       bg={
-                        amount === 50000 ? "red.200" :
-                        amount === 100000 ? "green.200" :
-                        amount === 200000 ? "orange.200" : "blue.200"
+                        amount === 50000
+                          ? "red.200"
+                          : amount === 100000
+                          ? "green.200"
+                          : amount === 200000
+                          ? "orange.200"
+                          : "blue.200"
                       }
                     >
                       {amount.toLocaleString()} VND
@@ -330,7 +440,12 @@ const StaffPayment = ({ removeItem }) => {
                   ))}
                 </HStack>
                 {cashAmount >= totalPrice && (
-                  <Text fontSize="2xl" color="blue.600" mt={4} fontWeight="bold">
+                  <Text
+                    fontSize="2xl"
+                    color="blue.600"
+                    mt={4}
+                    fontWeight="bold"
+                  >
                     Change: {(cashAmount - totalPrice).toLocaleString()} VND
                   </Text>
                 )}
@@ -345,7 +460,9 @@ const StaffPayment = ({ removeItem }) => {
             >
               Confirm Payment
             </Button>
-            <Button variant="outline" onClick={onClose}>Close</Button>
+            <Button variant="outline" onClick={onClose}>
+              Close
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

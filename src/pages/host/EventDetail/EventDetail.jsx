@@ -332,7 +332,7 @@ const EventDetails = () => {
               },
               body: JSON.stringify({
                 userid: vendor.userid,
-                source: `Sự kiện "${event.name}" đã được khởi động.`,
+                source: `The event "${event.name}" has started.`,
               }),
             })
               .then((res) => {

@@ -72,7 +72,7 @@ const ProductList = () => {
       setCategories(filteredCategories);
   
     } catch (error) {
-      message.error("Error fetching data from API!");
+      // message.error("Error fetching data from API!");
     } finally {
       setLoading(false);
     }
@@ -107,16 +107,21 @@ const ProductList = () => {
     try {
       const values = await form.validateFields();
   
-      // Chuyển các giá trị cần thiết sang kiểu số
+      // Chuẩn bị payload
       const payload = {
         ...values,
         categoryId: values.categoryId,
         status: true,
-        quantity: Number(values.quantity),  // Chuyển quantity thành số
-        count: Number(values.count),        // Chuyển count thành số
+        quantity: Number(values.quantity), // Ensure quantity is a number
       };
   
+      // Nếu là tạo mới, thêm count = 0
+      if (!editingProduct) {
+        payload.count = 0; // count mặc định là 0 khi POST
+      }
+  
       if (editingProduct) {
+        // Cập nhật sản phẩm (PUT), không gửi trường count
         await axios.put(
           `https://esmpbe.id.vn/api/product/${vendorId}/${editingProduct.productId}`,
           payload,
@@ -129,6 +134,7 @@ const ProductList = () => {
         );
         message.success("Product updated successfully!");
       } else {
+        // Tạo mới sản phẩm (POST)
         await axios.post(
           `https://esmpbe.id.vn/api/product/${vendorId}`,
           payload,
@@ -146,9 +152,11 @@ const ProductList = () => {
       setIsModalOpen(false);
       form.resetFields();
     } catch (error) {
+      console.error("Error saving product:", error);
       message.error("An error occurred!");
     }
   };
+  
   
 
   const handleDelete = async (id) => {
@@ -326,68 +334,58 @@ const ProductList = () => {
   onOk={handleSave}
   okText={editingProduct ? "Update" : "Create"}
 >
-  <Form form={form} layout="vertical">
-    <Form.Item
-      name="productName"
-      label="Product Name"
-      rules={[{ required: true, message: "Please enter the product name!" }]}
-    >
-      <Input />
-    </Form.Item>
+<Form form={form} layout="vertical">
+  <Form.Item
+    name="productName"
+    label="Product Name"
+    rules={[{ required: true, message: "Please enter the product name!" }]}
+  >
+    <Input />
+  </Form.Item>
 
-    <Form.Item
-  name="quantity"
-  label="Quantity"
-  rules={[
-    { 
-      required: true, 
-      message: "Please enter the quantity!" 
-    },
-    {
-      validator: (_, value) => {
-        if (value < 1) {
-          return Promise.reject(new Error("Quantity must be greater than or equal to 1"));
-        }
-        return Promise.resolve();
-      }
-    }
-  ]}
->
-  <Input type="number" />
-</Form.Item>
+  <Form.Item
+    name="quantity"
+    label="Quantity"
+    rules={[
+      { required: true, message: "Please enter the quantity!" },
+      {
+        validator: (_, value) => {
+          if (value < 1) {
+            return Promise.reject(
+              new Error("Quantity must be greater than or equal to 1")
+            );
+          }
+          return Promise.resolve();
+        },
+      },
+    ]}
+  >
+    <Input type="number" />
+  </Form.Item>
 
+  <Form.Item
+    name="description"
+    label="Description"
+    rules={[{ required: true, message: "Please enter the description!" }]}
+  >
+    <Input />
+  </Form.Item>
 
-    <Form.Item
-      name="description"
-      label="Description"
-      rules={[{ required: true, message: "Please enter the description!" }]}
-    >
-      <Input />
-    </Form.Item>
+  <Form.Item
+    name="categoryId"
+    label="Category"
+    rules={[{ required: true, message: "Please select a category!" }]}
+  >
+    <Select placeholder="Select category">
+      {categories.map((category) => (
+        <Option key={category.categoryId} value={category.categoryId}>
+          {category.categoryName}
+        </Option>
+      ))}
+    </Select>
+  </Form.Item>
+</Form>
 
-    <Form.Item
-      name="count"
-      label="Count"
-      initialValue={0}  // Default value
-      rules={[{ required: true, message: "Count is required!" }]}
-    >
-      <Input type="number" value={0} disabled />
-    </Form.Item>
-
-    <Form.Item
-      name="categoryId"
-      label="Category"
-      rules={[{ required: true, message: "Please select a category!" }]}
-    >
-      <Select placeholder="Select category">
-        {categories.map((category) => (
-          <Option key={category.categoryId} value={category.categoryId}>
-            {category.categoryName}
-          </Option>
-        ))}
-      </Select>
-    </Form.Item>
-  </Form>
 </Modal>
 
     </Box>
