@@ -196,11 +196,11 @@ const Event = () => {
 
     try {
       const startDateUTC = new Date(startDate);
-      startDateUTC.setHours(0, 0, 0, 0);
-
+      // startDateUTC.setHours(0, 0, 0, 0);
+      startDateUTC.setDate(startDateUTC.getDate() + 1);
       const endDateUTC = new Date(endDate);
-      endDateUTC.setHours(23, 59, 59, 999);
-
+      // endDateUTC.setHours(23, 59, 59, 999);
+      endDateUTC.setDate(endDateUTC.getDate() + 1);
       const newEvent = {
         name,
         hostId,
