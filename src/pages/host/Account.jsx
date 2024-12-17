@@ -63,7 +63,7 @@ const AccountManagement = () => {
   const [deleting, setDeleting] = useState(false); // For deleting accounts
   const [sendingEmail, setSendingEmail] = useState(false); // For sending email
   const [canCreateAccount, setCanCreateAccount] = useState(false);
-
+  const [showPassword, setShowPassword] = useState(false);
   const hostId = sessionStorage.getItem("hostId") || "";
   const accessToken = sessionStorage.getItem("accessToken") || "";
 
@@ -622,38 +622,47 @@ const AccountManagement = () => {
 
         {/* Modal for Account Details */}
         <Modal isOpen={isDetailOpen} onClose={onCloseDetail}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Account Details</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <p>
-                <strong>Username:</strong> {selectedAccount?.username}
-              </p>
-              <p>
-                <strong>Password:</strong> *********
-              </p>
-              <p>
-                <strong>Name:</strong> {selectedAccount?.name}
-              </p>
-              <p>
-                <strong>Email:</strong> {selectedAccount?.email}
-              </p>
-              <p>
-                <strong>Account Banking:</strong> {selectedAccount?.urlQr}
-              </p>
-              <p>
-                <strong>Status:</strong>{" "}
-                {selectedAccount?.status ? "Active" : "Inactive"}
-              </p>
-            </ModalBody>
-            <ModalFooter>
-              <Button colorScheme="teal" onClick={onCloseDetail}>
-                Close
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+  <ModalOverlay />
+  <ModalContent>
+    <ModalHeader>Account Details</ModalHeader>
+    <ModalCloseButton />
+    <ModalBody>
+      <p>
+        <strong>Username:</strong> {selectedAccount?.username}
+      </p>
+      <p>
+        <strong>Password:</strong>{" "}
+        {showPassword ? selectedAccount?.password : "*********"}{" "}
+        <Button
+          size="sm"
+          variant="link"
+          onClick={() => setShowPassword(!showPassword)}
+          colorScheme="blue"
+        >
+          {showPassword ? "Hide" : "Show"}
+        </Button>
+      </p>
+      <p>
+        <strong>Name:</strong> {selectedAccount?.name}
+      </p>
+      <p>
+        <strong>Email:</strong> {selectedAccount?.email}
+      </p>
+      <p>
+        <strong>Account Banking:</strong> {selectedAccount?.urlQr}
+      </p>
+      <p>
+        <strong>Status:</strong>{" "}
+        {selectedAccount?.status ? "Active" : "Inactive"}
+      </p>
+    </ModalBody>
+    <ModalFooter>
+      <Button colorScheme="teal" onClick={onCloseDetail}>
+        Close
+      </Button>
+    </ModalFooter>
+  </ModalContent>
+</Modal>
       </Box>
     </Box>
   );

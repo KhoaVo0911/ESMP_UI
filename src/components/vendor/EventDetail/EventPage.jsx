@@ -478,12 +478,7 @@ const EventDetail = () => {
           </Text>
         )}
       </Box> */}
-      <Text fontSize="2xl" fontWeight="bold" color="black" mb={4}>
-        Event Information
-      </Text>
-      <Text fontSize="large" color="gray.600" mb={10}>
-        {eventDetail.description}
-      </Text>
+     
 
       <Divider borderColor="gray.300" borderWidth="1px" mb={10} />
 
