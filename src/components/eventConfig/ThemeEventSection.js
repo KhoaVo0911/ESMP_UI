@@ -156,7 +156,8 @@ const ThemeEventSection = () => {
       fetchThemes();
       onClose();
     } catch (error) {
-      toast({ title: "Error saving themes", status: "error" });
+      console.log(error, "save");
+      // toast({ title: "Error saving themes", status: "error" });
     }
   };
   const handleDeleteTheme = async (themeId) => {
@@ -167,11 +168,12 @@ const ThemeEventSection = () => {
       setThemes(themes.filter((theme) => theme.themeId !== themeId));
       toast({ title: "Theme deleted", status: "success" });
     } catch (error) {
-      toast({
-        title: "Cannot delete theme",
-        description: "This theme may be in use.",
-        status: "error",
-      });
+      console.log(error, "delete");
+      // toast({
+      //   title: "Cannot delete theme",
+      //   description: "This theme may be in use.",
+      //   status: "error",
+      // });
     }
   };
   return (

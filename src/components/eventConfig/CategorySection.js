@@ -199,11 +199,12 @@ const CategorySection = () => {
       setCategories(categories.filter((cat) => cat.categoryId !== categoryId));
       toast({ title: "Category deleted", status: "success" });
     } catch (error) {
-      toast({
-        title: "Cannot delete category",
-        description: "This category may be in use.",
-        status: "error",
-      });
+      console.log(error, "delete");
+      // toast({
+      //   title: "Cannot delete category",
+      //   description: "This category may be in use.",
+      //   status: "error",
+      // });
     }
   };
 
