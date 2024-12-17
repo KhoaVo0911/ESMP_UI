@@ -13,7 +13,6 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Select,
   Heading,
   Modal,
   ModalOverlay,
@@ -26,12 +25,16 @@ import {
   Flex,
   Tooltip,
   useToast,
+  Checkbox,
+  VStack,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
+import { Select } from "antd";
 
 const ThemeEventSection = () => {
   const [themes, setThemes] = useState([]);
   const [newTheme, setNewTheme] = useState("");
+  const [checkedThemes, setCheckedThemes] = useState([]);
   const [status, setStatus] = useState("true");
   const [editingTheme, setEditingTheme] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -41,15 +44,26 @@ const ThemeEventSection = () => {
   const hostId = sessionStorage.getItem("hostId") || "";
   const accessToken = sessionStorage.getItem("accessToken") || "";
 
+  // Static theme options
+  const staticThemes = [
+    "Music",
+    "Sports",
+    "Conferences and conferences",
+    "Exhibitions and fairs",
+    "Education",
+    "Charity and fundraising",
+    "Entertainment",
+    "Culture and festivals",
+    "Community and society",
+    "Technology and startups",
+  ];
+
   const fetchThemes = async () => {
     try {
       const response = await axios.get(
         `https://esmpbe.id.vn/api/theme/hostId/${hostId}`,
         {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
+          headers: { Authorization: accessToken },
         }
       );
       setThemes(response.data);
@@ -68,7 +82,6 @@ const ThemeEventSection = () => {
   useEffect(() => {
     fetchThemes();
   }, []);
-
   const fetchHostExpireTime = async () => {
     try {
       const response = await axios.get(
@@ -108,115 +121,63 @@ const ThemeEventSection = () => {
     onOpen();
   };
 
-  const handleSaveTheme = async () => {
-    if (newTheme.trim()) {
-      try {
-        if (editingTheme) {
-          await axios.put(
-            `https://esmpbe.id.vn/api/theme/${editingTheme.themeId}`,
-            {
-              name: newTheme,
-              status: status === "true",
-              hostid: hostId,
-            },
-            {
-              headers: {
-                Authorization: `${accessToken}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          toast({
-            title: "Theme updated",
-            description: "The theme has been updated successfully.",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-          });
-        } else {
-          await axios.post(
-            "https://esmpbe.id.vn/api/theme",
-            {
-              name: newTheme,
-              status: status === "true",
-              hostid: hostId,
-            },
-            {
-              headers: {
-                Authorization: `${accessToken}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          toast({
-            title: "Theme added",
-            description: "New theme has been added successfully.",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-          });
-        }
-
-        fetchThemes();
-        onClose();
-        setNewTheme("");
-        setStatus("true");
-        setEditingTheme(null);
-      } catch (error) {
-        console.log("Error saving theme", error);
-        // toast({
-        //   title: "Error saving theme",
-        //   description: "Could not save the theme.",
-        //   status: "error",
-        //   duration: 3000,
-        //   isClosable: true,
-        // });
-      }
-    }
+  const handleCheckboxChange = (theme) => {
+    setCheckedThemes((prev) =>
+      prev.includes(theme) ? prev.filter((t) => t !== theme) : [...prev, theme]
+    );
   };
 
+  const handleSaveTheme = async () => {
+    try {
+      const combinedThemes = [...checkedThemes];
+      if (newTheme.trim()) {
+        combinedThemes.push(newTheme);
+      }
+
+      if (editingTheme) {
+        // Update theme
+        await axios.put(
+          `https://esmpbe.id.vn/api/theme/${editingTheme.themeId}`,
+          { name: newTheme, status: status === "true", hostid: hostId },
+          { headers: { Authorization: accessToken } }
+        );
+        toast({ title: "Theme updated", status: "success" });
+      } else {
+        // Create multiple themes
+        for (const theme of combinedThemes) {
+          await axios.post(
+            "https://esmpbe.id.vn/api/theme",
+            { name: theme, status: status === "true", hostid: hostId },
+            { headers: { Authorization: accessToken } }
+          );
+        }
+        toast({ title: "Themes created", status: "success" });
+      }
+      fetchThemes();
+      onClose();
+    } catch (error) {
+      toast({ title: "Error saving themes", status: "error" });
+    }
+  };
   const handleDeleteTheme = async (themeId) => {
     try {
       await axios.delete(`https://esmpbe.id.vn/api/theme/${themeId}`, {
-        headers: {
-          Authorization: `${accessToken}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: accessToken },
       });
       setThemes(themes.filter((theme) => theme.themeId !== themeId));
-
-      toast({
-        title: "Theme deleted",
-        description: "Theme has been deleted successfully.",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+      toast({ title: "Theme deleted", status: "success" });
     } catch (error) {
-      if (error.response && error.response.status === 400) {
-        toast({
-          title: "Error deleting theme",
-          description: "Could not delete theme.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        toast({
-          title: "Cannot delete theme",
-          description: "This theme has been used and cannot be deleted.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
+      toast({
+        title: "Cannot delete theme",
+        description: "This theme may be in use.",
+        status: "error",
+      });
     }
   };
-
   return (
     <Box mb={10}>
       <Flex justify="space-between" align="center" mb={6}>
-        <Heading size="lg" fontWeight="bold" color="blue.600">
+        <Heading size="lg" color="blue.600">
           Theme Event
         </Heading>
         <Tooltip
@@ -225,32 +186,20 @@ const ThemeEventSection = () => {
               ? ""
               : "Your package has expired, please renew to create a theme."
           }
-          shouldWrapChildren
         >
           <Button
             colorScheme="blue"
             onClick={() => openModal()}
-            size="md"
             leftIcon={<AddIcon />}
-            disabled={!canCreateTheme}
-            style={{
-              cursor: canCreateTheme ? "pointer" : "not-allowed",
-              opacity: canCreateTheme ? 1 : 0.6,
-            }}
+            isDisabled={!canCreateTheme}
           >
             Create New Theme
           </Button>
         </Tooltip>
       </Flex>
 
-      <Table
-        variant="simple"
-        colorScheme="gray"
-        size="lg"
-        bg="white"
-        borderRadius="md"
-        shadow="md"
-      >
+      {/* Table */}
+      <Table colorScheme="gray" bg="white" shadow="md">
         <Thead bg="gray.200">
           <Tr>
             <Th>No</Th>
@@ -270,6 +219,7 @@ const ThemeEventSection = () => {
                 </Badge>
               </Td>
               <Td>
+                {" "}
                 <Tooltip
                   label={
                     canCreateTheme
@@ -282,12 +232,12 @@ const ThemeEventSection = () => {
                     colorScheme="blue"
                     size="sm"
                     mr={2}
-                    onClick={() => openModal(theme)}
                     isDisabled={!canCreateTheme}
+                    onClick={() => openModal(theme)}
                   >
                     Edit
-                  </Button>
-                </Tooltip>
+                  </Button>{" "}
+                </Tooltip>{" "}
                 <Tooltip
                   label={
                     canCreateTheme
@@ -299,11 +249,11 @@ const ThemeEventSection = () => {
                   <Button
                     colorScheme="red"
                     size="sm"
-                    onClick={() => handleDeleteTheme(theme.themeId)}
                     isDisabled={!canCreateTheme}
+                    onClick={() => handleDeleteTheme(theme.themeId)}
                   >
                     Delete
-                  </Button>
+                  </Button>{" "}
                 </Tooltip>
               </Td>
             </Tr>
@@ -311,21 +261,44 @@ const ThemeEventSection = () => {
         </Tbody>
       </Table>
 
+      {/* Modal */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{editingTheme ? "Edit Theme" : "Add Theme"}</ModalHeader>
+          <ModalHeader>
+            {editingTheme ? "Edit Theme" : "Create Theme"}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl mb={4}>
-              <FormLabel>Theme Name</FormLabel>
+              <FormLabel>Custome Theme Name</FormLabel>
               <Input
-                placeholder="Enter theme name"
+                mt={2}
+                placeholder="Custome a Theme Name"
                 value={newTheme}
                 onChange={(e) => setNewTheme(e.target.value)}
               />
+              <FormLabel>Theme Name</FormLabel>
+              <VStack align="start" spacing={2}>
+                <Box
+                  display="grid"
+                  gridTemplateColumns="repeat(2, 1fr)"
+                  gap={2}
+                >
+                  {" "}
+                  {staticThemes.map((theme) => (
+                    <Checkbox
+                      key={theme}
+                      isChecked={checkedThemes.includes(theme)}
+                      onChange={() => handleCheckboxChange(theme)}
+                    >
+                      {theme}
+                    </Checkbox>
+                  ))}
+                </Box>
+              </VStack>
             </FormControl>
-            <FormControl mb={4}>
+            <FormControl>
               <FormLabel>Status</FormLabel>
               <Select
                 value={status}

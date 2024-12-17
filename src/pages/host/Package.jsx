@@ -517,14 +517,14 @@ const CourseList = () => {
           clearInterval(intervalId); // Dừng kiểm tra thanh toán
           clearInterval(countdownIntervalRef.current); // Dừng countdown
 
-          toast({
-            title: "Payment Successful",
-            description:
-              "You have successfully completed the payment for the package.",
-            status: "success",
-            duration: 5000,
-            isClosable: true,
-          });
+          // toast({
+          //   title: "Payment Successful",
+          //   description:
+          //     "You have successfully completed the payment for the package.",
+          //   status: "success",
+          //   duration: 5000,
+          //   isClosable: true,
+          // });
 
           setSelectedPackage((prevState) => ({ ...prevState, showQR: false }));
           onClose(); // Close the modal

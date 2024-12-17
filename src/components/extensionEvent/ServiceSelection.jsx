@@ -21,6 +21,8 @@ import {
   Input,
   FormErrorMessage,
   useToast,
+  List,
+  ListItem,
 } from "@chakra-ui/react";
 import axios from "axios";
 
@@ -28,27 +30,34 @@ const API_BASE_URL = "https://esmpbe.id.vn/api/service";
 
 const ServiceManagement = ({ eventId }) => {
   const [services, setServices] = useState([]);
-  const [editingService, setEditingService] = useState(null);
   const [serviceName, setServiceName] = useState("");
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
 
-  const [serviceNameError, setServiceNameError] = useState("");
   const [priceError, setPriceError] = useState("");
   const [quantityError, setQuantityError] = useState("");
+  const [serviceNameError, setServiceNameError] = useState("");
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const typesPerPage = 3;
+  const [editingService, setEditingService] = useState(null);
+
+  const serviceSuggestions = [
+    "Booth installation and decoration services",
+    "Electrical and lighting equipment supply services",
+    "Technical support services",
+    "Goods transportation and installation services",
+    "Cleaning and sanitation services",
+    "Wifi and internet connection services",
+    "Customer care and information support services",
+  ];
 
   const fetchServices = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/${eventId}`, {
-        headers: {
-          Authorization: sessionStorage.getItem("accessToken"),
-        },
+        headers: { Authorization: sessionStorage.getItem("accessToken") },
       });
       setServices(response.data);
     } catch (error) {
@@ -67,81 +76,45 @@ const ServiceManagement = ({ eventId }) => {
     if (eventId) fetchServices();
   }, [eventId]);
 
-  const totalPages = Math.ceil(services.length / typesPerPage);
-  const indexOfLastType = currentPage * typesPerPage;
-  const indexOfFirstType = indexOfLastType - typesPerPage;
-  const currentTypes = services.slice(indexOfFirstType, indexOfLastType);
-
   const handleSave = async () => {
-    let valid = true;
-
     setServiceNameError("");
     setPriceError("");
     setQuantityError("");
 
     if (!serviceName) {
       setServiceNameError("Service name is required.");
-      valid = false;
+      return;
     }
-
     if (!price || parseFloat(price) < 0) {
-      setPriceError("Price must be a positive number.");
-      valid = false;
+      setPriceError("Price must be positive.");
+      return;
     }
-
     if (!quantity || parseInt(quantity) < 0) {
-      setQuantityError("Quantity must be a positive number.");
-      valid = false;
+      setQuantityError("Quantity must be positive.");
+      return;
     }
-
-    if (!valid) return;
 
     try {
+      const payload = {
+        name: serviceName,
+        price: parseFloat(price),
+        quantity: parseInt(quantity),
+      };
+
       if (editingService) {
         await axios.put(
           `${API_BASE_URL}/${editingService.serviceId}`,
-          {
-            name: serviceName,
-            price: parseFloat(price),
-            quantity: parseInt(quantity),
-          },
-          {
-            headers: {
-              Authorization: sessionStorage.getItem("accessToken"),
-              "Content-Type": "application/json",
-            },
-          }
+          payload,
+          { headers: { Authorization: sessionStorage.getItem("accessToken") } }
         );
-        toast({
-          title: "Service updated",
-          description: "The service has been updated successfully.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
+        toast({ title: "Service updated", status: "success" });
       } else {
-        await axios.post(
-          `${API_BASE_URL}/${eventId}`,
-          {
-            name: serviceName,
-            price: parseFloat(price),
-            quantity: parseInt(quantity),
-          },
-          {
-            headers: {
-              Authorization: sessionStorage.getItem("accessToken"),
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        toast({
-          title: "Service created",
-          description: "A new service has been created successfully.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
+        await axios.post(`${API_BASE_URL}/${eventId}`, payload, {
+          headers: { Authorization: sessionStorage.getItem("accessToken") },
         });
+        toast({ title: "Service created", status: "success" });
       }
+
       fetchServices();
       onClose();
       resetForm();
@@ -201,20 +174,43 @@ const ServiceManagement = ({ eventId }) => {
   };
 
   const resetForm = () => {
-    setEditingService(null);
     setServiceName("");
     setPrice("");
     setQuantity("");
+    setFilteredSuggestions([]);
+    setEditingService(null);
   };
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+  const handleInputChange = (value) => {
+    setServiceName(value);
+
+    // Filter suggestions dynamically
+    if (value) {
+      const filtered = serviceSuggestions.filter((suggestion) =>
+        suggestion.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredSuggestions(filtered);
+    } else {
+      setFilteredSuggestions([]);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setServiceName(suggestion);
+    setFilteredSuggestions([]);
   };
 
   return (
     <Box>
-      <Button colorScheme="blue" mb={4} onClick={onOpen}>
-        Create New Service
+      <Button
+        colorScheme="blue"
+        mb={4}
+        onClick={() => {
+          resetForm();
+          onOpen();
+        }}
+      >
+        Create New Service Support
       </Button>
 
       <Table variant="simple">
@@ -227,7 +223,7 @@ const ServiceManagement = ({ eventId }) => {
           </Tr>
         </Thead>
         <Tbody>
-          {currentTypes.map((service) => (
+          {services.map((service) => (
             <Tr key={service.serviceId}>
               <Td>{service.name}</Td>
               <Td>{service.price}</Td>
@@ -237,16 +233,15 @@ const ServiceManagement = ({ eventId }) => {
                   size="sm"
                   colorScheme="teal"
                   mr={2}
-                  onClick={() => handleEdit(service)}
+                  onClick={() => {
+                    setEditingService(service);
+                    setServiceName(service.name);
+                    setPrice(service.price);
+                    setQuantity(service.quantity);
+                    onOpen();
+                  }}
                 >
                   Edit
-                </Button>
-                <Button
-                  size="sm"
-                  colorScheme="red"
-                  onClick={() => handleDelete(service.serviceId)}
-                >
-                  Delete
                 </Button>
               </Td>
             </Tr>
@@ -254,35 +249,44 @@ const ServiceManagement = ({ eventId }) => {
         </Tbody>
       </Table>
 
-      <Flex justifyContent="flex-end" mt={4}>
-        {Array.from({ length: totalPages }, (_, i) => (
-          <Button
-            key={i}
-            onClick={() => handlePageChange(i + 1)}
-            colorScheme={currentPage === i + 1 ? "blue" : "gray"}
-            mx={1}
-          >
-            {i + 1}
-          </Button>
-        ))}
-      </Flex>
-
+      {/* Modal */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
-            {editingService ? "Edit Service" : "Create New Service"}
+            {editingService
+              ? "Edit Service Support"
+              : "Create New Service Support"}
           </ModalHeader>
           <ModalBody>
             <FormControl mb={4} isInvalid={!!serviceNameError}>
               <FormLabel>Service Name</FormLabel>
               <Input
                 value={serviceName}
-                onChange={(e) => setServiceName(e.target.value)}
+                onChange={(e) => handleInputChange(e.target.value)}
+                placeholder="Enter or select a service name"
               />
-              {serviceNameError && (
-                <FormErrorMessage>{serviceNameError}</FormErrorMessage>
+              {filteredSuggestions.length > 0 && (
+                <List
+                  border="1px solid #ccc"
+                  borderRadius="md"
+                  mt={1}
+                  maxH="150px"
+                  overflowY="auto"
+                >
+                  {filteredSuggestions.map((suggestion) => (
+                    <ListItem
+                      key={suggestion}
+                      p={2}
+                      _hover={{ bg: "gray.200", cursor: "pointer" }}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      {suggestion}
+                    </ListItem>
+                  ))}
+                </List>
               )}
+              <FormErrorMessage>{serviceNameError}</FormErrorMessage>
             </FormControl>
 
             <FormControl mb={4} isInvalid={!!priceError}>
@@ -292,7 +296,7 @@ const ServiceManagement = ({ eventId }) => {
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
               />
-              {priceError && <FormErrorMessage>{priceError}</FormErrorMessage>}
+              <FormErrorMessage>{priceError}</FormErrorMessage>
             </FormControl>
 
             <FormControl mb={4} isInvalid={!!quantityError}>
@@ -302,9 +306,7 @@ const ServiceManagement = ({ eventId }) => {
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
               />
-              {quantityError && (
-                <FormErrorMessage>{quantityError}</FormErrorMessage>
-              )}
+              <FormErrorMessage>{quantityError}</FormErrorMessage>
             </FormControl>
           </ModalBody>
           <ModalFooter>

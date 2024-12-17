@@ -73,59 +73,55 @@ const AdminAccountManagement = () => {
     onClose: onEditClose,
   } = useDisclosure();
   const sendEmail = async (account) => {
-    const emailData = {
-      toEmail: account.account.email,
-      subject: "Your account has been activated",
-      body: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-          <div style="background-color: #f4f4f4; padding: 20px; border-radius: 8px;">
-            <h2 style="text-align: center; color: #007BFF;">Account Activation Successful</h2>
-            <p style="font-size: 16px; text-align: justify;">
-              Dear ${account.account.name || "User"},
-            </p>
-            <p style="font-size: 16px; text-align: justify;">
-              Congratulations! Your account has been successfully activated by our admin team. We are delighted to have you onboard. Please review our terms and contract by clicking the link below:
-            </p>
-            <div style="text-align: center; margin: 20px 0;">
-              <a href="https://docs.google.com/document/d/1a7-4GR1zZADkCw6CzCYRZ_guTl88MF4c/edit?usp=sharing&ouid=104522618690737883282&rtpof=true&sd=true" 
-                 style="text-decoration: none; background-color: #007BFF; color: #fff; padding: 10px 20px; border-radius: 5px; font-size: 16px;"
-                 download>
-                Download Contract
-              </a>
-            </div>
-            <p style="font-size: 16px; text-align: justify;">
-              Thank you for choosing us. If you have any questions or need further assistance, feel free to contact us at any time.
-            </p>
-            <p style="font-size: 16px; text-align: justify;">
-              Best regards,<br>
-              The Admin Team
-            </p>
-          </div>
-        </div>
-      `,
-    };
+    let subject = "";
+    let body = "";
+
+    // Chọn nội dung email dựa trên trạng thái
+    switch (account.emailType) {
+      case "activatedFirstTime":
+        subject = "Your account has been activated";
+        body = `
+          <p>Dear ${account.account.name},</p>
+          <p>Congratulations! Your account has been successfully activated for the first time.</p>
+          <p>Please review our contract  <a href="https://docs.google.com/document/d/1a7-4GR1zZADkCw6CzCYRZ_guTl88MF4c/edit?usp=sharing&ouid=104522618690737883282&rtpof=true&sd=true" .</p>
+          <p>Best regards,</p>
+          <p>The Admin Team</p>
+        `;
+        break;
+
+      case "reactivated":
+        subject = "Your account has been reactivated";
+        body = `
+          <p>Dear ${account.account.name},</p>
+          <p>Good news! Your account has been reactivated. Welcome back!</p>
+          <p>Please check your account and review any updates.</p>
+          <p>Best regards,</p>
+          <p>The Admin Team</p>
+        `;
+        break;
+
+      case "deactivated":
+        subject = "Your account has been deactivated";
+        body = `
+          <p>Dear ${account.account.name},</p>
+          <p>We regret to inform you that your account has been deactivated. If you believe this is a mistake, please contact our support team.</p>
+          <p>Best regards,</p>
+          <p>The Admin Team</p>
+        `;
+        break;
+
+      default:
+        console.error("Unknown email type");
+        return;
+    }
 
     try {
-      // Fetch the PDF file from the public directory
-      const fileUrl = `${process.env.PUBLIC_URL}/Hợp đồng sử dụng phần mềm.docx.pdf`; // Use a file URL
-      const response = await fetch(fileUrl);
+      const emailData = new FormData();
+      emailData.append("toEmail", account.account.email);
+      emailData.append("subject", subject);
+      emailData.append("body", body);
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch the file");
-      }
-
-      // Convert the response to a Blob
-      const fileBlob = await response.blob();
-
-      // Create a FormData object
-      const formData = new FormData();
-      formData.append("toEmail", emailData.toEmail);
-      formData.append("subject", emailData.subject);
-      formData.append("body", emailData.body);
-      formData.append("file", fileBlob, "Hợp đồng sử dụng phần mềm.pdf");
-
-      // Send the form data
-      await axios.post("https://esmpbe.id.vn/api/mail/send-email", formData, {
+      await axios.post("https://esmpbe.id.vn/api/mail/send-email", emailData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -133,7 +129,7 @@ const AdminAccountManagement = () => {
 
       toast({
         title: "Email Sent.",
-        description: `An email with the contract has been sent to ${emailData.toEmail}`,
+        description: `An email has been sent to ${account.account.email}`,
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -155,8 +151,17 @@ const AdminAccountManagement = () => {
     axios
       .get("https://esmpbe.id.vn/api/host")
       .then((response) => {
-        setAccounts(response.data); // Assuming the API returns account data
-        setFilteredAccounts(response.data); // Set initial filtered accounts
+        const sortedAccounts = response.data.sort((a, b) => {
+          // Sắp xếp theo trạng thái: Active (true) trước Inactive (false)
+          if (a.account.status !== b.account.status) {
+            return b.account.status - a.account.status;
+          }
+          // Nếu trạng thái giống nhau, sắp xếp theo thời gian tạo (mới nhất trước)
+          return new Date(b.account.createdat) - new Date(a.account.createdat);
+        });
+
+        setAccounts(sortedAccounts); // Lưu lại dữ liệu đã sắp xếp
+        setFilteredAccounts(sortedAccounts); // Lưu lại filtered accounts (nếu có)
       })
       .catch((error) => console.error(error));
   }, []);
@@ -263,7 +268,6 @@ const AdminAccountManagement = () => {
       apibanking: selectedAccount.apibanking,
       status: selectedAccount.account.status, // Update status field
     };
-
     axios
       .put(
         `https://esmpbe.id.vn/api/host/${selectedAccount.hostid}`,
@@ -282,8 +286,19 @@ const AdminAccountManagement = () => {
         axios
           .get("https://esmpbe.id.vn/api/host")
           .then((response) => {
-            setAccounts(response.data);
-            setFilteredAccounts(response.data);
+            const sortedAccounts = response.data.sort((a, b) => {
+              // Sắp xếp theo trạng thái: Active (true) trước Inactive (false)
+              if (a.account.status !== b.account.status) {
+                return b.account.status - a.account.status;
+              }
+              // Nếu trạng thái giống nhau, sắp xếp theo thời gian tạo (mới nhất trước)
+              return (
+                new Date(b.account.createdat) - new Date(a.account.createdat)
+              );
+            });
+
+            setAccounts(sortedAccounts); // Update state with sorted accounts
+            setFilteredAccounts(sortedAccounts); // Update filtered accounts
           })
           .catch((error) => {
             console.error("Error fetching updated accounts:", error);
@@ -325,20 +340,96 @@ const AdminAccountManagement = () => {
     setSelectedAccount(account);
     onEditOpen();
   };
+  const toggleStatus = (account) => {
+    const updatedStatus = !account.account.status; // Toggle the status
+
+    const updatedAccount = {
+      ...account,
+      account: { ...account.account, status: updatedStatus },
+    };
+
+    axios
+      .put(`https://esmpbe.id.vn/api/host/${account.hostid}`, {
+        ...updatedAccount.account,
+      })
+      .then((response) => {
+        // Update the status in the accounts state
+        const updatedAccounts = accounts.map((acc) =>
+          acc.account.id === account.account.id ? updatedAccount : acc
+        );
+
+        // Sort the accounts by status and creation date
+        const sortedAccounts = updatedAccounts.sort((a, b) => {
+          if (a.account.status !== b.account.status) {
+            return b.account.status - a.account.status; // Active first
+          }
+          return new Date(b.account.createdat) - new Date(a.account.createdat); // Latest first
+        });
+
+        setAccounts(sortedAccounts); // Update state with sorted accounts
+        setFilteredAccounts(sortedAccounts); // Update filtered accounts
+
+        toast({
+          title: "Account Status Updated.",
+          description: `The account status has been successfully updated to ${
+            updatedStatus ? "Active" : "Inactive"
+          }.`,
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+
+        // Check conditions for sending different emails
+        if (updatedStatus) {
+          if (account.account.createdat === account.account.updatedat) {
+            // Case 1: Account activated for the first time
+            sendEmail({
+              ...updatedAccount,
+              emailType: "activatedFirstTime",
+            });
+          } else {
+            // Case 2: Account reactivated
+            sendEmail({
+              ...updatedAccount,
+              emailType: "reactivated",
+            });
+          }
+        } else {
+          // Case 3: Account deactivated
+          sendEmail({
+            ...updatedAccount,
+            emailType: "deactivated",
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error updating account status:", error);
+        toast({
+          title: "Error Updating Status.",
+          description:
+            "There was an error updating the status. Please try again.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      });
+  };
 
   return (
     <Stack spacing={4} p={4}>
       {/* Search Bar */}
-      <InputGroup mb={4}>
-        <InputLeftElement
-          pointerEvents="none"
-          children={<SearchIcon color="gray.300" />}
-        />
+      <InputGroup mb={4} justifyContent="center" width="auto" maxWidth="400px">
+        <InputLeftElement pointerEvents="none" />
         <Input
           type="text"
           placeholder="Search accounts..."
           value={searchTerm}
           onChange={handleSearch}
+          size="xl"
+          borderColor="black"
+          focusBorderColor="teal.500"
+          borderRadius="md"
+          p={2}
         />
       </InputGroup>
 
@@ -359,9 +450,8 @@ const AdminAccountManagement = () => {
           <Thead>
             <Tr>
               <Th>Username</Th>
-              <Th>Password</Th>
               <Th>Name</Th>
-              <Th>Status</Th>
+              <Th>Status</Th> {/* Make this clickable */}
               <Th textAlign="center">Actions</Th>
             </Tr>
           </Thead>
@@ -369,9 +459,16 @@ const AdminAccountManagement = () => {
             {currentAccounts.map((account) => (
               <Tr key={account.account.id}>
                 <Td>{account.account.username}</Td>
-                <Td>*******</Td>
                 <Td>{account.account.name}</Td>
-                <Td>{account.account.status ? "Active" : "Inactive"}</Td>
+                <Td>
+                  <Button
+                    size="sm"
+                    onClick={() => toggleStatus(account)}
+                    colorScheme={account.account.status ? "green" : "red"}
+                  >
+                    {account.account.status ? "Active" : "Inactive"}
+                  </Button>
+                </Td>
                 <Td textAlign="center">
                   {/* View details button */}
                   <IconButton
@@ -387,15 +484,6 @@ const AdminAccountManagement = () => {
                     icon={<EditIcon />}
                     aria-label="Edit account"
                     onClick={() => openEditModal(account)}
-                    variant="ghost"
-                    size="sm"
-                    mx={1}
-                  />
-                  {/* Delete account button */}
-                  <IconButton
-                    icon={<EmailIcon />}
-                    aria-label="Send email"
-                    onClick={() => sendEmail(account)}
                     variant="ghost"
                     size="sm"
                     mx={1}
@@ -551,7 +639,7 @@ const AdminAccountManagement = () => {
                 }
               />
             </FormControl>
-            <FormControl>
+            {/* <FormControl>
               <FormLabel>Status</FormLabel>
               <Select
                 value={selectedAccount?.account.status ? "active" : "inactive"}
@@ -568,7 +656,7 @@ const AdminAccountManagement = () => {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </Select>
-            </FormControl>
+            </FormControl> */}
           </ModalBody>
 
           <ModalFooter>
