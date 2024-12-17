@@ -79,16 +79,31 @@ const AdminAccountManagement = () => {
     // Chọn nội dung email dựa trên trạng thái
     switch (account.emailType) {
       case "activatedFirstTime":
-        subject = "Your account has been activated";
-        body = `
-          <p>Dear ${account.account.name},</p>
-          <p>Congratulations! Your account has been successfully activated for the first time.</p>
-          <p>Please review our contract  <a href="https://docs.google.com/document/d/1a7-4GR1zZADkCw6CzCYRZ_guTl88MF4c/edit?usp=sharing&ouid=104522618690737883282&rtpof=true&sd=true" .</p>
-          <p>Best regards,</p>
-          <p>The Admin Team</p>
-        `;
-        break;
+    subject = "Your account has been activated";
+    body = `
+      <p>Dear ${account.account.name},</p>
+      <p>We are excited to inform you that your account has been successfully activated for the first time!</p>
+      
+      <p>As part of the activation process, we kindly ask you to carefully review and sign the contract to complete your registration. This is an important step in ensuring a smooth and transparent relationship between you and our platform.</p>
+      
+      <p>To review and sign the contract, please click on the link below:</p>
+      <p style="text-align: center;">
+        <a href="https://docs.google.com/document/d/1a7-4GR1zZADkCw6CzCYRZ_guTl88MF4c/edit?usp=sharing&ouid=104522618690737883282&rtpof=true&sd=true" 
+           style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">Review and Sign the Contract</a>
+      </p>
+      
+      <p>It is important to read through the entire contract to ensure you understand the terms and conditions of our platform. Once you have reviewed the document, please sign it electronically. If you have any questions or need clarification, feel free to reach out to our support team.</p>
+      
+      <p>We appreciate your attention to this matter and look forward to your active participation in our community.</p>
+      
+      <p>If you need any assistance or have any concerns, do not hesitate to contact us at any time. We are here to help!</p>
+      
+      <p>Best regards,</p>
+      <p>The Admin Team</p>
+    `;
+    break;
 
+  
       case "reactivated":
         subject = "Your account has been reactivated";
         body = `
