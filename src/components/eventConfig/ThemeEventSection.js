@@ -54,13 +54,14 @@ const ThemeEventSection = () => {
       );
       setThemes(response.data);
     } catch (error) {
-      toast({
-        title: "Error fetching themes",
-        description: "Could not load themes.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log("Error fetching themes", error);
+      // toast({
+      //   title: "Error fetching themes",
+      //   description: "Could not load themes.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -162,13 +163,14 @@ const ThemeEventSection = () => {
         setStatus("true");
         setEditingTheme(null);
       } catch (error) {
-        toast({
-          title: "Error saving theme",
-          description: "Could not save the theme.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        console.log("Error saving theme", error);
+        // toast({
+        //   title: "Error saving theme",
+        //   description: "Could not save the theme.",
+        //   status: "error",
+        //   duration: 3000,
+        //   isClosable: true,
+        // });
       }
     }
   };

@@ -1,20 +1,52 @@
 import React, { useState, useEffect } from "react";
 import {
-  Table, Thead, Tbody, Tr, Th, Td, IconButton, Modal,
-  ModalOverlay, ModalContent, ModalHeader, ModalFooter,
-  ModalBody, ModalCloseButton, useDisclosure, FormControl,
-  FormLabel, Input, Stack, Button, Box, InputGroup, InputLeftElement, FormErrorMessage, useToast, Select
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  IconButton,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
+  FormControl,
+  FormLabel,
+  Input,
+  Stack,
+  Button,
+  Box,
+  InputGroup,
+  InputLeftElement,
+  FormErrorMessage,
+  useToast,
+  Select,
 } from "@chakra-ui/react";
-import { EditIcon, DeleteIcon, ViewIcon, SearchIcon, EmailIcon } from "@chakra-ui/icons";
+import {
+  EditIcon,
+  DeleteIcon,
+  ViewIcon,
+  SearchIcon,
+  EmailIcon,
+} from "@chakra-ui/icons";
 import axios from "axios";
-
 
 const AdminAccountManagement = () => {
   const [accounts, setAccounts] = useState([]);
   const [filteredAccounts, setFilteredAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [newAccount, setNewAccount] = useState({
-    username: "", password: "", name: "", phone: "", email: "", expiretime: ""
+    username: "",
+    password: "",
+    name: "",
+    phone: "",
+    email: "",
+    expiretime: "",
   });
   const [error, setError] = useState({});
 
@@ -25,9 +57,21 @@ const AdminAccountManagement = () => {
   const toast = useToast(); // Initialize toast
 
   // Modal disclosures
-  const { isOpen: isCreateOpen, onOpen: onCreateOpen, onClose: onCreateClose } = useDisclosure();
-  const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure();
-  const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure();
+  const {
+    isOpen: isCreateOpen,
+    onOpen: onCreateOpen,
+    onClose: onCreateClose,
+  } = useDisclosure();
+  const {
+    isOpen: isDetailOpen,
+    onOpen: onDetailOpen,
+    onClose: onDetailClose,
+  } = useDisclosure();
+  const {
+    isOpen: isEditOpen,
+    onOpen: onEditOpen,
+    onClose: onEditClose,
+  } = useDisclosure();
   const sendEmail = async (account) => {
     const emailData = {
       toEmail: account.account.email,
@@ -60,34 +104,33 @@ const AdminAccountManagement = () => {
         </div>
       `,
     };
-    
-  
+
     try {
       // Fetch the PDF file from the public directory
       const fileUrl = `${process.env.PUBLIC_URL}/Hợp đồng sử dụng phần mềm.docx.pdf`; // Use a file URL
       const response = await fetch(fileUrl);
-  
+
       if (!response.ok) {
         throw new Error("Failed to fetch the file");
       }
-  
+
       // Convert the response to a Blob
       const fileBlob = await response.blob();
-  
+
       // Create a FormData object
       const formData = new FormData();
       formData.append("toEmail", emailData.toEmail);
       formData.append("subject", emailData.subject);
       formData.append("body", emailData.body);
       formData.append("file", fileBlob, "Hợp đồng sử dụng phần mềm.pdf");
-  
+
       // Send the form data
       await axios.post("https://esmpbe.id.vn/api/mail/send-email", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-  
+
       toast({
         title: "Email Sent.",
         description: `An email with the contract has been sent to ${emailData.toEmail}`,
@@ -97,19 +140,20 @@ const AdminAccountManagement = () => {
       });
     } catch (error) {
       console.error("Error sending email:", error);
-      toast({
-        title: "Email Error.",
-        description: "There was an error sending the email. Please try again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Email Error.",
+      //   description: "There was an error sending the email. Please try again.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     }
   };
-  
+
   // Get list of accounts from API
   useEffect(() => {
-    axios.get("https://esmpbe.id.vn/api/host")
+    axios
+      .get("https://esmpbe.id.vn/api/host")
       .then((response) => {
         setAccounts(response.data); // Assuming the API returns account data
         setFilteredAccounts(response.data); // Set initial filtered accounts
@@ -121,9 +165,10 @@ const AdminAccountManagement = () => {
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
     const lowercasedSearchTerm = event.target.value.toLowerCase();
-    const filteredData = accounts.filter(account =>
-      account.account.username.toLowerCase().includes(lowercasedSearchTerm) ||
-      account.account.name.toLowerCase().includes(lowercasedSearchTerm)
+    const filteredData = accounts.filter(
+      (account) =>
+        account.account.username.toLowerCase().includes(lowercasedSearchTerm) ||
+        account.account.name.toLowerCase().includes(lowercasedSearchTerm)
     );
     setFilteredAccounts(filteredData);
     setCurrentPage(1); // Reset to first page when searching
@@ -132,7 +177,10 @@ const AdminAccountManagement = () => {
   // Get current page's accounts
   const indexOfLastAccount = currentPage * accountsPerPage;
   const indexOfFirstAccount = indexOfLastAccount - accountsPerPage;
-  const currentAccounts = filteredAccounts.slice(indexOfFirstAccount, indexOfLastAccount);
+  const currentAccounts = filteredAccounts.slice(
+    indexOfFirstAccount,
+    indexOfLastAccount
+  );
 
   // Change page
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -140,8 +188,14 @@ const AdminAccountManagement = () => {
   // Create a new account
   const createAccount = () => {
     if (validateForm()) {
-      const updatedAccount = { ...newAccount, expiretime: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString() };
-      axios.post("https://esmpbe.id.vn/api/user/register", updatedAccount)
+      const updatedAccount = {
+        ...newAccount,
+        expiretime: new Date(
+          new Date().setDate(new Date().getDate() + 7)
+        ).toISOString(),
+      };
+      axios
+        .post("https://esmpbe.id.vn/api/user/register", updatedAccount)
         .then((response) => {
           setAccounts([...accounts, response.data]);
           setFilteredAccounts([...filteredAccounts, response.data]);
@@ -157,7 +211,8 @@ const AdminAccountManagement = () => {
           });
 
           // Refetch the data to make sure it's updated
-          axios.get("https://esmpbe.id.vn/api/host")
+          axios
+            .get("https://esmpbe.id.vn/api/host")
             .then((response) => {
               setAccounts(response.data);
               setFilteredAccounts(response.data);
@@ -183,7 +238,10 @@ const AdminAccountManagement = () => {
     }
 
     // Email format validation
-    if (newAccount.email && !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(newAccount.email)) {
+    if (
+      newAccount.email &&
+      !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(newAccount.email)
+    ) {
       newError.email = "Email format is invalid";
     }
 
@@ -203,10 +261,14 @@ const AdminAccountManagement = () => {
       eventstoragetime: selectedAccount.eventstoragetime,
       bankingaccount: selectedAccount.bankingaccount,
       apibanking: selectedAccount.apibanking,
-      status: selectedAccount.account.status  // Update status field
+      status: selectedAccount.account.status, // Update status field
     };
 
-    axios.put(`https://esmpbe.id.vn/api/host/${selectedAccount.hostid}`, updatedData)
+    axios
+      .put(
+        `https://esmpbe.id.vn/api/host/${selectedAccount.hostid}`,
+        updatedData
+      )
       .then((response) => {
         toast({
           title: "Account Updated.",
@@ -217,7 +279,8 @@ const AdminAccountManagement = () => {
         });
 
         // Fetch the updated account list after the update
-        axios.get("https://esmpbe.id.vn/api/host")
+        axios
+          .get("https://esmpbe.id.vn/api/host")
           .then((response) => {
             setAccounts(response.data);
             setFilteredAccounts(response.data);
@@ -226,7 +289,8 @@ const AdminAccountManagement = () => {
             console.error("Error fetching updated accounts:", error);
             toast({
               title: "Error Fetching Accounts.",
-              description: "There was an error fetching the latest account data.",
+              description:
+                "There was an error fetching the latest account data.",
               status: "error",
               duration: 5000,
               isClosable: true,
@@ -241,7 +305,8 @@ const AdminAccountManagement = () => {
         console.error(error);
         toast({
           title: "Error Updating Account.",
-          description: "There was an error updating the account. Please try again.",
+          description:
+            "There was an error updating the account. Please try again.",
           status: "error",
           duration: 5000,
           isClosable: true,
@@ -265,7 +330,10 @@ const AdminAccountManagement = () => {
     <Stack spacing={4} p={4}>
       {/* Search Bar */}
       <InputGroup mb={4}>
-        <InputLeftElement pointerEvents="none" children={<SearchIcon color="gray.300" />} />
+        <InputLeftElement
+          pointerEvents="none"
+          children={<SearchIcon color="gray.300" />}
+        />
         <Input
           type="text"
           placeholder="Search accounts..."
@@ -280,7 +348,13 @@ const AdminAccountManagement = () => {
       </Button> */}
 
       {/* Table displaying accounts */}
-      <Box border="1px" borderColor="gray.200" borderRadius="md" boxShadow="lg" p={4}>
+      <Box
+        border="1px"
+        borderColor="gray.200"
+        borderRadius="md"
+        boxShadow="lg"
+        p={4}
+      >
         <Table variant="striped" size="md" colorScheme="gray" borderRadius="md">
           <Thead>
             <Tr>
@@ -297,7 +371,7 @@ const AdminAccountManagement = () => {
                 <Td>{account.account.username}</Td>
                 <Td>*******</Td>
                 <Td>{account.account.name}</Td>
-                <Td>{account.account.status ? 'Active' : 'Inactive'}</Td>
+                <Td>{account.account.status ? "Active" : "Inactive"}</Td>
                 <Td textAlign="center">
                   {/* View details button */}
                   <IconButton
@@ -319,13 +393,13 @@ const AdminAccountManagement = () => {
                   />
                   {/* Delete account button */}
                   <IconButton
-    icon={<EmailIcon />}
-    aria-label="Send email"
-    onClick={() => sendEmail(account)}
-    variant="ghost"
-    size="sm"
-    mx={1}
-  />
+                    icon={<EmailIcon />}
+                    aria-label="Send email"
+                    onClick={() => sendEmail(account)}
+                    variant="ghost"
+                    size="sm"
+                    mx={1}
+                  />
                 </Td>
               </Tr>
             ))}
@@ -335,8 +409,20 @@ const AdminAccountManagement = () => {
 
       {/* Pagination */}
       <Box textAlign="center" mt={4}>
-        <Button onClick={() => paginate(currentPage - 1)} isDisabled={currentPage === 1}>Previous</Button>
-        <Button onClick={() => paginate(currentPage + 1)} isDisabled={currentPage === Math.ceil(filteredAccounts.length / accountsPerPage)}>Next</Button>
+        <Button
+          onClick={() => paginate(currentPage - 1)}
+          isDisabled={currentPage === 1}
+        >
+          Previous
+        </Button>
+        <Button
+          onClick={() => paginate(currentPage + 1)}
+          isDisabled={
+            currentPage === Math.ceil(filteredAccounts.length / accountsPerPage)
+          }
+        >
+          Next
+        </Button>
       </Box>
 
       {/* Create Account Modal */}
@@ -350,7 +436,9 @@ const AdminAccountManagement = () => {
               <FormLabel>Username</FormLabel>
               <Input
                 value={newAccount.username}
-                onChange={(e) => setNewAccount({ ...newAccount, username: e.target.value })}
+                onChange={(e) =>
+                  setNewAccount({ ...newAccount, username: e.target.value })
+                }
               />
               <FormErrorMessage>{error.username}</FormErrorMessage>
             </FormControl>
@@ -358,7 +446,9 @@ const AdminAccountManagement = () => {
               <FormLabel>Password</FormLabel>
               <Input
                 value={newAccount.password}
-                onChange={(e) => setNewAccount({ ...newAccount, password: e.target.value })}
+                onChange={(e) =>
+                  setNewAccount({ ...newAccount, password: e.target.value })
+                }
               />
               <FormErrorMessage>{error.password}</FormErrorMessage>
             </FormControl>
@@ -366,7 +456,9 @@ const AdminAccountManagement = () => {
               <FormLabel>Name</FormLabel>
               <Input
                 value={newAccount.name}
-                onChange={(e) => setNewAccount({ ...newAccount, name: e.target.value })}
+                onChange={(e) =>
+                  setNewAccount({ ...newAccount, name: e.target.value })
+                }
               />
               <FormErrorMessage>{error.name}</FormErrorMessage>
             </FormControl>
@@ -374,7 +466,9 @@ const AdminAccountManagement = () => {
               <FormLabel>Phone</FormLabel>
               <Input
                 value={newAccount.phone}
-                onChange={(e) => setNewAccount({ ...newAccount, phone: e.target.value })}
+                onChange={(e) =>
+                  setNewAccount({ ...newAccount, phone: e.target.value })
+                }
               />
               <FormErrorMessage>{error.phone}</FormErrorMessage>
             </FormControl>
@@ -382,15 +476,21 @@ const AdminAccountManagement = () => {
               <FormLabel>Email</FormLabel>
               <Input
                 value={newAccount.email}
-                onChange={(e) => setNewAccount({ ...newAccount, email: e.target.value })}
+                onChange={(e) =>
+                  setNewAccount({ ...newAccount, email: e.target.value })
+                }
               />
               <FormErrorMessage>{error.email}</FormErrorMessage>
             </FormControl>
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" onClick={createAccount}>Create</Button>
-            <Button variant="ghost" onClick={onCreateClose}>Cancel</Button>
+            <Button colorScheme="blue" onClick={createAccount}>
+              Create
+            </Button>
+            <Button variant="ghost" onClick={onCreateClose}>
+              Cancel
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -410,31 +510,60 @@ const AdminAccountManagement = () => {
               <FormLabel>Name</FormLabel>
               <Input
                 value={selectedAccount?.account.name}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, name: e.target.value } })}
+                onChange={(e) =>
+                  setSelectedAccount({
+                    ...selectedAccount,
+                    account: {
+                      ...selectedAccount.account,
+                      name: e.target.value,
+                    },
+                  })
+                }
               />
             </FormControl>
             <FormControl>
               <FormLabel>Email</FormLabel>
               <Input
                 value={selectedAccount?.account.email}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, email: e.target.value } })}
+                onChange={(e) =>
+                  setSelectedAccount({
+                    ...selectedAccount,
+                    account: {
+                      ...selectedAccount.account,
+                      email: e.target.value,
+                    },
+                  })
+                }
               />
             </FormControl>
             <FormControl>
               <FormLabel>Phone</FormLabel>
               <Input
                 value={selectedAccount?.account.phone}
-                onChange={(e) => setSelectedAccount({ ...selectedAccount, account: { ...selectedAccount.account, phone: e.target.value } })}
+                onChange={(e) =>
+                  setSelectedAccount({
+                    ...selectedAccount,
+                    account: {
+                      ...selectedAccount.account,
+                      phone: e.target.value,
+                    },
+                  })
+                }
               />
             </FormControl>
             <FormControl>
               <FormLabel>Status</FormLabel>
               <Select
                 value={selectedAccount?.account.status ? "active" : "inactive"}
-                onChange={(e) => setSelectedAccount({
-                  ...selectedAccount,
-                  account: { ...selectedAccount.account, status: e.target.value === "active" }
-                })}
+                onChange={(e) =>
+                  setSelectedAccount({
+                    ...selectedAccount,
+                    account: {
+                      ...selectedAccount.account,
+                      status: e.target.value === "active",
+                    },
+                  })
+                }
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
@@ -443,8 +572,12 @@ const AdminAccountManagement = () => {
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" onClick={updateAccount}>Update</Button>
-            <Button variant="ghost" onClick={onEditClose}>Cancel</Button>
+            <Button colorScheme="blue" onClick={updateAccount}>
+              Update
+            </Button>
+            <Button variant="ghost" onClick={onEditClose}>
+              Cancel
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -460,11 +593,15 @@ const AdminAccountManagement = () => {
             <p>Name: {selectedAccount?.account.name}</p>
             <p>Email: {selectedAccount?.account.email}</p>
             <p>Phone: {selectedAccount?.account.phone}</p>
-            <p>Status: {selectedAccount?.account.status ? "Active" : "Inactive"}</p>
+            <p>
+              Status: {selectedAccount?.account.status ? "Active" : "Inactive"}
+            </p>
           </ModalBody>
 
           <ModalFooter>
-            <Button variant="ghost" onClick={onDetailClose}>Close</Button>
+            <Button variant="ghost" onClick={onDetailClose}>
+              Close
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

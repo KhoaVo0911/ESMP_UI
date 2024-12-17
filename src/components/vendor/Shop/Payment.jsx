@@ -211,14 +211,14 @@ const Payment = ({ removeItem }) => {
       });
     } catch (error) {
       console.error("Error processing payment:", error);
-      toast({
-        title: "Error",
-        description:
-          "An error occurred while processing your payment. Please try again.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description:
+      //     "An error occurred while processing your payment. Please try again.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 

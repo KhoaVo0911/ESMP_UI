@@ -24,7 +24,6 @@ import { AddIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import { useToast } from "@chakra-ui/react";
 
-
 const API_PACKAGE = "https://esmpbe.id.vn/api/package";
 
 const PackageAdmin = () => {
@@ -97,7 +96,7 @@ const PackageAdmin = () => {
 
   const handleCreatePackage = async () => {
     if (!validateForm()) return;
-  
+
     try {
       const payload = {
         name: formData.name,
@@ -106,7 +105,7 @@ const PackageAdmin = () => {
         description: formData.description,
         expiretime: parseInt(formData.expiretime, 10),
       };
-  
+
       await axios.post(API_PACKAGE, payload, {
         headers: {
           Authorization: `${accessToken}`,
@@ -131,22 +130,21 @@ const PackageAdmin = () => {
       });
     } catch (error) {
       console.error("Error creating package:", error);
-      toast({
-        title: "Error.",
-        description:
-          "Failed to create package: " +
-          (error.response?.data?.message || error.message),
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error.",
+      //   description:
+      //     "Failed to create package: " +
+      //     (error.response?.data?.message || error.message),
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
-  
 
   const handleEditPackage = async () => {
     if (!validateForm()) return;
-  
+
     try {
       const payload = {
         name: formData.name,
@@ -155,7 +153,7 @@ const PackageAdmin = () => {
         description: formData.description,
         expiretime: parseInt(formData.expiretime, 10),
       };
-  
+
       await axios.put(`${API_PACKAGE}/${editId}`, payload, {
         headers: {
           Authorization: `${accessToken}`,
@@ -182,15 +180,15 @@ const PackageAdmin = () => {
       setEditId(null);
     } catch (error) {
       console.error("Error updating package:", error);
-      toast({
-        title: "Error.",
-        description:
-          "Failed to update package: " +
-          (error.response?.data?.message || error.message),
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error.",
+      //   description:
+      //     "Failed to update package: " +
+      //     (error.response?.data?.message || error.message),
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -218,15 +216,15 @@ const PackageAdmin = () => {
       fetchPackages();
     } catch (error) {
       console.error("Error toggling status:", error);
-      toast({
-        title: "Error.",
-        description:
-          "Failed to toggle package status: " +
-          (error.response?.data?.message || error.message),
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error.",
+      //   description:
+      //     "Failed to toggle package status: " +
+      //     (error.response?.data?.message || error.message),
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
   const openEditModal = (pkg) => {
@@ -246,7 +244,7 @@ const PackageAdmin = () => {
     if (a.status === b.status) return 0;
     return a.status ? -1 : 1;
   });
-  
+
   useEffect(() => {
     if (accessToken) {
       fetchPackages();
@@ -277,72 +275,71 @@ const PackageAdmin = () => {
           Create Package
         </Button>
       </Flex>
-     <Flex wrap="wrap" gap={6} justifyContent="center">
-  {sortedPackages.map((pkg) => (
-    <Box
-      key={pkg.id}
-      borderWidth="1px"
-      borderRadius="lg"
-      overflow="hidden"
-      boxShadow="md"
-      bg="white"
-      p={6}
-      w="300px"
-      textAlign="center"
-    >
-      <VStack spacing={4}>
-        <Text fontSize="2xl" fontWeight="bold" color="teal.700">
-          {pkg.name}
-        </Text>
-        <Text fontSize="sm" color="gray.600">
-          Expiry Time:{" "}
-          <strong>
-            {pkg.expiretime} Month{pkg.expiretime > 1 ? "s" : ""}
-          </strong>
-        </Text>
-        <Text>
-          Storage Time:{" "}
-          <strong>
-            {pkg.eventstoragetime}{" "}
-            {pkg.eventstoragetime > 1 ? "Months" : "Month"}
-          </strong>
-        </Text>
-        <Text>
-          Description: {pkg.description || "No description provided."}
-        </Text>
-        <Text fontSize="lg" fontWeight="bold" color="teal.800">
-          {pkg.price} VND
-        </Text>
-
-        <Badge
-          colorScheme={pkg.status ? "green" : "red"}
-          variant="solid"
-          px={4}
-          py={1}
-        >
-          {pkg.status ? "Active" : "Inactive"}
-        </Badge>
-        <HStack spacing={4}>
-          <Button
-            size="sm"
-            colorScheme="yellow"
-            onClick={() => openEditModal(pkg)}
+      <Flex wrap="wrap" gap={6} justifyContent="center">
+        {sortedPackages.map((pkg) => (
+          <Box
+            key={pkg.id}
+            borderWidth="1px"
+            borderRadius="lg"
+            overflow="hidden"
+            boxShadow="md"
+            bg="white"
+            p={6}
+            w="300px"
+            textAlign="center"
           >
-            Edit
-          </Button>
-          <Button
-            size="sm"
-            colorScheme={pkg.status ? "red" : "green"}
-            onClick={() => handleToggleStatus(pkg.id, pkg.status)}
-          >
-            {pkg.status ? "Inactivate" : "Activate"}
-          </Button>
-        </HStack>
-      </VStack>
-    </Box>
-  ))}
-</Flex>
+            <VStack spacing={4}>
+              <Text fontSize="2xl" fontWeight="bold" color="teal.700">
+                {pkg.name}
+              </Text>
+              <Text fontSize="sm" color="gray.600">
+                Expiry Time:{" "}
+                <strong>
+                  {pkg.expiretime} Month{pkg.expiretime > 1 ? "s" : ""}
+                </strong>
+              </Text>
+              <Text>
+                Storage Time:{" "}
+                <strong>
+                  {pkg.eventstoragetime}{" "}
+                  {pkg.eventstoragetime > 1 ? "Months" : "Month"}
+                </strong>
+              </Text>
+              <Text>
+                Description: {pkg.description || "No description provided."}
+              </Text>
+              <Text fontSize="lg" fontWeight="bold" color="teal.800">
+                {pkg.price} VND
+              </Text>
 
+              <Badge
+                colorScheme={pkg.status ? "green" : "red"}
+                variant="solid"
+                px={4}
+                py={1}
+              >
+                {pkg.status ? "Active" : "Inactive"}
+              </Badge>
+              <HStack spacing={4}>
+                <Button
+                  size="sm"
+                  colorScheme="yellow"
+                  onClick={() => openEditModal(pkg)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  colorScheme={pkg.status ? "red" : "green"}
+                  onClick={() => handleToggleStatus(pkg.id, pkg.status)}
+                >
+                  {pkg.status ? "Inactivate" : "Activate"}
+                </Button>
+              </HStack>
+            </VStack>
+          </Box>
+        ))}
+      </Flex>
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />

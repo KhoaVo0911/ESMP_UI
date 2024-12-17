@@ -169,13 +169,13 @@ const EventDetails = () => {
       }
     } catch (error) {
       console.error("Error updating event:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update the event.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "Failed to update the event.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -206,13 +206,13 @@ const EventDetails = () => {
           }
         } catch (error) {
           console.error("Error fetching services:", error);
-          toast({
-            title: "Error",
-            description: "An error occurred while fetching services.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
+          // toast({
+          //   title: "Error",
+          //   description: "An error occurred while fetching services.",
+          //   status: "error",
+          //   duration: 3000,
+          //   isClosable: true,
+          // });
         } finally {
           setLoadingServices(false); // Done loading services
         }
@@ -235,13 +235,13 @@ const EventDetails = () => {
           setThemes(response.data); // Cập nhật danh sách theme
         } catch (error) {
           console.error("Error fetching themes:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load themes.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
+          // toast({
+          //   title: "Error",
+          //   description: "Failed to load themes.",
+          //   status: "error",
+          //   duration: 3000,
+          //   isClosable: true,
+          // });
         } finally {
           setLoadingThemes(false);
         }
@@ -374,13 +374,13 @@ const EventDetails = () => {
       }));
     } catch (error) {
       console.error("Error updating event visibility:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred while updating the event visibility.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "An error occurred while updating the event visibility.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     } finally {
       setUpdatingVisibility(false); // Stop updating visibility
     }
@@ -452,13 +452,13 @@ const EventDetails = () => {
       navigate(`/events/host/${hostId}`);
     } catch (error) {
       console.error("Error cancelling event:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred while cancelling the event.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "An error occurred while cancelling the event.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 

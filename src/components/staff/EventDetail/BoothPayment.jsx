@@ -170,13 +170,13 @@ const BoothPayment = ({ boothTypeDetails, onBackToPolicy, eventId }) => {
       });
     } catch (error) {
       console.error("Error during finalizing payment:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred while processing your payment.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "An error occurred while processing your payment.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     }
   };
 

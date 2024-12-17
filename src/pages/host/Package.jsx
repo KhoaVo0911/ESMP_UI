@@ -79,13 +79,13 @@ const CourseList = () => {
         }
       } catch (error) {
         console.error("Error fetching packages:", error);
-        toast({
-          title: "Lỗi",
-          description: "Can not load",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
+        // toast({
+        //   title: "Lỗi",
+        //   description: "Can not load",
+        //   status: "error",
+        //   duration: 5000,
+        //   isClosable: true,
+        // });
       }
     };
 
@@ -161,14 +161,14 @@ const CourseList = () => {
               })
               .catch((error) => {
                 console.error("Error cancelling transaction:", error);
-                toast({
-                  title: "Error",
-                  description:
-                    "Failed to cancel the transaction. Please try again.",
-                  status: "error",
-                  duration: 5000,
-                  isClosable: true,
-                });
+                // toast({
+                //   title: "Error",
+                //   description:
+                //     "Failed to cancel the transaction. Please try again.",
+                //   status: "error",
+                //   duration: 5000,
+                //   isClosable: true,
+                // });
               });
 
             setSelectedPackage((prevState) => ({
@@ -197,13 +197,13 @@ const CourseList = () => {
       countdownIntervalRef.current = transactionCheckInterval;
     } catch (error) {
       console.error("Error creating transaction:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create the transaction. Please try again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "Failed to create the transaction. Please try again.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -252,18 +252,17 @@ const CourseList = () => {
           duration: 5000,
           isClosable: true,
         });
-        }
-        } catch (error) {
-          console.error("Error while canceling the transaction:", error);
-          toast({
-            title: "Error",
-            description: "Unable to cancel the transaction. Please try again.",
-            status: "error",
-            duration: 5000,
-            isClosable: true,
-          });
-        }
-        
+      }
+    } catch (error) {
+      console.error("Error while canceling the transaction:", error);
+      // toast({
+      //   title: "Error",
+      //   description: "Unable to cancel the transaction. Please try again.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
+    }
 
     // Dọn dẹp trạng thái và đóng modal
     setSelectedPackage((prevState) => ({ ...prevState, showQR: false }));
@@ -458,27 +457,27 @@ const CourseList = () => {
                         }
                       );
                       sessionStorage.setItem("expiretime", expireTime);
-                      toast({
-                        title: "Information Updated Successfully",
-                        description:
-                          "Expiration date and storage time have been updated.",
-                        status: "success",
-                        duration: 5000,
-                        isClosable: true,
-                      });
+                      // toast({
+                      //   title: "Information Updated Successfully",
+                      //   description:
+                      //     "Expiration date and storage time have been updated.",
+                      //   status: "success",
+                      //   duration: 5000,
+                      //   isClosable: true,
+                      // });
                     } catch (error) {
                       console.error(
                         "Error while updating host information:",
                         error
                       );
-                      toast({
-                        title: "Update Failed",
-                        description:
-                          "Unable to update host information. Please try again.",
-                        status: "error",
-                        duration: 5000,
-                        isClosable: true,
-                      });
+                      // toast({
+                      //   title: "Update Failed",
+                      //   description:
+                      //     "Unable to update host information. Please try again.",
+                      //   status: "error",
+                      //   duration: 5000,
+                      //   isClosable: true,
+                      // });
                     }
                   };
 
@@ -493,23 +492,23 @@ const CourseList = () => {
                 "Error while fetching transaction information or updating host:",
                 error
               );
-              toast({
-                title: "Error",
-                description:
-                  "Unable to process the transaction. Please try again.",
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-              });
+              // toast({
+              //   title: "Error",
+              //   description:
+              //     "Unable to process the transaction. Please try again.",
+              //   status: "error",
+              //   duration: 5000,
+              //   isClosable: true,
+              // });
             }
 
-            toast({
-              title: "Transaction Recorded Successfully",
-              description: "The transaction information has been saved.",
-              status: "success",
-              duration: 5000,
-              isClosable: true,
-            });
+            // toast({
+            //   title: "Transaction Recorded Successfully",
+            //   description: "The transaction information has been saved.",
+            //   status: "success",
+            //   duration: 5000,
+            //   isClosable: true,
+            // });
           } else {
             console.error("hostId is not in sessionStorage.");
           }
@@ -542,13 +541,13 @@ const CourseList = () => {
       }
     } catch (error) {
       console.error("Error while checking payment:", error);
-      toast({
-        title: "Error",
-        description: "Unable to check payment status. Please try again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "Unable to check payment status. Please try again.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     }
   };
 

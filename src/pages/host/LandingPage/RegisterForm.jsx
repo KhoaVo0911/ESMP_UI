@@ -40,7 +40,10 @@ const RegisterForm = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await axios.post("https://esmpbe.id.vn/api/user/register", formData);
+      const response = await axios.post(
+        "https://esmpbe.id.vn/api/user/register",
+        formData
+      );
       toast({
         title: "Success",
         description: "Registration successful!",
@@ -57,20 +60,29 @@ const RegisterForm = () => {
         expiretime: expiretime, // Đảm bảo giữ nguyên giá trị expiretime
       });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Registration failed. Please try again.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.error("Registration failed. Please try again.", error);
+      // toast({
+      //   title: "Error",
+      //   description: "Registration failed. Please try again.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Box maxW="500px" mx="auto" p={6} bg="white" borderRadius="md" color="#003366" boxShadow="lg">
+    <Box
+      maxW="500px"
+      mx="auto"
+      p={6}
+      bg="white"
+      borderRadius="md"
+      color="#003366"
+      boxShadow="lg"
+    >
       <Heading as="h2" size="xl" textAlign="center" color="#003366" mb={6}>
         Register Account
       </Heading>

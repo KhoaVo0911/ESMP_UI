@@ -52,13 +52,14 @@ const ServiceManagement = ({ eventId }) => {
       });
       setServices(response.data);
     } catch (error) {
-      toast({
-        title: "Error fetching services",
-        description: "Could not load services.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log("Error fetching services", error);
+      // toast({
+      //   title: "Error fetching services",
+      //   description: "Could not load services.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -145,14 +146,18 @@ const ServiceManagement = ({ eventId }) => {
       onClose();
       resetForm();
     } catch (error) {
-      toast({
-        title: "Error saving service",
-        description:
-          error.response?.data?.message || "Could not save the service.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log(
+        "Error saving service",
+        error.response?.data?.message || "Could not save the service."
+      );
+      // toast({
+      //   title: "Error saving service",
+      //   description:
+      //     error.response?.data?.message || "Could not save the service.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -172,14 +177,18 @@ const ServiceManagement = ({ eventId }) => {
         isClosable: true,
       });
     } catch (error) {
-      toast({
-        title: "Error deleting service",
-        description:
-          error.response?.data?.message || "Could not delete the service.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log(
+        "Error deleting service",
+        error.response?.data?.message || "Could not delete the service."
+      );
+      // toast({
+      //   title: "Error deleting service",
+      //   description:
+      //     error.response?.data?.message || "Could not delete the service.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 

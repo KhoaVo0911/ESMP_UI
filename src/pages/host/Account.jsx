@@ -286,14 +286,14 @@ const AccountManagement = () => {
       console.error("Error sending email:", error);
 
       // Show error toast
-      toast({
-        title: "Failed to send email.",
-        description:
-          "There was an error while sending the email. Please try again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Failed to send email.",
+      //   description:
+      //     "There was an error while sending the email. Please try again.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     } finally {
       setSendingEmail(false);
     }
@@ -445,75 +445,74 @@ const AccountManagement = () => {
             </Tr>
           </Thead>
           <Tbody>
-  {loading ? (
-    <Tr>
-      <Td colSpan={7} textAlign="center">
-        <Spinner color="teal" />
-      </Td>
-    </Tr>
-  ) : (
-    accounts.map((account, index) => (
-      <Tr key={account.vendorId}>
-        <Td>{index + 1}</Td>
-        <Td>{account.username}</Td>
-        <Td>{account.name}</Td>
-        <Td>{account.email}</Td>
-        <Td>{account.urlQr}</Td>
-        <Td>
-          <Badge colorScheme={account.status ? "green" : "red"}>
-            {account.status ? "ACTIVE" : "INACTIVE"}
-          </Badge>
-        </Td>
-        <Td textAlign="center">
-          <Tooltip label="View Details" shouldWrapChildren>
-            <IconButton
-              icon={<InfoIcon />}
-              size="sm"
-              colorScheme="blue"
-              mr={2}
-              onClick={() => openDetailModal(account)}
-              isDisabled={!canCreateAccount}
-              aria-label="View Details"
-            />
-          </Tooltip>
-          <Tooltip label="Edit Account" shouldWrapChildren>
-            <IconButton
-              icon={<EditIcon />}
-              size="sm"
-              colorScheme="yellow"
-              mr={2}
-              onClick={() => openEditModal(account)}
-              isDisabled={!canCreateAccount}
-              aria-label="Edit Account"
-            />
-          </Tooltip>
-          <Tooltip label="Send Email" shouldWrapChildren>
-            <IconButton
-              icon={<EmailIcon />}
-              size="sm"
-              colorScheme="teal"
-              mr={2}
-              onClick={() => handleSendEmail(account)}
-              isDisabled={!canCreateAccount}
-              aria-label="Send Email"
-            />
-          </Tooltip>
-          <Tooltip label="Delete Account" shouldWrapChildren>
-            <IconButton
-              icon={<DeleteIcon />}
-              size="sm"
-              colorScheme="red"
-              onClick={() => handleDeleteAccount(account.vendorId)}
-              isDisabled={!canCreateAccount}
-              aria-label="Delete Account"
-            />
-          </Tooltip>
-        </Td>
-      </Tr>
-    ))
-  )}
-</Tbody>
-
+            {loading ? (
+              <Tr>
+                <Td colSpan={7} textAlign="center">
+                  <Spinner color="teal" />
+                </Td>
+              </Tr>
+            ) : (
+              accounts.map((account, index) => (
+                <Tr key={account.vendorId}>
+                  <Td>{index + 1}</Td>
+                  <Td>{account.username}</Td>
+                  <Td>{account.name}</Td>
+                  <Td>{account.email}</Td>
+                  <Td>{account.urlQr}</Td>
+                  <Td>
+                    <Badge colorScheme={account.status ? "green" : "red"}>
+                      {account.status ? "ACTIVE" : "INACTIVE"}
+                    </Badge>
+                  </Td>
+                  <Td textAlign="center">
+                    <Tooltip label="View Details" shouldWrapChildren>
+                      <IconButton
+                        icon={<InfoIcon />}
+                        size="sm"
+                        colorScheme="blue"
+                        mr={2}
+                        onClick={() => openDetailModal(account)}
+                        isDisabled={!canCreateAccount}
+                        aria-label="View Details"
+                      />
+                    </Tooltip>
+                    <Tooltip label="Edit Account" shouldWrapChildren>
+                      <IconButton
+                        icon={<EditIcon />}
+                        size="sm"
+                        colorScheme="yellow"
+                        mr={2}
+                        onClick={() => openEditModal(account)}
+                        isDisabled={!canCreateAccount}
+                        aria-label="Edit Account"
+                      />
+                    </Tooltip>
+                    <Tooltip label="Send Email" shouldWrapChildren>
+                      <IconButton
+                        icon={<EmailIcon />}
+                        size="sm"
+                        colorScheme="teal"
+                        mr={2}
+                        onClick={() => handleSendEmail(account)}
+                        isDisabled={!canCreateAccount}
+                        aria-label="Send Email"
+                      />
+                    </Tooltip>
+                    <Tooltip label="Delete Account" shouldWrapChildren>
+                      <IconButton
+                        icon={<DeleteIcon />}
+                        size="sm"
+                        colorScheme="red"
+                        onClick={() => handleDeleteAccount(account.vendorId)}
+                        isDisabled={!canCreateAccount}
+                        aria-label="Delete Account"
+                      />
+                    </Tooltip>
+                  </Td>
+                </Tr>
+              ))
+            )}
+          </Tbody>
         </Table>
 
         {/* Modal for Create/Edit Account */}
@@ -595,13 +594,12 @@ const AccountManagement = () => {
                   <FormErrorMessage>{errors.phone?.message}</FormErrorMessage>
                 </FormControl>
                 <FormControl mt={4}>
-  <FormLabel>Account Banking</FormLabel>
-  <Input
-    {...register("urlQr")}
-    placeholder="Enter QR code URL"
-  />
-</FormControl>
-
+                  <FormLabel>Account Banking</FormLabel>
+                  <Input
+                    {...register("urlQr")}
+                    placeholder="Enter QR code URL"
+                  />
+                </FormControl>
 
                 <ModalFooter>
                   <Button

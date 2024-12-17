@@ -312,13 +312,14 @@ const CategorySection = () => {
       );
       setCategories(response.data);
     } catch (error) {
-      toast({
-        title: "Error fetching categories",
-        description: "Could not load categories.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log("Could not load categories", error);
+      // toast({
+      //   title: "Error fetching categories",
+      //   description: "Could not load categories.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -460,13 +461,13 @@ const CategorySection = () => {
       onClose();
     } catch (error) {
       console.error("Error saving category:", error);
-      toast({
-        title: "Error saving category",
-        description: "Could not save the category.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error saving category",
+      //   description: "Could not save the category.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 

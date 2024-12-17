@@ -19,7 +19,15 @@ import axios from "axios";
 import { storage } from "./../../../shared/firebase/firebaseConfig";
 import { ref, getDownloadURL } from "firebase/storage";
 
-const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAdd,menuName }) => {
+const AddProductModal = ({
+  isOpen,
+  onClose,
+  vendorId,
+  eventId,
+  accessToken,
+  onAdd,
+  menuName,
+}) => {
   const [products, setProducts] = useState([]);
   const [productNames, setProductNames] = useState({});
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -46,20 +54,24 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
           },
         }
       );
-  
+
       // Filter for product items with status: true
-      const filteredProductItems = productItemsResponse.data.filter((product) => product.status === true);
-  
+      const filteredProductItems = productItemsResponse.data.filter(
+        (product) => product.status === true
+      );
+
       const productItemsWithImages = await Promise.all(
         filteredProductItems.map(async (product) => {
           const imageRef = ref(storage, `${vendorId}/${product.productItemId}`);
-          const imageUrl = await getDownloadURL(imageRef).catch(() => "https://via.placeholder.com/150");
+          const imageUrl = await getDownloadURL(imageRef).catch(
+            () => "https://via.placeholder.com/150"
+          );
           return { ...product, imageUrl };
         })
       );
-  
+
       setProducts(productItemsWithImages);
-  
+
       // Fetch product names
       const productsResponse = await axios.get(
         `https://esmpbe.id.vn/api/product/${vendorId}`,
@@ -70,30 +82,31 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
           },
         }
       );
-  
+
       const productNameMap = {};
       productsResponse.data.forEach((product) => {
         productNameMap[product.productId] = product.productName;
       });
       setProductNames(productNameMap);
     } catch (error) {
-      console.error("Error fetching products:", error);
-      toast({
-        title: "Error",
-        description: "Unable to load products.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.error("Unable to load products.", error);
+      // toast({
+      //   title: "Error",
+      //   description: "Unable to load products.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     } finally {
       setLoading(false);
     }
   };
-  
 
   const handleSelectProduct = (product) => {
     setSelectedProducts((prev) =>
-      prev.includes(product) ? prev.filter((p) => p !== product) : [...prev, product]
+      prev.includes(product)
+        ? prev.filter((p) => p !== product)
+        : [...prev, product]
     );
   };
 
@@ -112,16 +125,15 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
     setIsSubmitting(true);
     try {
       const payload = {
-        menuName:  menuName,
+        menuName: menuName,
         productItem: selectedProducts.map((product) => ({
           id: product.productItemId,
-         
         })),
       };
 
       const response = await axios.post(
         `https://esmpbe.id.vn/api/menu/${vendorId}/${eventId}`,
-        payload, 
+        payload,
         {
           headers: {
             Authorization: `${accessToken}`,
@@ -130,7 +142,10 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
         }
       );
 
-      if (response.data && response.data.message === "Create menuItem success") {
+      if (
+        response.data &&
+        response.data.message === "Create menuItem success"
+      ) {
         toast({
           title: "Success",
           description: "Products have been added to the menu.",
@@ -145,14 +160,14 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
         onClose();
       }
     } catch (error) {
-      console.error("Error adding products to menu:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred while adding products to the menu.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log("Error adding products to menu:", error);
+      // toast({
+      //   title: "Error",
+      //   description: "An error occurred while adding products to the menu.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     } finally {
       setIsSubmitting(false);
     }
@@ -178,29 +193,36 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
                     overflow="hidden"
                     p="4"
                     textAlign="left"
-                    background={selectedProducts.includes(product) ? "blue.100" : "white"}
+                    background={
+                      selectedProducts.includes(product) ? "blue.100" : "white"
+                    }
                     onClick={() => handleSelectProduct(product)}
                     cursor="pointer"
                     display="flex"
                     flexDirection="column"
                     justifyContent="space-between"
                   >
-                    <Image src={product.imageUrl} alt={product.name} boxSize="100px" mx="auto" />
+                    <Image
+                      src={product.imageUrl}
+                      alt={product.name}
+                      boxSize="100px"
+                      mx="auto"
+                    />
                     <Text fontWeight="bold" fontSize="xl" mt={2}>
                       {productNames[product.productId] || product.name}
                     </Text>
                     <Text fontWeight="bold" fontSize="lg" color="gray.600">
-  {parseInt(product.price).toLocaleString("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  })}
-</Text>
+                      {parseInt(product.price).toLocaleString("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      })}
+                    </Text>
 
                     <VStack align="start" spacing={1} mt={2}>
                       {product.details.map((detail, index) => (
                         <Text key={index} fontSize="sm" color="gray.500">
-                          - {productNames[detail.productId] || detail.productId} x {detail.quantity}{" "}
-                          {detail.unit}
+                          - {productNames[detail.productId] || detail.productId}{" "}
+                          x {detail.quantity} {detail.unit}
                         </Text>
                       ))}
                     </VStack>

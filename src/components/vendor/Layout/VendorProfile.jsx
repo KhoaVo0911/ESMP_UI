@@ -1,6 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Heading, Text, VStack, Spinner, Input, Button, FormControl, FormLabel, useToast } from '@chakra-ui/react';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Heading,
+  Text,
+  VStack,
+  Spinner,
+  Input,
+  Button,
+  FormControl,
+  FormLabel,
+  useToast,
+} from "@chakra-ui/react";
+import axios from "axios";
 
 const VendorProfile = () => {
   const [vendorData, setVendorData] = useState(null);
@@ -8,30 +19,31 @@ const VendorProfile = () => {
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [updatedVendor, setUpdatedVendor] = useState({
-    name: '',
-    email: '',
-    urlQr: ''
+    name: "",
+    email: "",
+    urlQr: "",
   });
   const toast = useToast();
   const vendorId = sessionStorage.getItem("vendorId");
   // Lấy các thông tin từ sessionStorage
-  const hostId = sessionStorage.getItem('hostId');
-  const accessToken = sessionStorage.getItem('accessToken');
+  const hostId = sessionStorage.getItem("hostId");
+  const accessToken = sessionStorage.getItem("accessToken");
 
   useEffect(() => {
     // Gọi API để lấy thông tin vendor
-    axios.get(`/vendor/${vendorId}`)
-      .then(response => {
+    axios
+      .get(`/vendor/${vendorId}`)
+      .then((response) => {
         setVendorData(response.data);
         setUpdatedVendor({
           name: response.data.name,
           email: response.data.email,
-          urlQr: response.data.urlQr
+          urlQr: response.data.urlQr,
         });
         setLoading(false);
       })
-      .catch(err => {
-        setError('Failed to load vendor data');
+      .catch((err) => {
+        setError("Failed to load vendor data");
         setLoading(false);
       });
   }, [vendorId]);
@@ -45,15 +57,15 @@ const VendorProfile = () => {
     setUpdatedVendor({
       name: vendorData.name,
       email: vendorData.email,
-      urlQr: vendorData.urlQr
+      urlQr: vendorData.urlQr,
     });
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUpdatedVendor(prev => ({
+    setUpdatedVendor((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -62,7 +74,7 @@ const VendorProfile = () => {
     const updatedData = {
       name: updatedVendor.name,
       email: updatedVendor.email,
-      urlQr: updatedVendor.urlQr
+      urlQr: updatedVendor.urlQr,
     };
 
     try {
@@ -70,28 +82,29 @@ const VendorProfile = () => {
       const response = await axios.put(`/vendor/${vendorId}`, updatedData, {
         headers: {
           Authorization: `${accessToken}`,
-          'Host-Id': hostId
-        }
+          "Host-Id": hostId,
+        },
       });
 
       // Cập nhật dữ liệu mới và thông báo thành công
       setVendorData(response.data);
       setIsEditing(false);
       toast({
-        title: 'Profile updated.',
-        description: 'Your vendor profile has been updated successfully.',
-        status: 'success',
+        title: "Profile updated.",
+        description: "Your vendor profile has been updated successfully.",
+        status: "success",
         duration: 3000,
-        isClosable: true
+        isClosable: true,
       });
     } catch (error) {
-      toast({
-        title: 'Update failed.',
-        description: 'There was an error updating your profile.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true
-      });
+      console.log("There was an error updating your profile.", error);
+      // toast({
+      //   title: 'Update failed.',
+      //   description: 'There was an error updating your profile.',
+      //   status: 'error',
+      //   duration: 3000,
+      //   isClosable: true
+      // });
     }
   };
 
@@ -134,17 +147,27 @@ const VendorProfile = () => {
             onChange={handleChange}
           />
         </FormControl>
-        <Text><strong>Phone:</strong> {vendorData.phone || 'N/A'}</Text>
-        <Text><strong>Address:</strong> {vendorData.address}</Text>
+        <Text>
+          <strong>Phone:</strong> {vendorData.phone || "N/A"}
+        </Text>
+        <Text>
+          <strong>Address:</strong> {vendorData.address}
+        </Text>
 
         <VStack spacing={4} direction="row" align="center">
           {isEditing ? (
             <>
-              <Button onClick={handleSubmit} colorScheme="blue">Save</Button>
-              <Button onClick={handleCancel} colorScheme="gray">Cancel</Button>
+              <Button onClick={handleSubmit} colorScheme="blue">
+                Save
+              </Button>
+              <Button onClick={handleCancel} colorScheme="gray">
+                Cancel
+              </Button>
             </>
           ) : (
-            <Button onClick={handleEdit} colorScheme="teal">Edit</Button>
+            <Button onClick={handleEdit} colorScheme="teal">
+              Edit
+            </Button>
           )}
         </VStack>
       </VStack>

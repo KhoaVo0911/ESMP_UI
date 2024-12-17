@@ -33,7 +33,7 @@ const OrderedList = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
-  const { accessToken, vendorId, eventId, staffId  } = location.state || {};
+  const { accessToken, vendorId, eventId, staffId } = location.state || {};
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,14 +111,14 @@ const OrderedList = () => {
         }
         setTransactions(transactionMap);
       } catch (error) {
-        console.error("Error fetching transactions:", error);
-        toast({
-          title: "Error",
-          description: "Unable to fetch transactions.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        console.error("Unable to fetch transactions.", error);
+        //   toast({
+        //     title: "Error",
+        //     description: "Unable to fetch transactions.",
+        //     status: "error",
+        //     duration: 3000,
+        //     isClosable: true,
+        //   });
       }
     };
 
@@ -161,7 +161,9 @@ const OrderedList = () => {
   }, [orders, accessToken]);
 
   const handleBack = () => {
-    navigate(`/StaffShop/${vendorId}/${staffId}/${eventId}`, { state: { accessToken, vendorId, eventId, totalRevenue } });
+    navigate(`/StaffShop/${vendorId}/${staffId}/${eventId}`, {
+      state: { accessToken, vendorId, eventId, totalRevenue },
+    });
   };
 
   const handleViewDetails = async (orderId) => {
@@ -199,14 +201,14 @@ const OrderedList = () => {
       }));
       openDetail(orderId);
     } catch (error) {
-      console.error("Error fetching order details:", error);
-      toast({
-        title: "Error",
-        description: "Unable to fetch order details.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.error("Unable to fetch order details.", error);
+      // toast({
+      //   title: "Error",
+      //   description: "Unable to fetch order details.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     } finally {
       setLoadingDetails((prev) => ({ ...prev, [orderId]: false }));
     }
@@ -281,14 +283,17 @@ const OrderedList = () => {
         isClosable: true,
       });
     } catch (error) {
-      console.error("Error updating order status:", error);
-      toast({
-        title: "Error",
-        description: "Unable to update order status.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.error(
+        "Error updating order status:",
+        "Unable to update order status."
+      );
+      // toast({
+      //   title: "Error",
+      //   description: "Unable to update order status.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 

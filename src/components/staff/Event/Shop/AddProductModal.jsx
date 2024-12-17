@@ -19,7 +19,14 @@ import axios from "axios";
 import { storage } from "./../../../../shared/firebase/firebaseConfig";
 import { ref, getDownloadURL } from "firebase/storage";
 
-const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAdd }) => {
+const AddProductModal = ({
+  isOpen,
+  onClose,
+  vendorId,
+  eventId,
+  accessToken,
+  onAdd,
+}) => {
   const [products, setProducts] = useState([]);
   const [productNames, setProductNames] = useState({});
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -48,7 +55,9 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
       const productItemsWithImages = await Promise.all(
         productItemsResponse.data.map(async (product) => {
           const imageRef = ref(storage, `${vendorId}/${product.productItemId}`);
-          const imageUrl = await getDownloadURL(imageRef).catch(() => "https://via.placeholder.com/150");
+          const imageUrl = await getDownloadURL(imageRef).catch(
+            () => "https://via.placeholder.com/150"
+          );
           return { ...product, imageUrl };
         })
       );
@@ -69,14 +78,14 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
       });
       setProductNames(productNameMap);
     } catch (error) {
-      console.error("Error fetching products:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải sản phẩm.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log("Error fetching products:", error);
+      // toast({
+      //   title: "Lỗi",
+      //   description: "Không thể tải sản phẩm.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     } finally {
       setLoading(false);
     }
@@ -84,7 +93,9 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
 
   const handleSelectProduct = (product) => {
     setSelectedProducts((prev) =>
-      prev.includes(product) ? prev.filter((p) => p !== product) : [...prev, product]
+      prev.includes(product)
+        ? prev.filter((p) => p !== product)
+        : [...prev, product]
     );
   };
 
@@ -99,7 +110,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
       });
       return;
     }
-  
+
     setIsSubmitting(true);
     try {
       const payload = {
@@ -107,7 +118,7 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
           id: product.productItemId,
         })),
       };
-  
+
       const response = await axios.post(
         `https://esmpbe.id.vn/api/menu/${vendorId}/${eventId}`,
         payload,
@@ -118,8 +129,11 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
           },
         }
       );
-  
-      if (response.data && response.data.message === "Create menuItem success") {
+
+      if (
+        response.data &&
+        response.data.message === "Create menuItem success"
+      ) {
         toast({
           title: "Thành công",
           description: "Sản phẩm đã được thêm vào menu.",
@@ -127,26 +141,25 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
           duration: 3000,
           isClosable: true,
         });
-  
+
         // Gọi onAdd với thông tin sản phẩm để cập nhật UI
         onAdd(selectedProducts);
         setSelectedProducts([]);
         onClose();
       }
     } catch (error) {
-      console.error("Error adding products to menu:", error);
-      toast({
-        title: "Lỗi",
-        description: "Đã xảy ra lỗi khi thêm sản phẩm vào menu.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log("Error adding products to menu:", error);
+      // toast({
+      //   title: "Lỗi",
+      //   description: "Đã xảy ra lỗi khi thêm sản phẩm vào menu.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="5xl">
@@ -168,14 +181,21 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
                     overflow="hidden"
                     p="4"
                     textAlign="left"
-                    background={selectedProducts.includes(product) ? "blue.100" : "white"}
+                    background={
+                      selectedProducts.includes(product) ? "blue.100" : "white"
+                    }
                     onClick={() => handleSelectProduct(product)}
                     cursor="pointer"
                     display="flex"
                     flexDirection="column"
                     justifyContent="space-between"
                   >
-                    <Image src={product.imageUrl} alt={product.name} boxSize="100px" mx="auto" />
+                    <Image
+                      src={product.imageUrl}
+                      alt={product.name}
+                      boxSize="100px"
+                      mx="auto"
+                    />
                     <Text fontWeight="bold" fontSize="xl" mt={2}>
                       {productNames[product.productId] || product.name}
                     </Text>
@@ -188,8 +208,8 @@ const AddProductModal = ({ isOpen, onClose, vendorId, eventId, accessToken, onAd
                     <VStack align="start" spacing={1} mt={2}>
                       {product.details.map((detail, index) => (
                         <Text key={index} fontSize="sm" color="gray.500">
-                          - {productNames[detail.productId] || detail.productId} x {detail.quantity}{" "}
-                          {detail.unit}
+                          - {productNames[detail.productId] || detail.productId}{" "}
+                          x {detail.quantity} {detail.unit}
                         </Text>
                       ))}
                     </VStack>

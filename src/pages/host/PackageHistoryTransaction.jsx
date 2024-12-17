@@ -114,11 +114,14 @@ const TransactionHistory = () => {
       const accessToken = sessionStorage.getItem("accessToken");
 
       // Get current host data
-      const { data: currentHostData } = await axios.get(`${API_HOST}/${hostId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const { data: currentHostData } = await axios.get(
+        `${API_HOST}/${hostId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       // Update host data with new expiretime and eventstoragetime
       const updatedData = {
@@ -146,13 +149,13 @@ const TransactionHistory = () => {
       // });
     } catch (error) {
       console.error("Error updating host data:", error);
-      toast({
-        title: "Update failed",
-        description: "Unable to update host data. Please try again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Update failed",
+      //   description: "Unable to update host data. Please try again.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -216,40 +219,43 @@ const TransactionHistory = () => {
                   <Tr key={transaction.id}>
                     <Td>{packageDetails.name}</Td>
                     <Td>{packageDetails.description}</Td>
-                    <Td><Box
+                    <Td>
+                      <Box
                         color="blue" // Green color for purchase date text
                         fontWeight="bold"
                       >
-                      {new Date(transaction.createdat).toLocaleDateString()}
+                        {new Date(transaction.createdat).toLocaleDateString()}
                       </Box>
                     </Td>
                     <Td>
-                    <Box
+                      <Box
                         color="red.600" // Red color for expiration date text
                         fontWeight="bold"
                       >
-                      {new Date(
-                        calculateExpirationDate(
-                          transaction.createdat,
-                          packageDetails.expiretime
-                        )
-                      ).toLocaleDateString()}
-                    </Box></Td>
-                    <Td>
-                    <Box
-                        color="blue.600" // Red color for expiration date text
-                        fontWeight="bold"
-                      >
-                      {new Date(
-                        calculateStorageDate(
+                        {new Date(
                           calculateExpirationDate(
                             transaction.createdat,
                             packageDetails.expiretime
-                          ),
-                          packageDetails.eventstoragetime
-                        )
-                      ).toLocaleDateString()}
-                    </Box> </Td>
+                          )
+                        ).toLocaleDateString()}
+                      </Box>
+                    </Td>
+                    <Td>
+                      <Box
+                        color="blue.600" // Red color for expiration date text
+                        fontWeight="bold"
+                      >
+                        {new Date(
+                          calculateStorageDate(
+                            calculateExpirationDate(
+                              transaction.createdat,
+                              packageDetails.expiretime
+                            ),
+                            packageDetails.eventstoragetime
+                          )
+                        ).toLocaleDateString()}
+                      </Box>{" "}
+                    </Td>
                     <Td>{transaction.status}</Td>
                     <Td>{packageDetails.price} VND</Td>
                   </Tr>

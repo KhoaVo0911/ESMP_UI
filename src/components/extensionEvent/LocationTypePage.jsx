@@ -316,14 +316,18 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
         );
         setLocationTypes(response.data);
       } catch (error) {
-        toast({
-          title: "Error fetching location types",
-          description:
-            error.response?.data?.message || "Could not load location types.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        console.log(
+          "Error fetching location types",
+          error.response?.data?.message || "Could not load location types."
+        );
+        // toast({
+        //   title: "Error fetching location types",
+        //   description:
+        //     error.response?.data?.message || "Could not load location types.",
+        //   status: "error",
+        //   duration: 3000,
+        //   isClosable: true,
+        // });
       }
     }
   };
@@ -349,7 +353,7 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
     }
 
     if (!price || isNaN(price) || parseFloat(price) < 0) {
-      formErrors.price = "Price must be a valid number and greater than 0.";
+      formErrors.price = "Price must be a valid number and cannot be negative.";
     }
 
     if (isColorDuplicate(color)) {
@@ -403,14 +407,18 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
       onClose();
       resetForm();
     } catch (error) {
-      toast({
-        title: "Error saving location type",
-        description:
-          error.response?.data?.message || "Could not save the location type.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log(
+        "Error saving location type",
+        error.response?.data?.message || "Could not save the location type."
+      );
+      // toast({
+      //   title: "Error saving location type",
+      //   description:
+      //     error.response?.data?.message || "Could not save the location type.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -430,15 +438,19 @@ const LocationTypeManagement = ({ eventId, hostId }) => {
         isClosable: true,
       });
     } catch (error) {
-      toast({
-        title: "Error deleting location type",
-        description:
-          error.response?.data?.message ||
-          "Could not delete the location type.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log(
+        "Error deleting location type",
+        error.response?.data?.message || "Could not delete the location type."
+      );
+      // toast({
+      //   title: "Error deleting location type",
+      //   description:
+      //     error.response?.data?.message ||
+      //     "Could not delete the location type.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 

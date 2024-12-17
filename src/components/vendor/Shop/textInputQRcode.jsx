@@ -77,7 +77,9 @@ const TestQRCODE = () => {
           setAccountNumber(accountNumberFromApi);
 
           // Find the selected bank from the bank list
-          const selectedBank = banks.find((bank) => bank.code === bankCodeFromApi);
+          const selectedBank = banks.find(
+            (bank) => bank.code === bankCodeFromApi
+          );
           if (selectedBank) {
             setSelectedBank(selectedBank.name);
           }
@@ -87,12 +89,12 @@ const TestQRCODE = () => {
         }
       } catch (error) {
         console.error("Error fetching QR code info:", error);
-        toast({
-          title: "Error fetching QR info",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        // toast({
+        //   title: "Error fetching QR info",
+        //   status: "error",
+        //   duration: 3000,
+        //   isClosable: true,
+        // });
       }
     };
 
@@ -173,18 +175,26 @@ const TestQRCODE = () => {
       }
     } catch (error) {
       console.error("Error updating QR URL:", error);
-      toast({
-        title: "Error updating QR URL",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error updating QR URL",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
   return (
     <ChakraProvider>
-      <Box maxW="md" mx="auto" mt={10} p={5} borderWidth={1} borderRadius="lg" boxShadow="lg">
+      <Box
+        maxW="md"
+        mx="auto"
+        mt={10}
+        p={5}
+        borderWidth={1}
+        borderRadius="lg"
+        boxShadow="lg"
+      >
         {/* Bank search */}
         <FormControl mb={4}>
           <FormLabel>Bank Code or Name</FormLabel>
