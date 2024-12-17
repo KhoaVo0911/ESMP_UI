@@ -49,8 +49,8 @@ const EndEvent = ({
         }
 
         setEventStatus(currentEvent.status);
-      
-        setEventName(currentEvent.name); 
+
+        setEventName(currentEvent.name);
         const vendorResponse = await axios.get(
           `https://esmpbe.id.vn/api/vendorinevent/${vendorId}/${eventId}`,
           {
@@ -74,13 +74,14 @@ const EndEvent = ({
           });
         }
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch event or vendor details.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        console.log("Failed to fetch event or vendor details.");
+        // toast({
+        //   title: "Error",
+        //   description: "Failed to fetch event or vendor details.",
+        //   status: "error",
+        //   duration: 3000,
+        //   isClosable: true,
+        // });
       } finally {
         setLoading(false);
       }
@@ -167,7 +168,8 @@ const EndEvent = ({
 
       toast({
         title: "Success",
-        description: "Event successfully ended, payment updated, and notification sent.",
+        description:
+          "Event successfully ended, payment updated, and notification sent.",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -177,9 +179,14 @@ const EndEvent = ({
         onStatusUpdate("finished");
       }
     } catch (error) {
+      console.log(
+        "Failed to end event, update payment, or send notification.",
+        error
+      );
       toast({
         title: "Error",
-        description: "Failed to end event, update payment, or send notification.",
+        description:
+          "Failed to end event, update payment, or send notification.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -205,7 +212,11 @@ const EndEvent = ({
           }}
           isLoading={actionLoading}
           disabled={vendorInEventStatus === "finished" || actionLoading}
-          cursor={vendorInEventStatus === "finished" || actionLoading ? "not-allowed" : "pointer"}
+          cursor={
+            vendorInEventStatus === "finished" || actionLoading
+              ? "not-allowed"
+              : "pointer"
+          }
         >
           End Event
         </Button>

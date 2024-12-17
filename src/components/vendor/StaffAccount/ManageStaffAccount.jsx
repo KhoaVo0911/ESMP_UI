@@ -59,13 +59,13 @@ const StaffAccountManager = () => {
       setStaffAccounts(response.data);
     } catch (error) {
       console.error("Error fetching staff accounts:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch staff accounts.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "Failed to fetch staff accounts.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -112,13 +112,13 @@ const StaffAccountManager = () => {
         "Error toggling staff status:",
         error.response || error.message
       );
-      toast({
-        title: "Error",
-        description: "Failed to update staff status.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "Failed to update staff status.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
   // Validate email and phone
@@ -128,24 +128,27 @@ const StaffAccountManager = () => {
   // Handle Update Staff
   const handleUpdateStaff = async () => {
     const { password, name, phone, email } = selectedStaff;
-  
+
     let newErrors = {};
-  
+
     // Validation logic
     if (!name) newErrors.name = "Name is required";
     if (!password) newErrors.password = "Password is required";
     if (!phone) newErrors.phone = "Phone number is required";
-    if (!validatePhone(phone)) newErrors.phone = "Phone number must be 10-11 digits";
+    if (!validatePhone(phone))
+      newErrors.phone = "Phone number must be 10-11 digits";
     if (!email) newErrors.email = "Email is required";
-    if (!validateEmail(email)) newErrors.email = "Please enter a valid Gmail address (e.g., example@gmail.com)";
-  
+    if (!validateEmail(email))
+      newErrors.email =
+        "Please enter a valid Gmail address (e.g., example@gmail.com)";
+
     setErrors(newErrors);
-  
+
     // If errors exist, do not proceed
     if (Object.keys(newErrors).length > 0) {
       return;
     }
-  
+
     try {
       await axios.put(
         `${BASE_URL}/staff/${selectedStaff.staffId}`,
@@ -154,7 +157,7 @@ const StaffAccountManager = () => {
           headers: { Authorization: `${accessToken}` },
         }
       );
-  
+
       toast({
         title: "Success",
         description: "Staff account updated successfully.",
@@ -162,19 +165,28 @@ const StaffAccountManager = () => {
         duration: 3000,
         isClosable: true,
       });
-  
+
       setIsEditModalOpen(false);
       fetchStaffAccounts();
     } catch (error) {
       console.error("Error updating staff account:", error);
-  
+
       const responseCode = error.response?.data?.code;
       const message = error.response?.data?.message;
-  
+
       if (responseCode === "P2002" && message.includes("email")) {
-        setErrors((prev) => ({ ...prev, email: "This email is already registered." }));
-      } else if (responseCode === "UNKNOWN" && message.includes("Username already exists")) {
-        setErrors((prev) => ({ ...prev, username: "This username already exists." }));
+        setErrors((prev) => ({
+          ...prev,
+          email: "This email is already registered.",
+        }));
+      } else if (
+        responseCode === "UNKNOWN" &&
+        message.includes("Username already exists")
+      ) {
+        setErrors((prev) => ({
+          ...prev,
+          username: "This username already exists.",
+        }));
       } else {
         toast({
           title: "Error",
@@ -186,37 +198,39 @@ const StaffAccountManager = () => {
       }
     }
   };
-  
 
   // Handle Create Staff
   const handleCreateStaff = async () => {
     const { username, password, name, phone, email } = newStaff;
-  
+
     let newErrors = {};
-  
+
     // Validation logic
     if (!username) newErrors.username = "Username is required";
     if (!password) newErrors.password = "Password is required";
     if (!name) newErrors.name = "Name is required";
     if (!phone) newErrors.phone = "Phone number is required";
-    if (!validatePhone(phone)) newErrors.phone = "Phone number must be 10-11 digits";
+    if (!validatePhone(phone))
+      newErrors.phone = "Phone number must be 10-11 digits";
     if (!email) newErrors.email = "Email is required";
-    if (!validateEmail(email)) newErrors.email = "Please enter a valid Gmail address (e.g., example@gmail.com)";
-  
+    if (!validateEmail(email))
+      newErrors.email =
+        "Please enter a valid Gmail address (e.g., example@gmail.com)";
+
     setErrors(newErrors);
-  
+
     // If errors exist, do not proceed
     if (Object.keys(newErrors).length > 0) {
       return;
     }
-  
+
     try {
       await axios.post(
         `${BASE_URL}/staff/${vendorId}`,
         { username, password, name, phone, email },
         { headers: { Authorization: `${accessToken}` } }
       );
-  
+
       toast({
         title: "Success",
         description: "Staff account created successfully.",
@@ -224,22 +238,36 @@ const StaffAccountManager = () => {
         duration: 3000,
         isClosable: true,
       });
-  
+
       setIsCreateModalOpen(false);
-      setNewStaff({ username: "", password: "", name: "", phone: "", email: "" });
+      setNewStaff({
+        username: "",
+        password: "",
+        name: "",
+        phone: "",
+        email: "",
+      });
       fetchStaffAccounts();
     } catch (error) {
       console.error("Error creating staff account:", error);
-  
+
       // Handle known backend errors
       const responseCode = error.response?.data?.code;
       const message = error.response?.data?.message;
-     
-      
+
       if (responseCode === "P2002" && message.includes("email")) {
-        setErrors((prev) => ({ ...prev, email: "This email is already registered." }));
-      } else if (responseCode === "UNKNOWN" && message.includes("Username already exists")) {
-        setErrors((prev) => ({ ...prev, username: "This username already exists." }));
+        setErrors((prev) => ({
+          ...prev,
+          email: "This email is already registered.",
+        }));
+      } else if (
+        responseCode === "UNKNOWN" &&
+        message.includes("Username already exists")
+      ) {
+        setErrors((prev) => ({
+          ...prev,
+          username: "This username already exists.",
+        }));
       } else {
         toast({
           title: "Error",
@@ -284,24 +312,29 @@ const StaffAccountManager = () => {
             <Tr key={staff.staffId}>
               <Td>{staff.username}</Td>
               <Td>
-  <HStack>
-    <Box>
-      {visiblePasswords[staff.staffId]
-        ? staff.password // Show password in plain text
-        : "****" // Masked password
-      }
-    </Box>
-    <IconButton
-      icon={
-        visiblePasswords[staff.staffId] ? <ViewOffIcon /> : <ViewIcon />
-      }
-      size="sm"
-      onClick={() => togglePasswordVisibility(staff.staffId)}
-      variant="ghost"
-      aria-label="Toggle Password Visibility"
-    />
-  </HStack>
-</Td>
+                <HStack>
+                  <Box>
+                    {
+                      visiblePasswords[staff.staffId]
+                        ? staff.password // Show password in plain text
+                        : "****" // Masked password
+                    }
+                  </Box>
+                  <IconButton
+                    icon={
+                      visiblePasswords[staff.staffId] ? (
+                        <ViewOffIcon />
+                      ) : (
+                        <ViewIcon />
+                      )
+                    }
+                    size="sm"
+                    onClick={() => togglePasswordVisibility(staff.staffId)}
+                    variant="ghost"
+                    aria-label="Toggle Password Visibility"
+                  />
+                </HStack>
+              </Td>
 
               <Td>{staff.name}</Td>
               <Td>{staff.phone}</Td>
@@ -335,54 +368,65 @@ const StaffAccountManager = () => {
           <ModalCloseButton />
           <ModalBody>
             <FormControl isInvalid={errors.name} mb={3}>
-  <FormLabel>Name</FormLabel>
-  <Input
-    placeholder="Enter name"
-    value={selectedStaff?.name || ""}
-    onChange={(e) =>
-      setSelectedStaff((prev) => ({ ...prev, name: e.target.value }))
-    }
-  />
-  <FormErrorMessage>{errors.name}</FormErrorMessage>
-</FormControl>
+              <FormLabel>Name</FormLabel>
+              <Input
+                placeholder="Enter name"
+                value={selectedStaff?.name || ""}
+                onChange={(e) =>
+                  setSelectedStaff((prev) => ({
+                    ...prev,
+                    name: e.target.value,
+                  }))
+                }
+              />
+              <FormErrorMessage>{errors.name}</FormErrorMessage>
+            </FormControl>
 
-<FormControl isInvalid={errors.password} mb={3}>
-  <FormLabel>Password</FormLabel>
-  <Input
-    type="password"
-    placeholder="Enter password"
-    value={selectedStaff?.password || ""}
-    onChange={(e) =>
-      setSelectedStaff((prev) => ({ ...prev, password: e.target.value }))
-    }
-  />
-  <FormErrorMessage>{errors.password}</FormErrorMessage>
-</FormControl>
+            <FormControl isInvalid={errors.password} mb={3}>
+              <FormLabel>Password</FormLabel>
+              <Input
+                type="password"
+                placeholder="Enter password"
+                value={selectedStaff?.password || ""}
+                onChange={(e) =>
+                  setSelectedStaff((prev) => ({
+                    ...prev,
+                    password: e.target.value,
+                  }))
+                }
+              />
+              <FormErrorMessage>{errors.password}</FormErrorMessage>
+            </FormControl>
 
-<FormControl isInvalid={errors.phone} mb={3}>
-  <FormLabel>Phone</FormLabel>
-  <Input
-    placeholder="Enter phone number"
-    value={selectedStaff?.phone || ""}
-    onChange={(e) =>
-      setSelectedStaff((prev) => ({ ...prev, phone: e.target.value }))
-    }
-  />
-  <FormErrorMessage>{errors.phone}</FormErrorMessage>
-</FormControl>
+            <FormControl isInvalid={errors.phone} mb={3}>
+              <FormLabel>Phone</FormLabel>
+              <Input
+                placeholder="Enter phone number"
+                value={selectedStaff?.phone || ""}
+                onChange={(e) =>
+                  setSelectedStaff((prev) => ({
+                    ...prev,
+                    phone: e.target.value,
+                  }))
+                }
+              />
+              <FormErrorMessage>{errors.phone}</FormErrorMessage>
+            </FormControl>
 
-<FormControl isInvalid={errors.email} mb={3}>
-  <FormLabel>Email</FormLabel>
-  <Input
-    placeholder="Enter email"
-    value={selectedStaff?.email || ""}
-    onChange={(e) =>
-      setSelectedStaff((prev) => ({ ...prev, email: e.target.value }))
-    }
-  />
-  <FormErrorMessage>{errors.email}</FormErrorMessage>
-</FormControl>
-
+            <FormControl isInvalid={errors.email} mb={3}>
+              <FormLabel>Email</FormLabel>
+              <Input
+                placeholder="Enter email"
+                value={selectedStaff?.email || ""}
+                onChange={(e) =>
+                  setSelectedStaff((prev) => ({
+                    ...prev,
+                    email: e.target.value,
+                  }))
+                }
+              />
+              <FormErrorMessage>{errors.email}</FormErrorMessage>
+            </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleUpdateStaff}>
@@ -415,7 +459,7 @@ const StaffAccountManager = () => {
           <ModalHeader>Create Staff Account</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-          <FormControl isInvalid={errors.username} mb={3}>
+            <FormControl isInvalid={errors.username} mb={3}>
               <FormLabel>Username</FormLabel>
               <Input
                 placeholder="Enter username"

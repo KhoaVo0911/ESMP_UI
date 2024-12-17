@@ -19,6 +19,7 @@ import {
   VStack,
   Input,
 } from "@chakra-ui/react";
+import { useToast } from "@chakra-ui/react";
 import avatar from "../../assets/images/avatardefault_92824.png";
 
 const Settings = () => {
@@ -42,6 +43,7 @@ const Settings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState(""); // Lỗi xác nhận mật khẩu
   const [oldPasswordError, setOldPasswordError] = useState(""); // Lỗi mật khẩu cũ
+  const toast = useToast();
 
   // Hàm chuyển expiretime từ chuỗi ISO sang định dạng ngày tháng dễ đọc
   const convertExpireTime = (expiretime) => {
@@ -96,43 +98,109 @@ const Settings = () => {
   };
 
   // Hàm cập nhật mật khẩu
+  // const handleUpdatePassword = () => {
+  //   // Reset trạng thái lỗi
+  //   setPasswordError("");
+  //   setOldPasswordError("");
+
+  //   // Kiểm tra mật khẩu cũ
+  //   if (oldPassword !== user.password) {
+  //     setOldPasswordError("Old password is incorrect.");
+  //     return; // Dừng nếu mật khẩu cũ không chính xác
+  //   }
+
+  //   // Kiểm tra mật khẩu mới và xác nhận mật khẩu
+  //   if (newPassword !== confirmPassword) {
+  //     setPasswordError("New password and confirm password do not match.");
+  //     return;
+  //   }
+  //   // Dữ liệu gửi lên API
+  //   const passwordData = {
+  //     newPassword, // Mã hóa mật khẩu mới
+  //   };
+
+  //   // Lấy accountId từ dữ liệu người dùng
+  //   const accountId = user.account?.id; // Sử dụng optional chaining để tránh lỗi nếu account undefined
+  //   if (!accountId) {
+  //     console.error("Account ID is undefined");
+  //     return;
+  //   }
+
+  //   // Gửi yêu cầu cập nhật mật khẩu
+  //   axios
+  //     .put(
+  //       `https://esmpbe.id.vn/api/user/newpassword/${accountId}`,
+  //       passwordData
+  //     )
+  //     .then(() => {
+  //       alert("Mật khẩu đã được cập nhật thành công!");
+  //       // Reset lại các trường mật khẩu
+  //       setOldPassword("");
+  //       setNewPassword("");
+  //       setConfirmPassword("");
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error updating password", error);
+  //     });
+  // };
+
   const handleUpdatePassword = () => {
     // Reset trạng thái lỗi
     setPasswordError("");
     setOldPasswordError("");
 
     // Kiểm tra mật khẩu cũ
+    if (!oldPassword) {
+      setOldPasswordError("Please enter old password.");
+      return;
+    }
+
     if (oldPassword !== user.password) {
-      setOldPasswordError("Mật khẩu cũ không đúng.");
+      setOldPasswordError("Old password is incorrect.");
       return; // Dừng nếu mật khẩu cũ không chính xác
     }
 
     // Kiểm tra mật khẩu mới và xác nhận mật khẩu
-    if (newPassword !== confirmPassword) {
-      setPasswordError("Mật khẩu mới và xác nhận mật khẩu không khớp.");
+    if (!newPassword) {
+      setPasswordError("Please enter new password.");
       return;
     }
+
+    if (!confirmPassword) {
+      setPasswordError("Please confirm new password.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New password and confirm password do not match.");
+      return;
+    }
+
     // Dữ liệu gửi lên API
     const passwordData = {
       newPassword, // Mã hóa mật khẩu mới
     };
 
-    // Lấy accountId từ dữ liệu người dùng
-    const accountId = user.account?.id; // Sử dụng optional chaining để tránh lỗi nếu account undefined
+    const accountId = user.account?.id; // Lấy accountId từ dữ liệu người dùng
     if (!accountId) {
       console.error("Account ID is undefined");
       return;
     }
 
-    // Gửi yêu cầu cập nhật mật khẩu
     axios
       .put(
         `https://esmpbe.id.vn/api/user/newpassword/${accountId}`,
         passwordData
       )
       .then(() => {
-        alert("Mật khẩu đã được cập nhật thành công!");
-        // Reset lại các trường mật khẩu
+        toast({
+          title: "Successfully!",
+          description: "Password updated successfully.",
+          status: "success",
+          duration: 3000, // Thời gian hiển thị (ms)
+          isClosable: true, // Cho phép đóng thông báo
+          position: "top-right", // Vị trí xuất hiện
+        });
         setOldPassword("");
         setNewPassword("");
         setConfirmPassword("");

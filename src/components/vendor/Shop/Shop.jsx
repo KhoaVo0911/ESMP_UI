@@ -266,13 +266,13 @@ const Shop = () => {
       fetchMenuItems(); // Fetch updated menu items
     } catch (error) {
       console.error("Error creating new menu", error);
-      toast({
-        title: "Error",
-        description: "There was an issue creating the menu. Please try again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "There was an issue creating the menu. Please try again.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -330,8 +330,7 @@ const Shop = () => {
           {menuName}
         </Text>
         <Box display="flex" alignItems="center" gap={4}>
-         
-        <Tooltip
+          <Tooltip
             label={
               vendorInEventStatus === "finished"
                 ? "Event is already finished."

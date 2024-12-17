@@ -250,6 +250,82 @@ const Event = () => {
     }
   };
 
+  // const handleCreateEvent = async (values) => {
+  //   const { name, description, startDate, endDate, file, deposit, themeId } =
+  //     values;
+
+  //   // Manual validation: End Date must be after Start Date
+  //   if (moment(endDate).isSameOrBefore(startDate)) {
+  //     message.error("End Date must be after Start Date!");
+  //     return;
+  //   }
+
+  //   if (
+  //     !name ||
+  //     !description ||
+  //     !startDate ||
+  //     !endDate ||
+  //     !file ||
+  //     !deposit ||
+  //     !themeId
+  //   ) {
+  //     message.error("Please fill in all fields.");
+  //     return;
+  //   }
+
+  //   try {
+  //     const startDateUTC = new Date(startDate);
+  //     startDateUTC.setDate(startDateUTC.getDate() + 1);
+  //     const endDateUTC = new Date(endDate);
+  //     endDateUTC.setDate(endDateUTC.getDate() + 1);
+
+  //     const newEvent = {
+  //       name,
+  //       hostId,
+  //       themeId,
+  //       description,
+  //       startDate: startDateUTC.toISOString(),
+  //       endDate: endDateUTC.toISOString(),
+  //       deposit: parseFloat(deposit),
+  //     };
+
+  //     console.log("Payload being sent:", newEvent);
+
+  //     const response = await axios.post(BASE_URL, newEvent, {
+  //       headers: { Authorization: getAccessToken() },
+  //     });
+
+  //     const eventId = response.data.id;
+
+  //     if (!eventId) {
+  //       throw new Error("Event ID is missing in the response");
+  //     }
+
+  //     const imageFile = file[0].originFileObj;
+  //     const imageRef = ref(storage, `${hostId}/${eventId}/${imageFile.name}`);
+  //     await uploadBytes(imageRef, imageFile);
+  //     const imageURL = await getDownloadURL(imageRef);
+
+  //     const updatedEvent = {
+  //       ...newEvent,
+  //       eventId,
+  //       imageURL,
+  //     };
+  //     setEvents((prevEvents) => [updatedEvent, ...prevEvents]);
+
+  //     await fetchEvents();
+
+  //     message.success("Event created successfully!");
+  //     setModalVisible(false);
+  //     form.resetFields();
+  //   } catch (error) {
+  //     console.error("Error creating event:", error);
+  //     message.error(
+  //       `Error: ${error.response?.data?.message || "Something went wrong"}`
+  //     );
+  //   }
+  // };
+
   // const handleEventClick = (event, services) => {
   //   sessionStorage.setItem("selectedEvent", JSON.stringify(event));
   //   sessionStorage.setItem("eventServices", JSON.stringify(services || []));
@@ -488,6 +564,66 @@ const Event = () => {
               </Form.Item>
             </Col>
           </Row>
+          {/* <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="startDate"
+                label="Start Date"
+                rules={[
+                  { required: true, message: "Please select the start date!" },
+                ]}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  disabledDate={(current) => {
+                    return current && current < moment().startOf("day");
+                  }}
+                  onChange={(date) => setStartDate(date)} // Cập nhật startDate vào state
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="endDate"
+                label="End Date"
+                dependencies={["startDate"]}
+                rules={[
+                  { required: true, message: "Please select the end date!" },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      const startDate = getFieldValue("startDate");
+
+                      // Kiểm tra nếu Start Date và End Date tồn tại
+                      if (!value || !startDate) {
+                        return Promise.resolve();
+                      }
+
+                      // So sánh ngày bằng moment
+                      if (moment(value).isAfter(moment(startDate))) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(
+                        new Error("End Date must be after Start Date!")
+                      );
+                    },
+                  }),
+                ]}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  disabledDate={(current) => {
+                    const startDate = form.getFieldValue("startDate");
+                    return (
+                      current &&
+                      (current < moment().startOf("day") ||
+                        (startDate &&
+                          current <= moment(startDate).startOf("day")))
+                    );
+                  }}
+                />
+              </Form.Item>
+            </Col>
+          </Row> */}
 
           <Form.Item
             name="deposit"

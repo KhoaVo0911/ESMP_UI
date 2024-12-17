@@ -51,9 +51,8 @@ const ServiceManagement = ({ eventId }) => {
     "Goods transportation and installation services",
     "Cleaning and sanitation services",
     "Wifi and internet connection services",
-    "Customer care and information support services"
+    "Customer care and information support services",
   ];
-  
 
   const fetchServices = async () => {
     try {
@@ -62,11 +61,14 @@ const ServiceManagement = ({ eventId }) => {
       });
       setServices(response.data);
     } catch (error) {
-      toast({
-        title: "Error fetching services",
-        status: "error",
-        duration: 3000,
-      });
+      console.log("Error fetching services", error);
+      // toast({
+      //   title: "Error fetching services",
+      //   description: "Could not load services.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -117,12 +119,58 @@ const ServiceManagement = ({ eventId }) => {
       onClose();
       resetForm();
     } catch (error) {
-      toast({
-        title: "Error saving service",
-        status: "error",
-        duration: 3000,
-      });
+      console.log(
+        "Error saving service",
+        error.response?.data?.message || "Could not save the service."
+      );
+      // toast({
+      //   title: "Error saving service",
+      //   description:
+      //     error.response?.data?.message || "Could not save the service.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
+  };
+
+  const handleDelete = async (serviceId) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/${serviceId}`, {
+        headers: {
+          Authorization: sessionStorage.getItem("accessToken"),
+        },
+      });
+      fetchServices();
+      toast({
+        title: "Service deleted",
+        description: "The service has been deleted successfully.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.log(
+        "Error deleting service",
+        error.response?.data?.message || "Could not delete the service."
+      );
+      // toast({
+      //   title: "Error deleting service",
+      //   description:
+      //     error.response?.data?.message || "Could not delete the service.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
+    }
+  };
+
+  const handleEdit = (service) => {
+    setEditingService(service);
+    setServiceName(service.name);
+    setPrice(service.price);
+    setQuantity(service.quantity);
+    onOpen();
   };
 
   const resetForm = () => {
@@ -154,7 +202,14 @@ const ServiceManagement = ({ eventId }) => {
 
   return (
     <Box>
-      <Button colorScheme="blue" mb={4} onClick={() => { resetForm(); onOpen(); }}>
+      <Button
+        colorScheme="blue"
+        mb={4}
+        onClick={() => {
+          resetForm();
+          onOpen();
+        }}
+      >
         Create New Service Support
       </Button>
 
@@ -199,7 +254,9 @@ const ServiceManagement = ({ eventId }) => {
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
-            {editingService ? "Edit Service Support" : "Create New Service Support"}
+            {editingService
+              ? "Edit Service Support"
+              : "Create New Service Support"}
           </ModalHeader>
           <ModalBody>
             <FormControl mb={4} isInvalid={!!serviceNameError}>

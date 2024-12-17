@@ -77,7 +77,7 @@ const ExtensionEvent = () => {
         <GridItem>
           <Box p={4} bg="white" borderRadius="md" boxShadow="sm">
             <Heading size="md" mb={4}>
-              Service Management
+              Service Support
             </Heading>
             <Divider mb={4} />
             <ServiceManagement eventId={eventId} />

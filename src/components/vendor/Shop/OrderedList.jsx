@@ -112,13 +112,13 @@ const OrderedList = () => {
         setTransactions(transactionMap);
       } catch (error) {
         console.error("Error fetching transactions:", error);
-        toast({
-          title: "Error",
-          description: "Unable to fetch transactions.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
+        // toast({
+        //   title: "Error",
+        //   description: "Unable to fetch transactions.",
+        //   status: "error",
+        //   duration: 3000,
+        //   isClosable: true,
+        // });
       }
     };
 
@@ -202,13 +202,13 @@ const OrderedList = () => {
       openDetail(orderId);
     } catch (error) {
       console.error("Error fetching order details:", error);
-      toast({
-        title: "Error",
-        description: "Unable to fetch order details.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "Unable to fetch order details.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     } finally {
       setLoadingDetails((prev) => ({ ...prev, [orderId]: false }));
     }
@@ -284,13 +284,13 @@ const OrderedList = () => {
       });
     } catch (error) {
       console.error("Error updating order status:", error);
-      toast({
-        title: "Error",
-        description: "Unable to update order status.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "Unable to update order status.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 

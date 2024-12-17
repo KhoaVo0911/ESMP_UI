@@ -55,7 +55,7 @@ const ThemeEventSection = () => {
     "Entertainment",
     "Culture and festivals",
     "Community and society",
-    "Technology and startups"
+    "Technology and startups",
   ];
 
   const fetchThemes = async () => {
@@ -68,11 +68,14 @@ const ThemeEventSection = () => {
       );
       setThemes(response.data);
     } catch (error) {
-      toast({
-        title: "Error fetching themes",
-        status: "error",
-        duration: 3000,
-      });
+      console.log("Error fetching themes", error);
+      // toast({
+      //   title: "Error fetching themes",
+      //   description: "Could not load themes.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -153,7 +156,8 @@ const ThemeEventSection = () => {
       fetchThemes();
       onClose();
     } catch (error) {
-      toast({ title: "Error saving themes", status: "error" });
+      console.log(error, "save");
+      // toast({ title: "Error saving themes", status: "error" });
     }
   };
   const handleDeleteTheme = async (themeId) => {
@@ -164,11 +168,12 @@ const ThemeEventSection = () => {
       setThemes(themes.filter((theme) => theme.themeId !== themeId));
       toast({ title: "Theme deleted", status: "success" });
     } catch (error) {
-      toast({
-        title: "Cannot delete theme",
-        description: "This theme may be in use.",
-        status: "error",
-      });
+      console.log(error, "delete");
+      // toast({
+      //   title: "Cannot delete theme",
+      //   description: "This theme may be in use.",
+      //   status: "error",
+      // });
     }
   };
   return (

@@ -268,13 +268,13 @@ const StaffShop = () => {
       fetchMenuItems(); // Fetch updated menu items
     } catch (error) {
       console.error("Error creating new menu", error);
-      toast({
-        title: "Error",
-        description: "There was an issue creating the menu. Please try again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "There was an issue creating the menu. Please try again.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -332,12 +332,10 @@ const StaffShop = () => {
           {menuName}
         </Text>
         <Box display="flex" alignItems="center" gap={4}>
-         
-
           <Button colorScheme="blue" onClick={handleGoToOrderedList}>
             Order History
           </Button>
-        
+
           <Tooltip
             label={
               vendorInEventStatus === "finished"
@@ -418,8 +416,6 @@ const StaffShop = () => {
           </DrawerContent>
         </DrawerOverlay>
       </Drawer>
-
-     
     </Box>
   );
 };

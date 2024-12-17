@@ -56,9 +56,9 @@ const CategorySection = () => {
     "Entertainment and Sports",
     "Cars and Motorcycles",
     "Travel and Hotels",
-    "Electronics and Digital"
+    "Electronics and Digital",
   ];
-  
+
   const staticThemes = [
     "Music",
     "Sports",
@@ -69,9 +69,8 @@ const CategorySection = () => {
     "Entertainment",
     "Culture and festivals",
     "Community and society",
-    "Technology and startups"
+    "Technology and startups",
   ];
-  
 
   const fetchCategories = async () => {
     try {
@@ -86,13 +85,14 @@ const CategorySection = () => {
       );
       setCategories(response.data);
     } catch (error) {
-      toast({
-        title: "Error fetching categories",
-        description: "Could not load categories.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      console.log("Could not load categories", error);
+      // toast({
+      //   title: "Error fetching categories",
+      //   description: "Could not load categories.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
   const fetchHostExpireTime = async () => {
@@ -180,11 +180,14 @@ const CategorySection = () => {
       fetchCategories();
       onClose();
     } catch (error) {
-      toast({
-        title: "Error saving category",
-        description: "Could not save the categories.",
-        status: "error",
-      });
+      console.error("Error saving category:", error);
+      // toast({
+      //   title: "Error saving category",
+      //   description: "Could not save the category.",
+      //   status: "error",
+      //   duration: 3000,
+      //   isClosable: true,
+      // });
     }
   };
 
@@ -196,11 +199,12 @@ const CategorySection = () => {
       setCategories(categories.filter((cat) => cat.categoryId !== categoryId));
       toast({ title: "Category deleted", status: "success" });
     } catch (error) {
-      toast({
-        title: "Cannot delete category",
-        description: "This category may be in use.",
-        status: "error",
-      });
+      console.log(error, "delete");
+      // toast({
+      //   title: "Cannot delete category",
+      //   description: "This category may be in use.",
+      //   status: "error",
+      // });
     }
   };
 
@@ -254,45 +258,44 @@ const CategorySection = () => {
                 </Badge>
               </Td>
               <Td>
-  <Flex gap={2}>
-    <Tooltip
-      label={
-        canCreateCategory
-          ? ""
-          : "Your package has expired, you cannot edit this category."
-      }
-      shouldWrapChildren
-    >
-      <Button
-        size="sm"
-        colorScheme="blue"
-        isDisabled={!canCreateCategory}
-        onClick={() => handleOpenEditCategory(category)}
-      >
-        Edit
-      </Button>
-    </Tooltip>
+                <Flex gap={2}>
+                  <Tooltip
+                    label={
+                      canCreateCategory
+                        ? ""
+                        : "Your package has expired, you cannot edit this category."
+                    }
+                    shouldWrapChildren
+                  >
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      isDisabled={!canCreateCategory}
+                      onClick={() => handleOpenEditCategory(category)}
+                    >
+                      Edit
+                    </Button>
+                  </Tooltip>
 
-    <Tooltip
-      label={
-        canCreateCategory
-          ? ""
-          : "Your package has expired, you cannot delete this category."
-      }
-      shouldWrapChildren
-    >
-      <Button
-        size="sm"
-        colorScheme="red"
-        isDisabled={!canCreateCategory}
-        onClick={() => handleDeleteCategory(category.categoryId)}
-      >
-        Delete
-      </Button>
-    </Tooltip>
-  </Flex>
-</Td>
-
+                  <Tooltip
+                    label={
+                      canCreateCategory
+                        ? ""
+                        : "Your package has expired, you cannot delete this category."
+                    }
+                    shouldWrapChildren
+                  >
+                    <Button
+                      size="sm"
+                      colorScheme="red"
+                      isDisabled={!canCreateCategory}
+                      onClick={() => handleDeleteCategory(category.categoryId)}
+                    >
+                      Delete
+                    </Button>
+                  </Tooltip>
+                </Flex>
+              </Td>
             </Tr>
           ))}
         </Tbody>

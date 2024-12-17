@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, Button, FormControl, Input, FormLabel, useToast } from "@chakra-ui/react";
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  Button,
+  FormControl,
+  Input,
+  FormLabel,
+  useToast,
+} from "@chakra-ui/react";
 import axios from "axios";
 
 const UpdateApiBanking = ({ isOpen, onClose }) => {
@@ -21,21 +33,23 @@ const UpdateApiBanking = ({ isOpen, onClose }) => {
     const fetchBankingData = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`https://esmpbe.id.vn/api/host/${hostId}`);
-        
+        const response = await axios.get(
+          `https://esmpbe.id.vn/api/host/${hostId}`
+        );
+
         // Assuming the response contains all fields, we'll only display the banking info for editing
         setData(response.data);
         setBankingAccount(response.data.bankingaccount || "");
         setApiBanking(response.data.apibanking || "");
       } catch (error) {
         console.error("Error fetching banking data", error);
-        toast({
-          title: "Error fetching data.",
-          description: "There was an issue fetching the current banking data.",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
+        // toast({
+        //   title: "Error fetching data.",
+        //   description: "There was an issue fetching the current banking data.",
+        //   status: "error",
+        //   duration: 5000,
+        //   isClosable: true,
+        // });
       } finally {
         setIsLoading(false);
       }
@@ -55,9 +69,9 @@ const UpdateApiBanking = ({ isOpen, onClose }) => {
       });
       return;
     }
-  
+
     setIsSubmitting(true);
-  
+
     try {
       // Prepare data with only the fields you want to update
       const updatedData = {
@@ -69,9 +83,12 @@ const UpdateApiBanking = ({ isOpen, onClose }) => {
         bankingaccount: bankingAccount, // Cập nhật tài khoản ngân hàng
         apibanking: apiBanking, // Cập nhật liên kết API ngân hàng
       };
-  
+
       // Send PUT request with only the fields that need to be updated
-      const response = await axios.put(`https://esmpbe.id.vn/api/host/${hostId}`, updatedData);
+      const response = await axios.put(
+        `https://esmpbe.id.vn/api/host/${hostId}`,
+        updatedData
+      );
       if (response.status === 200) {
         toast({
           title: "Success",
@@ -84,18 +101,17 @@ const UpdateApiBanking = ({ isOpen, onClose }) => {
       }
     } catch (error) {
       console.error("Error updating banking data", error);
-      toast({
-        title: "Error updating data.",
-        description: "There was an issue updating the banking data.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Error updating data.",
+      //   description: "There was an issue updating the banking data.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">

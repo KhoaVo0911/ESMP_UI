@@ -75,7 +75,7 @@ const AdminAccountManagement = () => {
   const sendEmail = async (account) => {
     let subject = "";
     let body = "";
-  
+
     // Chọn nội dung email dựa trên trạng thái
     switch (account.emailType) {
       case "activatedFirstTime":
@@ -114,7 +114,7 @@ const AdminAccountManagement = () => {
           <p>The Admin Team</p>
         `;
         break;
-  
+
       case "deactivated":
         subject = "Your account has been deactivated";
         body = `
@@ -124,24 +124,24 @@ const AdminAccountManagement = () => {
           <p>The Admin Team</p>
         `;
         break;
-  
+
       default:
         console.error("Unknown email type");
         return;
     }
-  
+
     try {
       const emailData = new FormData();
       emailData.append("toEmail", account.account.email);
       emailData.append("subject", subject);
       emailData.append("body", body);
-  
+
       await axios.post("https://esmpbe.id.vn/api/mail/send-email", emailData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-  
+
       toast({
         title: "Email Sent.",
         description: `An email has been sent to ${account.account.email}`,
@@ -151,16 +151,16 @@ const AdminAccountManagement = () => {
       });
     } catch (error) {
       console.error("Error sending email:", error);
-      toast({
-        title: "Error Sending Email.",
-        description: "There was an error sending the email. Please try again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      // toast({
+      //   title: "Email Error.",
+      //   description: "There was an error sending the email. Please try again.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
     }
   };
-  
+
   // Get list of accounts from API
   useEffect(() => {
     axios
@@ -272,7 +272,7 @@ const AdminAccountManagement = () => {
   // Update account details
   const updateAccount = () => {
     if (!selectedAccount) return;
-  
+
     const updatedData = {
       name: selectedAccount.account.name,
       phone: selectedAccount.account.phone,
@@ -283,7 +283,6 @@ const AdminAccountManagement = () => {
       apibanking: selectedAccount.apibanking,
       status: selectedAccount.account.status, // Update status field
     };
-  
     axios
       .put(
         `https://esmpbe.id.vn/api/host/${selectedAccount.hostid}`,
@@ -297,7 +296,7 @@ const AdminAccountManagement = () => {
           duration: 5000,
           isClosable: true,
         });
-  
+
         // Fetch the updated account list after the update
         axios
           .get("https://esmpbe.id.vn/api/host")
@@ -308,9 +307,11 @@ const AdminAccountManagement = () => {
                 return b.account.status - a.account.status;
               }
               // Nếu trạng thái giống nhau, sắp xếp theo thời gian tạo (mới nhất trước)
-              return new Date(b.account.createdat) - new Date(a.account.createdat);
+              return (
+                new Date(b.account.createdat) - new Date(a.account.createdat)
+              );
             });
-  
+
             setAccounts(sortedAccounts); // Update state with sorted accounts
             setFilteredAccounts(sortedAccounts); // Update filtered accounts
           })
@@ -325,7 +326,7 @@ const AdminAccountManagement = () => {
               isClosable: true,
             });
           });
-  
+
         // Close the modal and reset the selected account
         setSelectedAccount(null);
         onEditClose();
@@ -342,7 +343,6 @@ const AdminAccountManagement = () => {
         });
       });
   };
-  
 
   // View account details and open the modal
   const viewDetails = (account) => {
@@ -357,12 +357,12 @@ const AdminAccountManagement = () => {
   };
   const toggleStatus = (account) => {
     const updatedStatus = !account.account.status; // Toggle the status
-  
+
     const updatedAccount = {
       ...account,
       account: { ...account.account, status: updatedStatus },
     };
-  
+
     axios
       .put(`https://esmpbe.id.vn/api/host/${account.hostid}`, {
         ...updatedAccount.account,
@@ -372,7 +372,7 @@ const AdminAccountManagement = () => {
         const updatedAccounts = accounts.map((acc) =>
           acc.account.id === account.account.id ? updatedAccount : acc
         );
-  
+
         // Sort the accounts by status and creation date
         const sortedAccounts = updatedAccounts.sort((a, b) => {
           if (a.account.status !== b.account.status) {
@@ -380,10 +380,10 @@ const AdminAccountManagement = () => {
           }
           return new Date(b.account.createdat) - new Date(a.account.createdat); // Latest first
         });
-  
+
         setAccounts(sortedAccounts); // Update state with sorted accounts
         setFilteredAccounts(sortedAccounts); // Update filtered accounts
-  
+
         toast({
           title: "Account Status Updated.",
           description: `The account status has been successfully updated to ${
@@ -393,7 +393,7 @@ const AdminAccountManagement = () => {
           duration: 5000,
           isClosable: true,
         });
-  
+
         // Check conditions for sending different emails
         if (updatedStatus) {
           if (account.account.createdat === account.account.updatedat) {
@@ -421,36 +421,32 @@ const AdminAccountManagement = () => {
         console.error("Error updating account status:", error);
         toast({
           title: "Error Updating Status.",
-          description: "There was an error updating the status. Please try again.",
+          description:
+            "There was an error updating the status. Please try again.",
           status: "error",
           duration: 5000,
           isClosable: true,
         });
       });
   };
-  
-  
 
   return (
     <Stack spacing={4} p={4}>
       {/* Search Bar */}
       <InputGroup mb={4} justifyContent="center" width="auto" maxWidth="400px">
-  <InputLeftElement
-    pointerEvents="none"
-   
-  />
-  <Input
-    type="text"
-    placeholder="Search accounts..."
-    value={searchTerm}
-    onChange={handleSearch}
-    size="xl"
-    borderColor="black"
-    focusBorderColor="teal.500"
-    borderRadius="md"
-    p={2}
-  />
-</InputGroup>
+        <InputLeftElement pointerEvents="none" />
+        <Input
+          type="text"
+          placeholder="Search accounts..."
+          value={searchTerm}
+          onChange={handleSearch}
+          size="xl"
+          borderColor="black"
+          focusBorderColor="teal.500"
+          borderRadius="md"
+          p={2}
+        />
+      </InputGroup>
 
       {/* Create Account Button */}
       {/* <Button colorScheme="teal" onClick={onCreateOpen} mb={4} size="sm">
