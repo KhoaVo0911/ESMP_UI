@@ -789,13 +789,13 @@ const LocationMap = () => {
             <Button onClick={handleEditMap} colorScheme="teal" size="sm">
               Edit
             </Button>
-            <Button
+            {/* <Button
               onClick={() => setIsMapExists(false)}
               colorScheme="red"
               size="sm"
             >
               Delete
-            </Button>
+            </Button> */}
           </Flex>
         ) : (
           <Button onClick={handleCreateMap} colorScheme="blue" size="sm">

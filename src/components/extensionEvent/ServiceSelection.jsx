@@ -243,6 +243,13 @@ const ServiceManagement = ({ eventId }) => {
                 >
                   Edit
                 </Button>
+                <Button
+                  size="sm"
+                  colorScheme="red"
+                  onClick={() => handleDelete(service.serviceId)}
+                >
+                  Delete
+                </Button>
               </Td>
             </Tr>
           ))}
