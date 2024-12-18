@@ -61,28 +61,29 @@ const PieChart = () => {
     }
   }, [productData, categoryData]);
 
+  // Generate random color
+  const getRandomColor = () => {
+    const letters = "0123456789ABCDEF";
+    let color = "#";
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  };
+
+  // Generate a consistent set of random colors for each category
+  const colors = categoryData.map(() => getRandomColor());
+
   // Prepare data for the pie chart
   const chartData = {
     labels: categoryData.map((category) => category.categoryName),
     datasets: [
       {
-        data: categoryData.map((category) => categoryCounts[category.categoryId] || 0),
-        backgroundColor: [
-          "#6FD195",
-          "#8979FF",
-          "#FF928A",
-          "#3CC3DF",
-          "#FFAE4C",
-          "#537FF1",
-        ],
-        hoverBackgroundColor: [
-          "#6FD195",
-          "#8979FF",
-          "#FF928A",
-          "#3CC3DF",
-          "#FFAE4C",
-          "#537FF1",
-        ],
+        data: categoryData.map(
+          (category) => categoryCounts[category.categoryId] || 0
+        ),
+        backgroundColor: colors,
+        hoverBackgroundColor: colors, // Ensure hover color matches background color
       },
     ],
   };
@@ -131,9 +132,9 @@ const PieChart = () => {
         <div
           style={{
             position: "absolute",
-            left: "39%",
-            top: "50%",
-            transform: "translate(-50%, -50%)",
+            left: "24%", // Adjusted to center
+            top: "54%",  // Adjusted to center
+            transform: "translate(-20%, -50%)", // Centering transform
             fontSize: "24px",
             fontWeight: "bold",
           }}
