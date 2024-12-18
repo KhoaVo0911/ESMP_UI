@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
   Table,
@@ -9,18 +9,17 @@ import {
   Select,
   message,
 } from "antd";
+import { Box, HStack, Text, VStack, IconButton, Flex } from "@chakra-ui/react";
 import {
-  Box,
-  HStack,
-  Text,
-  VStack,
-  IconButton,
-  Flex,
-} from "@chakra-ui/react";
-import { DeleteOutline, EditOutlined } from "@mui/icons-material";
-import { SearchOutlined } from "@ant-design/icons";
-import { useLocation } from "react-router-dom";
+  DeleteOutline,
+  EditOutlined,
+  CloudUploadOutlined,
+  CloudDownloadOutlined,
+} from "@mui/icons-material";
 
+import { SearchOutlined, ExportOutlined } from "@ant-design/icons";
+import { useLocation } from "react-router-dom";
+import * as XLSX from "xlsx";
 const { Option } = Select;
 
 const ProductList = () => {
@@ -34,6 +33,7 @@ const ProductList = () => {
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("name");
+  const fileInputRef = useRef(null);
 
   const accessToken = sessionStorage.getItem("accessToken") || "";
   const vendorId = sessionStorage.getItem("vendorId") || "";
@@ -52,10 +52,10 @@ const ProductList = () => {
           },
         }
       );
-  
+
       setData(productResponse.data);
       setFilteredData(productResponse.data);
-  
+
       // Fetch categories and filter by status = true
       const categoryResponse = await axios.get(
         `https://esmpbe.id.vn/api/category/host/${hostId}`,
@@ -66,22 +66,158 @@ const ProductList = () => {
           },
         }
       );
-  
+
       // Filter categories where status is true
-      const filteredCategories = categoryResponse.data.filter((category) => category.status === true);
+      const filteredCategories = categoryResponse.data.filter(
+        (category) => category.status === true
+      );
       setCategories(filteredCategories);
-  
     } catch (error) {
       // message.error("Error fetching data from API!");
     } finally {
       setLoading(false);
     }
   };
-  
+
+  // Đọc file Excel và xử lý dữ liệu
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (evt) => {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      const validProducts = [];
+      const invalidProducts = [];
+
+      jsonData.forEach((product) => {
+        // So khớp categoryname từ Excel với categories từ API
+        const matchedCategory = categories.find(
+          (cat) =>
+            cat.categoryName.toLowerCase().trim() ===
+            product.categoryname?.toLowerCase().trim()
+        );
+
+        if (matchedCategory) {
+          validProducts.push({
+            ...product,
+            categoryId: matchedCategory.categoryId, // Gán categoryId hợp lệ
+          });
+        } else {
+          invalidProducts.push(product); // Thêm vào danh sách không hợp lệ
+        }
+      });
+
+      // Hiển thị các sản phẩm không hợp lệ
+      if (invalidProducts.length > 0) {
+        message.warning(
+          `${invalidProducts.length} product has an invalid categoryName and has been ignored.`
+        );
+        console.table(invalidProducts);
+      }
+
+      // Chỉ upload các sản phẩm hợp lệ
+      if (validProducts.length > 0) {
+        uploadProducts(validProducts);
+      } else {
+        message.error("No valid products to upload!");
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
+  // Gửi dữ liệu lên API import Excel
+  const uploadProducts = async (products) => {
+    try {
+      for (const product of products) {
+        await axios.post(
+          `https://esmpbe.id.vn/api/product/excel/${vendorId}/${hostId}`,
+          product,
+          {
+            headers: {
+              Authorization: `${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log(`Product uploaded: ${product.productName}`);
+      }
+      message.success("All products imported successfully!");
+      fetchData(); // Reload dữ liệu sau khi hoàn thành
+    } catch (error) {
+      console.error("Error importing products:", error);
+      message.error("Failed to import some products!");
+    }
+  };
+
+  // Tạo file Excel Template
+  const downloadTemplate = () => {
+    const templateData = [
+      {
+        productName: "Example Product",
+        description: "Example",
+        quantity: 10,
+        categoryname: "food",
+      },
+      {
+        productName: "Sample Product",
+        description: "Sample",
+        quantity: 20,
+        categoryname: "drink 1",
+      },
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+
+    XLSX.writeFile(workbook, "product_template.xlsx");
+  };
+
+  // Xuất toàn bộ Product List ra Excel
+  const exportProductList = () => {
+    // Tạo dữ liệu để export
+    const exportData = filteredData.map((product) => ({
+      productName: product.productName,
+      description: product.description,
+      quantity: product.quantity,
+      count: product.count,
+      createdAt: formatDate(product.createAt),
+      updatedAt: formatDate(product.updatedAt),
+      category:
+        categories.find((cat) => cat.categoryId === product.categoryId)
+          ?.categoryName || "Undefined",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Product List");
+
+    XLSX.writeFile(workbook, "product_list.xlsx");
+  };
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Kiểm tra trước khi upload
+  const checkCategoriesBeforeUpload = () => {
+    if (categories.length === 0) {
+      message.error("Categories not loaded yet. Please try again later.");
+      return false;
+    }
+    return true;
+  };
+
+  const triggerFileInput = () => {
+    if (checkCategoriesBeforeUpload()) {
+      fileInputRef.current.click();
+    }
+  };
 
   const formatDate = (date) => {
     const formattedDate = new Date(date);
@@ -106,7 +242,7 @@ const ProductList = () => {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-  
+
       // Chuẩn bị payload
       const payload = {
         ...values,
@@ -114,7 +250,7 @@ const ProductList = () => {
         status: true,
         quantity: Number(values.quantity), // Ensure quantity is a number
       };
-  
+
       // Nếu là tạo mới, thêm count = 0
       if (!editingProduct) {
         payload.count = 0; // count mặc định là 0 khi POST
@@ -122,7 +258,7 @@ const ProductList = () => {
         // Nếu là cập nhật, lấy count từ DB và thêm vào payload
         payload.count = editingProduct.count; // Đặt count từ editingProduct vào payload
       }
-  
+
       if (editingProduct) {
         // Cập nhật sản phẩm (PUT)
         await axios.put(
@@ -150,7 +286,7 @@ const ProductList = () => {
         );
         message.success("New product added successfully!");
       }
-  
+
       fetchData(); // Lấy lại dữ liệu sau khi thêm/sửa
       setIsModalOpen(false);
       form.resetFields();
@@ -159,26 +295,21 @@ const ProductList = () => {
       message.error("An error occurred!");
     }
   };
-  
-  
-  
-  
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(
-        `https://esmpbe.id.vn/api/product/${vendorId}/${id}`,
-        {
-          headers: {
-            Authorization: `${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await axios.delete(`https://esmpbe.id.vn/api/product/${vendorId}/${id}`, {
+        headers: {
+          Authorization: `${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
       fetchData();
       message.success("Product deleted successfully!");
     } catch (error) {
-      message.error("The product has been added to the product item and cannot be deleted!");
+      message.error(
+        "The product has been added to the product item and cannot be deleted!"
+      );
     }
   };
 
@@ -191,15 +322,41 @@ const ProductList = () => {
     setFilteredData(filtered);
   };
 
+  // const handleSort = (value) => {
+  //   setSortOrder(value);
+  //   const sorted = [...filteredData].sort((a, b) => {
+  //     if (value === "quantity") {
+  //       return a.quantity - b.quantity;
+  //     } else {
+  //       return a.count - b.count;
+  //     }
+  //   });
+  //   setFilteredData(sorted);
+  // };
+
   const handleSort = (value) => {
     setSortOrder(value);
+
     const sorted = [...filteredData].sort((a, b) => {
       if (value === "quantity") {
         return a.quantity - b.quantity;
-      } else {
+      } else if (value === "count") {
         return a.count - b.count;
+      } else if (value === "category") {
+        // Sắp xếp theo tên category
+        const categoryA =
+          categories.find((cat) => cat.categoryId === a.categoryId)
+            ?.categoryName || "";
+        const categoryB =
+          categories.find((cat) => cat.categoryId === b.categoryId)
+            ?.categoryName || "";
+
+        return categoryA.localeCompare(categoryB);
+      } else {
+        return 0;
       }
     });
+
     setFilteredData(sorted);
   };
 
@@ -208,7 +365,11 @@ const ProductList = () => {
       title: "Product Name",
       dataIndex: "productName",
       key: "productName",
-      render: (text) => <Text color="blue.700" fontWeight="bold">{text}</Text>,
+      render: (text) => (
+        <Text color="blue.700" fontWeight="bold">
+          {text}
+        </Text>
+      ),
     },
     {
       title: "Description",
@@ -244,7 +405,9 @@ const ProductList = () => {
       dataIndex: "categoryId",
       key: "categoryId",
       render: (categoryId) => {
-        const category = categories.find((cat) => cat.categoryId === categoryId);
+        const category = categories.find(
+          (cat) => cat.categoryId === categoryId
+        );
         return category ? category.categoryName : "Undefined";
       },
     },
@@ -274,30 +437,73 @@ const ProductList = () => {
 
   return (
     <Box padding={5} display="flex" flexDirection="column" alignItems="center">
-      <VStack width="90%" spacing={5}>
-        <Text fontSize="2xl" fontWeight="bold" color="purple.600">
-          Product List
+      <VStack width="100%" spacing={5}>
+        {/* Title */}
+        <Text fontSize="3xl" fontWeight="bold" color="purple.700">
+          Product Management
         </Text>
 
-        <Box display="flex" justifyContent="space-between" width="100%">
-          <HStack>
+        {/* Toolbar: Search, Sort, Import, Add */}
+        <Flex
+          justifyContent="space-between"
+          alignItems="center"
+          width="100%"
+          padding={3}
+          border="1px solid #e0e0e0"
+          borderRadius="md"
+          boxShadow="sm"
+          bg="white"
+        >
+          {/* Search and Sort */}
+          <HStack spacing={4}>
             <Input
               placeholder="Search products..."
               value={searchTerm}
               onChange={handleSearch}
               prefix={<SearchOutlined />}
-              style={{ width: "300px" }}
+              style={{ width: "250px" }}
             />
-          </HStack>
-          <HStack>
             <Select
               defaultValue="quantity"
-              style={{ width: 180 }}
+              style={{ width: "200px" }}
               onChange={handleSort}
             >
               <Option value="quantity">Sort by Quantity</Option>
               <Option value="count">Sort by Count</Option>
+              <Option value="category">Sort by Category</Option>
             </Select>
+          </HStack>
+
+          {/* Actions */}
+          <HStack spacing={3}>
+            <AntdButton
+              type="default"
+              onClick={downloadTemplate}
+              icon={<CloudDownloadOutlined />}
+            >
+              Download Template
+            </AntdButton>
+            <AntdButton
+              type="default"
+              icon={<CloudUploadOutlined />}
+              onClick={triggerFileInput}
+            >
+              Import Excel
+            </AntdButton>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".xlsx, .xls"
+              style={{ display: "none" }}
+              onChange={handleFileUpload}
+            />
+            <AntdButton
+              type="default"
+              onClick={exportProductList}
+              icon={<ExportOutlined />}
+            >
+              Export Product List
+            </AntdButton>
             <AntdButton
               type="primary"
               style={{ backgroundColor: "#6a1b9a", borderColor: "#6a1b9a" }}
@@ -306,93 +512,113 @@ const ProductList = () => {
               + Add New Product
             </AntdButton>
           </HStack>
+        </Flex>
+
+        {/* Allowed Categories */}
+        <Box
+          width="100%"
+          padding={4}
+          borderRadius="md"
+          boxShadow="sm"
+          bg="gray.50"
+          border="1px solid #e0e0e0"
+        >
+          <Text fontWeight="bold" fontSize="lg" marginBottom={3}>
+            Allowed Categories:
+          </Text>
+          <HStack wrap="wrap" spacing={3}>
+            {categories.map((category) => (
+              <Box
+                key={category.categoryId}
+                padding="5px 10px"
+                borderRadius="full"
+                backgroundColor="purple.100"
+                color="purple.800"
+                fontWeight="medium"
+                boxShadow="sm"
+              >
+                {category.categoryName}
+              </Box>
+            ))}
+          </HStack>
         </Box>
 
+        {/* Product Table */}
         <Box
-  width="100%"
-  border="1px solid #e0e0e0"
-  borderRadius="md"
-  boxShadow="md"
->
-  <Table
-    columns={columns}
-    dataSource={filteredData}
-    pagination={{
-      pageSize: 10, // Hiển thị 10 sản phẩm mỗi trang
-    }}
-    bordered
-    rowKey="productId"
-    loading={loading}
-    scroll={{
-      y: 400, // Chiều cao nội dung bảng cuộn
-    }}
-    style={{ padding: "10px" }}
-  />
-</Box>
-
+          width="100%"
+          border="1px solid #e0e0e0"
+          borderRadius="md"
+          boxShadow="lg"
+          bg="white"
+        >
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            pagination={{ pageSize: 10 }}
+            rowKey="productId"
+            loading={loading}
+            scroll={{ y: 400 }}
+          />
+        </Box>
       </VStack>
 
+      {/* Modal */}
       <Modal
-  title={editingProduct ? "Edit Product" : "Create New Product"}
-  open={isModalOpen}
-  onCancel={handleCancel}
-  onOk={handleSave}
-  okText={editingProduct ? "Update" : "Create"}
->
-<Form form={form} layout="vertical">
-  <Form.Item
-    name="productName"
-    label="Product Name"
-    rules={[{ required: true, message: "Please enter the product name!" }]}
-  >
-    <Input />
-  </Form.Item>
-
-  <Form.Item
-    name="quantity"
-    label="Quantity"
-    rules={[
-      { required: true, message: "Please enter the quantity!" },
-      {
-        validator: (_, value) => {
-          if (value < 1) {
-            return Promise.reject(
-              new Error("Quantity must be greater than or equal to 1")
-            );
-          }
-          return Promise.resolve();
-        },
-      },
-    ]}
-  >
-    <Input type="number" />
-  </Form.Item>
-
-  <Form.Item
-    name="description"
-    label="Description"
-    rules={[{ required: true, message: "Please enter the description!" }]}
-  >
-    <Input />
-  </Form.Item>
-
-  <Form.Item
-    name="categoryId"
-    label="Category"
-    rules={[{ required: true, message: "Please select a category!" }]}
-  >
-    <Select placeholder="Select category">
-      {categories.map((category) => (
-        <Option key={category.categoryId} value={category.categoryId}>
-          {category.categoryName}
-        </Option>
-      ))}
-    </Select>
-  </Form.Item>
-</Form>
-
-</Modal>
-
+        title={editingProduct ? "Edit Product" : "Create New Product"}
+        open={isModalOpen}
+        onCancel={handleCancel}
+        onOk={handleSave}
+        okText={editingProduct ? "Update" : "Create"}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="productName"
+            label="Product Name"
+            rules={[
+              { required: true, message: "Please enter the product name!" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="quantity"
+            label="Quantity"
+            rules={[
+              { required: true, message: "Please enter the quantity!" },
+              {
+                validator: (_, value) =>
+                  value >= 1
+                    ? Promise.resolve()
+                    : Promise.reject("Quantity must be >= 1"),
+              },
+            ]}
+          >
+            <Input type="number" />
+          </Form.Item>
+          <Form.Item
+            name="description"
+            label="Description"
+            rules={[
+              { required: true, message: "Please enter the description!" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="categoryId"
+            label="Category"
+            rules={[{ required: true, message: "Please select a category!" }]}
+          >
+            <Select placeholder="Select category">
+              {categories.map((category) => (
+                <Option key={category.categoryId} value={category.categoryId}>
+                  {category.categoryName}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
     </Box>
   );
 };

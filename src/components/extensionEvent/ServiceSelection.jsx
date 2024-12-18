@@ -264,7 +264,7 @@ const ServiceManagement = ({ eventId }) => {
               <Input
                 value={serviceName}
                 onChange={(e) => handleInputChange(e.target.value)}
-                placeholder="Enter or select a service name"
+                placeholder="Enter service name"
               />
               {filteredSuggestions.length > 0 && (
                 <List
