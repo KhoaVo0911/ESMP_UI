@@ -14,11 +14,12 @@ import {
   DeleteOutline,
   EditOutlined,
   CloudUploadOutlined,
+  CloudDownloadOutlined,
 } from "@mui/icons-material";
-import { SearchOutlined } from "@ant-design/icons";
+
+import { SearchOutlined, ExportOutlined } from "@ant-design/icons";
 import { useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
-
 const { Option } = Select;
 
 const ProductList = () => {
@@ -151,6 +152,52 @@ const ProductList = () => {
       console.error("Error importing products:", error);
       message.error("Failed to import some products!");
     }
+  };
+
+  // Tạo file Excel Template
+  const downloadTemplate = () => {
+    const templateData = [
+      {
+        productName: "Example Product",
+        description: "Example",
+        quantity: 10,
+        categoryname: "food",
+      },
+      {
+        productName: "Sample Product",
+        description: "Sample",
+        quantity: 20,
+        categoryname: "drink 1",
+      },
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+
+    XLSX.writeFile(workbook, "product_template.xlsx");
+  };
+
+  // Xuất toàn bộ Product List ra Excel
+  const exportProductList = () => {
+    // Tạo dữ liệu để export
+    const exportData = filteredData.map((product) => ({
+      productName: product.productName,
+      description: product.description,
+      quantity: product.quantity,
+      count: product.count,
+      createdAt: formatDate(product.createAt),
+      updatedAt: formatDate(product.updatedAt),
+      category:
+        categories.find((cat) => cat.categoryId === product.categoryId)
+          ?.categoryName || "Undefined",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Product List");
+
+    XLSX.writeFile(workbook, "product_list.xlsx");
   };
 
   useEffect(() => {
@@ -431,6 +478,13 @@ const ProductList = () => {
           <HStack spacing={3}>
             <AntdButton
               type="default"
+              onClick={downloadTemplate}
+              icon={<CloudDownloadOutlined />}
+            >
+              Download Template
+            </AntdButton>
+            <AntdButton
+              type="default"
               icon={<CloudUploadOutlined />}
               onClick={triggerFileInput}
             >
@@ -443,6 +497,13 @@ const ProductList = () => {
               style={{ display: "none" }}
               onChange={handleFileUpload}
             />
+            <AntdButton
+              type="default"
+              onClick={exportProductList}
+              icon={<ExportOutlined />}
+            >
+              Export Product List
+            </AntdButton>
             <AntdButton
               type="primary"
               style={{ backgroundColor: "#6a1b9a", borderColor: "#6a1b9a" }}
