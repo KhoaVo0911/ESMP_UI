@@ -653,12 +653,12 @@ const PropertiesPanel = ({
           </Box>
         </FormControl>
       </Grid>
-      <FormControl mb={2}>
+      {/* <FormControl mb={2}>
         <FormLabel>Rotation (°)</FormLabel>
         <Box p={2} border="1px solid" borderColor="gray.300" borderRadius="md">
           {selectedImage.rotation || 0}
         </Box>
-      </FormControl>
+      </FormControl> */}
     </>
   );
 
@@ -721,12 +721,12 @@ const PropertiesPanel = ({
           </Box>
         </FormControl>
       </Grid>
-      <FormControl mb={2}>
+      {/* <FormControl mb={2}>
         <FormLabel>Rotation (°)</FormLabel>
         <Box p={2} border="1px solid" borderColor="gray.300" borderRadius="md">
           {selectedShape.rotation || 0}
         </Box>
-      </FormControl>
+      </FormControl> */}
     </>
   );
 
@@ -789,12 +789,12 @@ const PropertiesPanel = ({
           </Box>
         </FormControl>
       </Grid>
-      <FormControl mb={2}>
+      {/* <FormControl mb={2}>
         <FormLabel>Rotation (°)</FormLabel>
         <Box p={2} border="1px solid" borderColor="gray.300" borderRadius="md">
           {selectedBooth.rotation || 0}
         </Box>
-      </FormControl>
+      </FormControl> */}
     </>
   );
 
@@ -832,7 +832,7 @@ const PropertiesPanel = ({
             {selectedText.height}
           </Box>
         </FormControl>
-        <FormControl>
+        {/* <FormControl>
           <FormLabel>Font Size</FormLabel>
           <Box
             p={2}
@@ -842,8 +842,8 @@ const PropertiesPanel = ({
           >
             {selectedText.fontSize || 16}
           </Box>
-        </FormControl>
-        <FormControl>
+        </FormControl> */}
+        {/* <FormControl>
           <FormLabel>Rotation (°)</FormLabel>
           <Box
             p={2}
@@ -853,7 +853,7 @@ const PropertiesPanel = ({
           >
             {selectedText.rotation || 0}
           </Box>
-        </FormControl>
+        </FormControl> */}
       </Grid>
       <Grid templateColumns="repeat(2, 1fr)" gap={2} mb={4}>
         <FormControl>

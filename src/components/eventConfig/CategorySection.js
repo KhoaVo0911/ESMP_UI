@@ -47,29 +47,14 @@ const CategorySection = () => {
 
   // Static suggestion list
   const staticSuggestions = [
-    "Fashion",
-    "Technology",
-    "Functional foods and beverages",
-    "Books and Education",
-    "Health and Beauty",
-    "Home Appliances and Furniture",
-    "Entertainment and Sports",
-    "Cars and Motorcycles",
-    "Travel and Hotels",
-    "Electronics and Digital",
-  ];
-
-  const staticThemes = [
-    "Music",
-    "Sports",
-    "Conferences and conferences",
-    "Exhibitions and fairs",
-    "Education",
-    "Charity and fundraising",
-    "Entertainment",
-    "Culture and festivals",
-    "Community and society",
-    "Technology and startups",
+    "Food",
+    "Drink",
+    "Book",
+    "Furniture",
+    "Electronics",
+    "Fruit",
+    "Vegatables",
+    "Others",
   ];
 
   const fetchCategories = async () => {

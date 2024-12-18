@@ -248,8 +248,6 @@ const AccountManagement = () => {
                   <tr><th>Name</th><td>${account.name}</td></tr>
                   <tr><th>Phone</th><td>${account.phone}</td></tr>
                   <tr><th>Email</th><td>${account.email}</td></tr>
-                  <tr><th>Address</th><td>${account.address}</td></tr>
-                  <tr><th>QR URL</th><td>${account.urlQr}</td></tr>
                 </table>
               </div>
               <div class="footer">
@@ -356,7 +354,7 @@ const AccountManagement = () => {
     setValue("name", account.name);
     setValue("phone", account.phone);
     setValue("email", account.email);
-    setValue("address", account.address);
+    // setValue("address", account.address);
     setValue("urlQr", account.urlQr);
     // setValue("status", account.status);
     onOpen();
@@ -620,47 +618,47 @@ const AccountManagement = () => {
 
         {/* Modal for Account Details */}
         <Modal isOpen={isDetailOpen} onClose={onCloseDetail}>
-  <ModalOverlay />
-  <ModalContent>
-    <ModalHeader>Account Details</ModalHeader>
-    <ModalCloseButton />
-    <ModalBody>
-      <p>
-        <strong>Username:</strong> {selectedAccount?.username}
-      </p>
-      <p>
-        <strong>Password:</strong>{" "}
-        {showPassword ? selectedAccount?.password : "*********"}{" "}
-        <Button
-          size="sm"
-          variant="link"
-          onClick={() => setShowPassword(!showPassword)}
-          colorScheme="blue"
-        >
-          {showPassword ? "Hide" : "Show"}
-        </Button>
-      </p>
-      <p>
-        <strong>Name:</strong> {selectedAccount?.name}
-      </p>
-      <p>
-        <strong>Email:</strong> {selectedAccount?.email}
-      </p>
-      <p>
-        <strong>Account Banking:</strong> {selectedAccount?.urlQr}
-      </p>
-      <p>
-        <strong>Status:</strong>{" "}
-        {selectedAccount?.status ? "Active" : "Inactive"}
-      </p>
-    </ModalBody>
-    <ModalFooter>
-      <Button colorScheme="teal" onClick={onCloseDetail}>
-        Close
-      </Button>
-    </ModalFooter>
-  </ModalContent>
-</Modal>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Account Details</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <p>
+                <strong>Username:</strong> {selectedAccount?.username}
+              </p>
+              <p>
+                <strong>Password:</strong>{" "}
+                {showPassword ? selectedAccount?.password : "*********"}{" "}
+                <Button
+                  size="sm"
+                  variant="link"
+                  onClick={() => setShowPassword(!showPassword)}
+                  colorScheme="blue"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </Button>
+              </p>
+              <p>
+                <strong>Name:</strong> {selectedAccount?.name}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedAccount?.email}
+              </p>
+              <p>
+                <strong>Account Banking:</strong> {selectedAccount?.urlQr}
+              </p>
+              <p>
+                <strong>Status:</strong>{" "}
+                {selectedAccount?.status ? "Active" : "Inactive"}
+              </p>
+            </ModalBody>
+            <ModalFooter>
+              <Button colorScheme="teal" onClick={onCloseDetail}>
+                Close
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </Box>
     </Box>
   );

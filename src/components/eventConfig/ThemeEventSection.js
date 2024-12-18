@@ -26,8 +26,8 @@ import {
   Tooltip,
   useToast,
   Checkbox,
-  VStack, Select
-
+  VStack,
+  Select,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
 
@@ -48,14 +48,16 @@ const ThemeEventSection = () => {
   const staticThemes = [
     "Music",
     "Sports",
-    "Conferences and conferences",
-    "Exhibitions and fairs",
+    "Conferences",
+    "Job Fairs",
+    "Concerts",
+    "Exhibitions",
     "Education",
     "Charity and fundraising",
     "Entertainment",
-    "Culture and festivals",
-    "Community and society",
-    "Technology and startups",
+    "Festivals",
+    "Talkshow",
+    "Technology",
   ];
 
   const fetchThemes = async () => {
@@ -265,67 +267,70 @@ const ThemeEventSection = () => {
 
       {/* Modal */}
       <Modal isOpen={isOpen} onClose={onClose}>
-  <ModalOverlay />
-  <ModalContent>
-    <ModalHeader>
-      {editingTheme ? "Edit Theme" : "Create Theme"}
-    </ModalHeader>
-    <ModalCloseButton />
-    <ModalBody>
-      {/* Show input for theme name */}
-      <FormControl mb={4}>
-        <FormLabel>Theme Name</FormLabel>
-        <Input
-          mt={2}
-          placeholder="Enter Theme Name"
-          value={newTheme}
-          onChange={(e) => setNewTheme(e.target.value)}
-        />
-      </FormControl>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            {editingTheme ? "Edit Theme" : "Create Theme"}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {/* Show input for theme name */}
+            <FormControl mb={4}>
+              <FormLabel>Theme Name</FormLabel>
+              <Input
+                mt={2}
+                placeholder="Enter Theme Name"
+                value={newTheme}
+                onChange={(e) => setNewTheme(e.target.value)}
+              />
+            </FormControl>
 
-      {/* Status dropdown */}
-      <FormControl>
-        <FormLabel>Status</FormLabel>
-        <Select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <option value="true">ACTIVE</option>
-          <option value="false">INACTIVE</option>
-        </Select>
-      </FormControl>
+            {/* Status dropdown */}
+            <FormControl>
+              <FormLabel>Status</FormLabel>
+              <Select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option value="true">ACTIVE</option>
+                <option value="false">INACTIVE</option>
+              </Select>
+            </FormControl>
 
-      {/* Only show the static themes checkbox list when creating a new theme */}
-      {!editingTheme && (
-        <FormControl mt={4}>
-          <FormLabel>Static Theme Options</FormLabel>
-          <VStack align="start" spacing={2}>
-            <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={2}>
-              {staticThemes.map((theme) => (
-                <Checkbox
-                  key={theme}
-                  isChecked={checkedThemes.includes(theme)}
-                  onChange={() => handleCheckboxChange(theme)}
-                >
-                  {theme}
-                </Checkbox>
-              ))}
-            </Box>
-          </VStack>
-        </FormControl>
-      )}
-    </ModalBody>
-    <ModalFooter>
-      <Button colorScheme="blue" onClick={handleSaveTheme}>
-        {editingTheme ? "Update" : "Create"}
-      </Button>
-      <Button onClick={onClose} ml={3}>
-        Cancel
-      </Button>
-    </ModalFooter>
-  </ModalContent>
-</Modal>
-
+            {/* Only show the static themes checkbox list when creating a new theme */}
+            {!editingTheme && (
+              <FormControl mt={4}>
+                <FormLabel>Static Theme Options</FormLabel>
+                <VStack align="start" spacing={2}>
+                  <Box
+                    display="grid"
+                    gridTemplateColumns="repeat(2, 1fr)"
+                    gap={2}
+                  >
+                    {staticThemes.map((theme) => (
+                      <Checkbox
+                        key={theme}
+                        isChecked={checkedThemes.includes(theme)}
+                        onChange={() => handleCheckboxChange(theme)}
+                      >
+                        {theme}
+                      </Checkbox>
+                    ))}
+                  </Box>
+                </VStack>
+              </FormControl>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={handleSaveTheme}>
+              {editingTheme ? "Update" : "Create"}
+            </Button>
+            <Button onClick={onClose} ml={3}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
