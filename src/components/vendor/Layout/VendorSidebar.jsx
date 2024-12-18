@@ -233,7 +233,7 @@ const VendorSideBar = ({ collapsed }) => {
             <span
               style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
             >
-              Manage Product Items
+              Product Items
             </span>
           ),
           onClick: () => navigate(`/manage-product/${vendorId}`),
@@ -257,7 +257,7 @@ const VendorSideBar = ({ collapsed }) => {
             <span
               style={{ fontSize: "14px", fontWeight: "700", color: "#1B2559" }}
             >
-              Manage Staff Account
+              Staff Account
             </span>
           ),
           onClick: () => navigate(`/staff-account-manager/${vendorId}`),
