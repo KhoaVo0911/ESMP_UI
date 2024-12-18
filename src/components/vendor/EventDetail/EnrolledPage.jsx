@@ -56,9 +56,11 @@ const EventEnrolled = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(5); // Number of items per page
   const navigate = useNavigate();
+
   const vendorinEventId = state?.vendorInEventId;
   console.log("gi ki vay", vendorinEventId);
-
+  const eventStatus = state?.eventStatus;
+  console.log("vai", eventStatus);
   useEffect(() => {
     if (!eventId) {
       console.error("Missing eventId");
@@ -270,10 +272,13 @@ const EventEnrolled = () => {
             <Button colorScheme="blue" size="lg" onClick={handleShopClick}>
               Shop
             </Button>
-            <CancelEventButton
-              vendorinEventId={vendorinEventId}
-              eventId={eventId}
-            />
+            {eventDetail.status !== "running" &&
+              eventDetail.status !== "finished" && (
+                <CancelEventButton
+                  vendorinEventId={vendorinEventId}
+                  eventId={eventId}
+                />
+              )}
           </HStack>
         </VStack>
         <Box
